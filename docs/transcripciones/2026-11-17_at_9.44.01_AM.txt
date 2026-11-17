@@ -1,0 +1,374 @@
+# WhatsApp Ptt 2026-11-17 at 9.44.01 AM.ogg (1185s)
+
+[00:00] La cantidad o por frecuencia mensual, por ejemplo, se está a punto de definirse.
+[00:05] Igual, no sé si podría, creo que deberíamos definirlo nosotros como fundación,
+[00:08] pero los premios a veces también pueden entrar dentro de esa propuesta que acabamos de hacer de la Hackathon.
+[00:13] Porque igual puede ser más como...
+[00:15] Es que de hecho eso puede ser un tema escalable.
+[00:17] O sea, nosotros en este momento el punto de partida es un recurso tecnológico para sistematizar todo lo que tiene que ver con la recolección,
+[00:28] envío administración de parte de los coordinadores todo obviamente todo el tema de informes
+[00:37] posteriores porque el aplicativo debería decirnos nosotros al final cuantos han recorrestado cuantos
+[00:42] se lo aprovechamos quién usuario en particular o sea que puede hacer cualquier cantidad de filtros
+[00:47] y puede decir algo el usuario x recopiló x cantidad de ahí podrá partir ese punto de ese
+[00:57] de los puntos pero ya la segunda fase y en esa segunda pasión que pudieran ser compañeros
+[01:13] si le des con eso recompensaríamos una pregunta en cuanto al tema de la forma para hacer la
+[01:23] solicitud a un mención fuerte áfrica el sistema debería reconocer cuáles aprovechables y no es
+[01:33] así ok que es solamente para confirmar que si en dos bolsas de bolsa diferente o como
+[01:42] lo identificamos nosotros bueno de la foto tiene un asterisco porque no lo pensamos pero
+[01:48] pero será que no se van a estar los residuos
+[01:53] y los residuos y los cuantos más
+[01:57] nosotros hace un año hicimos un proyecto
+[02:05] en este proyecto con un reconocimiento
+[02:09] barrial yo sé que es un poco diferente
+[02:11] a lo que estamos manejando pero el mismo
+[02:13] drone hacía un barrido por todo el barrio
+[02:16] Y él podía identificar los puntos críticos y el nivel de basura que había en ese territorio.
+[02:21] Por eso en algún momento nos pensamos que el aplicativo tuviese también funciones,
+[02:26] tipo con cámara podría identificar el residuo que estaba abriendo.
+[02:29] Ok, yo tenía pensado que era tipo...
+[02:31] ¿Dónde está la pregunta que voy a hacer?
+[02:32] En el caso, bolsas negras, blancas y verdes.
+[02:35] Ah, no. Sería residuo.
+[02:36] Si en algún periódico me llevas el cerífugo, a ver si lo dejamos ir así,
+[02:40] sí o sí, para las acató o para una segunda fase más escalable,
+[02:43] como indicó el propio.
+[02:44] De hecho, repito, lo importante aquí es que hay una solicitud de recolección.
+[02:50] Parte de su propuesta es cómo se hace esa solicitud de recolección.
+[02:55] Si por texto, si por una imagen, si por una señal de humo.
+[03:00] Exactamente.
+[03:01] Y ahí lo dejo a su gente.
+[03:02] O sea, ahí depende de su desarrollo.
+[03:05] Y a la gente.
+[03:06] Mire, y que Andrea dijo algo, claro.
+[03:09] Escucha, que Andrea dijo algo súper importante y es que sea fácil para la persona final.
+[03:14] Recordemos que la persona final es una persona que viene de dos escenarios.
+[03:18] Uno, está en un restaurante.
+[03:19] Y dos, está en una casa.
+[03:21] Y eso asumiendo que la persona maneje bien un dispositivo, o sea, asumiendo que maneje bien un celular.
+[03:28] Por eso le digo que sea fácil para la persona.
+[03:32] Otra pregunta.
+[03:34] Escuchemos todos, todos, todos, pero puede ser la misma pregunta de varios.
+[03:37] Lo que acabas de mencionar, ¿cuál es el promedio de edad de los reconectores?
+[03:47] Buena pregunta. No, esa edad no la tenemos, claro, son las familias que lo utilizan.
+[03:54] Y las unidades productivas que van a ser adultos, eso sí, mayores de 18, pero promedio de edad no te lo puedo dar.
+[04:02] ¿Tienen información que nos puedan ayudar para identificar eso?
+[04:06] el perfil que ha dado
+[04:08] el tema que nosotros
+[04:10] la manera de recolectar
+[04:11] es todas las personas
+[04:11] que va y recoge
+[04:12] o sea el que recoge
+[04:14] o el que solicita
+[04:15] o sea
+[04:15] mi pregunta
+[04:16] mi pregunta
+[04:17] va más orientada
+[04:17] a saber
+[04:18] dependiendo de edad
+[04:20] una persona mayor
+[04:21] tiene el mismo conocimiento
+[04:22] de una persona joven
+[04:23] al usar un aplicativo
+[04:24] entonces
+[04:26] quería saber
+[04:27] como que
+[04:28] a qué público
+[04:29] de edad
+[04:30] está orientada
+[04:31] la aplicación
+[04:31] para saber
+[04:31] qué tan
+[04:32] dinámica
+[04:33] didáctica
+[04:33] debe ser
+[04:34] esa pregunta
+[04:35] no la tenemos
+[04:35] discriminada
+[04:37] porque nosotros tenemos datos por hogar
+[04:39] no tendría forma de garantizar
+[04:41] si te vas a hacer aquí
+[04:43] en el lugar, en la entidad, vas a hacer el curso
+[04:45] normal que puede ser
+[04:49] alguno de los momentos que nos podrá
+[04:51] realmente decirte que
+[04:53] está entre los 40 y 50 años
+[04:55] que puede haber sido yo aquí
+[04:56] pero que yo garantice que lo voy a hacer
+[04:59] y todos tendrían
+[05:01] acceso a un celular, ¿verdad?
+[05:03] todos los usuarios
+[05:05] recolectores
+[05:07] bueno, ah bueno
+[05:08] a los coordinadores
+[05:10] de recicladores y guarderos
+[05:12] se les va a dar desde Fundación una tablet
+[05:14] que es donde ellos van a recibir la solicitud
+[05:17] eso lo vamos a garantizar
+[05:18] que ellos tengan la tablet donde van a recibir
+[05:21] la solicitud y van a hacer todo el proceso
+[05:22] ya que el usuario por si lo hará desde su dispositivo
+[05:25] electrónico, son computadores, son la tablet
+[05:27] nosotros lo vamos a abrir
+[05:29] por ejemplo el comerciante
+[05:31] ellos descargarán
+[05:33] o instalarán o mirarán la página web o mirarán el WhatsApp
+[05:37] porque aún no sabemos qué va a salir de acá.
+[05:40] Tengo dos preguntas en más o menos.
+[05:43] La primera es, tengo entendido que en el 2021
+[05:45] ustedes necesitarán una palabra, salas aquí.
+[05:51] Y creo que sí.
+[05:52] Y tengo entendido que ya tienen como una especie de ruta ya
+[05:56] de recolección de residuos.
+[05:58] Mi pregunta es, primero, ¿esa regresa de aviso
+[06:01] de que los vayan los recolectores
+[06:04] se hace por medio de Whatsapp
+[06:06] o sea, se hace por una llamada
+[06:07] y lo segundo, entonces
+[06:09] esa ruta está definida
+[06:12] ya, por ejemplo, no sé
+[06:13] el día, el primer lunes de cada mes
+[06:16] se hace la ruta tal, o es variable
+[06:18] dependiendo de la solicitud
+[06:20] Ok, a tu primera pregunta, eso
+[06:22] me lo dicen ustedes, o sea, ¿cómo se hace
+[06:24] la respuesta a la solicitud?
+[06:26] ¿Le da usted dentro del marco de las tratos?
+[06:28] No, no, si actualmente se hace por Whatsapp
+[06:30] Ah, ok, esa ruta no existe.
+[06:32] O sea, esto es nuevo.
+[06:33] A ver, los recicladores no hacen esto.
+[06:35] Los recicladores acá, por ejemplo, ellos sí tienen unos bienes en los que las personas
+[06:40] pueden reconocerlos porque pasan siempre los mismos.
+[06:43] Ellos sí tienen una ruta de reciclar.
+[06:45] Que ellos, de hecho, están divididos por zona.
+[06:46] Ellos son 15 recicladores.
+[06:48] Entonces están en los puertos de almacenamiento de la supermanzana, de la propiedad horizontal
+[06:54] o están caminando.
+[06:56] Ellos tienen rutas.
+[06:57] Los porteros, si bien ellos aún no están haciendo el recurso como tal,
+[07:04] pero ellos sí algunos ya recolectan movilidades productivas.
+[07:07] Pero porque muy naturalmente el ejercicio se dio.
+[07:09] Entonces, por ejemplo, hay algún negocio que ya le dice a un portero que se lo recoja.
+[07:12] ¿Cuándo lo hace o cómo? No lo sé.
+[07:14] Porque ya es un ejercicio natural que surgió.
+[07:17] Y puede que le diga solamente lo llame cuando tenga o no sé.
+[07:21] Pero ya yo sé que hay unos porteros que sí lo hacen.
+[07:23] Los horarios de recolección de residuos son los lunes, los días con el invierno.
+[07:27] para responder la pregunta por ejemplo y completando lo que están peleando en esta
+[07:36] primera etapa aquí pueden controlar hasta cuatro resultados por ejemplo del avanzado
+[07:41] avanzada 4 hay una zona que se llama doris y es la que ya todas las personas se identifica
+[07:47] y entonces en algún momento tiene algún material se lo guarda y la señora lo recoge puede ser
+[07:52] mayor espacio de la misma manera también se da en esta zona está en esta zona en la manzana 19
+[08:06] en donde están colocando como todo recibe igual una de las personas que hace parte de
+[08:21] ese colectivo de recicladores que ya han decidido capacitación sobre tema de autocuidado sobre
+[08:27] separación está en este sector de la misma manera en la manzana en la obra primera etapa
+[08:34] del sector del CDI
+[08:36] ya también hay personas que reciclan
+[08:39] entonces si tenemos
+[08:40] un mapa como tal donde se establece
+[08:43] que en la zona 1 está la señora
+[08:45] Dolores, que en la zona 2
+[08:47] está Álvaro, que en la zona 3
+[08:49] está... En Brisas está
+[08:51] Víctor. Exactamente
+[08:53] En Brisas de San Pablo
+[08:54] es donde se va a focalizar
+[08:56] donde se va a focalizar la estrategia, hay una persona
+[08:59] de Aso Rescatar que ya está
+[09:01] complementando toda la estrategia
+[09:03] un poquito nos vemos el tema del barrio no funciona tanto como en estas casas que son
+[09:13] barrios abiertos allá nos organizamos más por torre 34 torre 35 y torre 36 los invitamos a
+[09:21] que bajen y conozca la estrategia que hemos nos ha tocado dañar nosotros cambiar reorganizar
+[09:28] porque normalmente las actividades las hacen a tarde, nos ha tocado tener horas de 5 de la tarde a 8 de la noche
+[09:36] porque sabemos que son casas dormitorios, mucha gente sale a trabajar con ustedes, salen a estudiar
+[09:42] y les dejan ir a su casa, entonces a partir de esa estrategia hemos tratado de lo posible
+[09:47] generar sensibilización con las personas, hablar de la tarifa con sus usuarios y hablar de esto que viene
+[09:54] entonces si te das cuenta ya llevamos el terreno abonado precisamente para que cuando esto entre
+[10:00] funcionamiento ya se ponga más fácil.
+[10:03] ¿Listo?
+[10:04] Sí, gracias a ti.
+[10:06] ¿Alguna otra pregunta?
+[10:07] Tengo una pregunta en cuanto a facturación.
+[10:10] ¿Este proyecto tiene algún límite de gasto y quién lo asume?
+[10:13] Por ejemplo, me habían dicho que a principio iba con ustedes y luego que se lo quedaba
+[10:16] alguien del barrio.
+[10:17] ¿Eso cómo saben gestionar luego?
+[10:19] ¿Se maneja una plata por la comunidad o un fondo o cómo se...?
+[10:22] Nosotros como fundación garantizamos el funcionamiento al principio, por ejemplo, nosotros ya internamente de nuestra área de monitoreo, hoy nos puede acompañar David,
+[10:33] él es nuestro experto, es de Moniteví, que nos ha montado varios aplicativos desde la misma fundación,
+[10:38] con él estábamos revisando la opción de que el otro año él va a quedar agujado, yo de esto no sé, va a quedar agujado en esto que le habló el profesor.
+[10:48] de todas las plataformas de sistemas de información
+[10:49] que tenga la fundación
+[10:50] esa fundación ya maneja
+[10:52] el tipo de base de datos
+[10:55] el tipo de programa
+[10:56] plataformas tecnológicas
+[10:59] de hecho
+[11:00] en el reto
+[11:03] se les va a entregar a ustedes cuáles son las herramientas
+[11:05] ya eso está definido
+[11:06] ya las herramientas están definidas
+[11:09] y las herramientas a forma
+[11:10] para nosotros es prácticamente lo que ustedes conocen
+[11:14] estoy seguro que nadie
+[11:15] tiene que aprender un nuevo lenguaje
+[11:17] porque lo que está trabajando, lo que ya está
+[11:19] trabajando la fundación
+[11:21] ustedes trabajan en esas
+[11:23] mismas herramientas
+[11:24] y lo que van a dejar desarrollar en ellas
+[11:26] muy seguramente van a utilizar
+[11:29] Python, van a utilizar POP
+[11:30] todos ustedes van a trabajar con esos trabajos
+[11:33] entonces de alguna
+[11:35] forma eso se parte
+[11:37] del ejercicio porque
+[11:38] esto va a quedar dentro
+[11:41] de la estructura tecnológica de la fundación
+[11:43] y para que eso pueda quedar pues tienen que
+[11:45] manejar los tipos
+[11:47] y todo lo que ese costo implique
+[11:50] de esas plataformas
+[11:51] nosotros tenemos nosotros durante este
+[11:53] prototipo y la de funcionamiento
+[11:55] que vamos a monitorizar el otro año
+[11:57] Este, referente a la
+[12:00] formación que recibe
+[12:01] que recibe los
+[12:04] locales de separación
+[12:05] que recibimos
+[12:08] hasta que
+[12:09] hasta que punto se logre identificar
+[12:11] el producto orgánico
+[12:12] esto no se aprovecha
+[12:15] totalmente
+[12:17] por la misma dinámica
+[12:25] y el equipo a sobreescargarse
+[12:29] trasladada hasta los últimos establecimientos
+[12:31] porque ustedes saben que
+[12:32] un restaurante no va a dejar el negocio
+[12:35] pero con tal de ver si va a recibir una capacitación
+[12:38] ¿qué hace a sobreescargar?
+[12:39] a sobreescargar va, entonces son
+[12:40] 4 o 5 talleres específicamente sobre
+[12:43] el tema de la separación del equipo
+[12:45] De esos talleres que comenta, ¿tiene recursos, diapositivas, planes, documentos o todo es simplemente hablado?
+[12:57] ¿Esas documentaciones las van a entregar o no?
+[13:00] Es que, bueno, igual los talleres son más en línea con la gestión, o sea, no hay nada, con el manejo de residuos, ¿me entiendes?
+[13:09] Más como cómo hacerlo y más práctico que teórico.
+[13:13] no hay como una metodología
+[13:17] o sea, por supuesto que es más
+[13:18] práctico que teórico, el acompañamiento
+[13:20] es preciso para la advertencia del residuo
+[13:22] ¿y video?
+[13:25] no
+[13:26] para mí no se manejan videos
+[13:28] ya a nivel
+[13:32] más que todo de proyecto, quería saber
+[13:34] si existen como métricas o KPIs
+[13:37] para evaluar como el desempeño del aplicativo
+[13:39] o sea, tengo otra pregunta
+[13:40] esa es la primera, para, no sé, toma decisiones
+[13:42] o mejor a continuo, la segunda es
+[13:44] que si existen, sería
+[13:46] como pertinente que el aplicativo las muestre
+[13:48] y si el aplicativo
+[13:50] debería mostrar como que actores
+[13:52] estarían implicados, o sea
+[13:54] sería solo el personal
+[13:57] de la huerta o también por ejemplo
+[13:59] la fundación para el tema de los seis
+[14:01] meses de monitoreo
+[14:01] Bueno, lo de las métricas si van a estar
+[14:05] como les digo, ni hay experticia
+[14:07] en este, yo soy psicóloga y trabajo muy bien
+[14:09] en la comunidad, pero la persona que no me pudo
+[14:11] acompañar hoy, yo sé que el otro año está
+[14:13] contemplado el monitoreo y está todo el tema de
+[14:15] la fundación igual el monitoreo del otro año aún no se ha definido como se hará si acompañado por
+[14:27] el tema del chico que habíamos conversado que a mi me comentó por eso que hay como un asterisco
+[14:32] por un político, el tema de que quede alojado en la infraestructura de la fundación tiene muchos
+[14:38] limitantes porque obviamente ese ese dar ese acceso a alguien que no sea fundación
+[14:46] nos queda imposible por un tema de seguridad porque ahí está bajada muchas cosas de fundación
+[14:50] entonces posiblemente si no tenéis esas métricas pero aún está por definir cómo será ese
+[14:55] monitoreo posterior sobre el reto es lo único que tengo que responder por ahora porque
+[14:58] como te digo no es mi expertise igual el día de hoy ya las capas van a estar a la persona
+[15:02] acompañando algo pequeñito así como hay beneficios como los puntos colombia
+[15:08] también pueden haber como infracciones
+[15:13] o regalos
+[15:15] podría ser valiante
+[15:17] la propuesta de cada uno
+[15:18] eso sería valiante la propuesta
+[15:21] de cada uno
+[15:22] pero si
+[15:23] una es
+[15:27] que pasa si por ejemplo
+[15:28] vamos a decir que el índice
+[15:30] de acierto no es del 100%
+[15:34] sino que se hizo una recolección
+[15:36] en micarrón y algo que no se puede
+[15:38] que no se podía
+[15:39] se devuelve, se queda
+[15:41] en el mar de la fundación
+[15:43] ¿qué se hace?
+[15:45] Bueno, eso, fundación, no se le puede hacer enseguida
+[15:47] vuelte a los recicladores
+[15:49] creo que ahí está, creo que eso no debería
+[15:52] yo sé que igual es una posibilidad, pero creo que deberíamos
+[15:53] darle las opciones al aplicativo para que eso
+[15:56] no pase, o sea como para disminuir
+[15:58] que eso pueda ocurrir, porque la idea
+[16:00] es que eso no pase, o sea la idea es que
+[16:02] el reciclador antes de llegar a asignar el servicio
+[16:04] o cuando lo asigne, supongo que esa persona
+[16:05] que vaya a buscarlo debe hacer una revisión de lo que recibe
+[16:08] una recolección
+[16:12] cuando se preste el servicio hay algún proceso de validación y si no pues se
+[16:20] responde al servicio que no se recolectó porque no cumplía con esto
+[16:24] y la segunda es los recolectores o los volteros
+[16:29] podría decirme si cuentan con datos en celular o algo del estilo
+[16:35] La tabla que le vamos a dar, le vamos a dar las tablets y se va a revisar el tema de conectividad.
+[16:42] Pero lo que se mide era que nada más iba a tener tablets y los coordinadores.
+[16:48] Ya ellos internamente, es que a ver, partiendo de la dinámica de cómo funcionan, por ejemplo, los recicladores.
+[16:54] Claramente.
+[16:55] Nosotros ellos son 15, pero en su mayoría son adultos mayores.
+[17:00] Entonces, nosotros de hecho no nos comunicamos con un hombre cuando tenemos formaciones.
+[17:04] lo hacemos a través de una de ellas, que es como la líder, por así decirlo, ha subido ese rol.
+[17:08] Y de hecho ella es la que maneja el punto de acopio, o está acompañando siempre el punto de acopio.
+[17:13] Ella es la que va a tener la tabla.
+[17:15] Ya como de ahí hacia adelante ella se contacte con los demás recicladores para asignar el servicio,
+[17:19] es muy distinto para nosotros, porque ellos tienen su propia dinámica,
+[17:22] no sabemos si es que los llaman, los buscan, la casa, o sea, ya ellos funcionan,
+[17:25] ellos dicen, mira, ¿qué es lo mío? Llega.
+[17:27] Pero ella tiene su manera de contactarse con ellos.
+[17:30] Sí o sí, nuestro punto focal para los recicladores y los guarderos va a ser la tabla.
+[17:34] es lo único que podemos garantizar hasta ahora
+[17:36] Te habías comentado
+[17:40] de que podían haber
+[17:41] recicladores que eran como voluntarios
+[17:44] ¿es que ellos reciben alguna compensación
+[17:46] por hacer ese trabajo?
+[17:47] No, los recicladores no son los huerteros
+[17:49] Bueno, los voluntarios
+[17:51] El caso de la huerta es inmediatamente voluntario
+[17:54] ¿Cómo funciona? Hay ahí
+[17:55] más de 80 camas que son
+[17:59] 40
+[18:01] parceladas y 40 comunitarias
+[18:03] ¿Cómo funciona el trabajo en la huerta?
+[18:04] Te dan una parcelada que es toda la producción
+[18:06] que tú agarras, la estudias, tú ahora sí la vendes, la coges para consumo de hogar
+[18:10] o que haces con la producción. Y la contrapartida es que por esa parcelada que tengo en una
+[18:15] comunidad, que es la de la huerta, pues tú las siembras cosas ahí y eso que se venda
+[18:20] es para la huerta. Es 80-20, 80 para la huerta, 20 para ella. Esa es como la contrapartida.
+[18:26] De igual manera, también la mayoría de huerteros son adultos mayores o son personas
+[18:29] bastante adultas. Entendamos que la dinámica de este tipo de prácticas recae sobre adultos
+[18:36] mayores porque son esas personas que por punto que suena son quienes tienen los ingresos no tienen
+[18:43] un trabajo estable son informales y requieren general ingreso de alguna manera. Eso en el caso de los recicladores, en el caso de los huerteles porque tienen tiempo libre. Son ellos quienes asisten a la huerta. Son abuelos mayores.
+[18:54] y el perfil son campesinos
+[19:03] víctimas del conflicto y
+[19:05] entonces sí si quieren vamos vamos a hacer el recorrido igual con el recorrido es pasar
+[19:20] por el punto de llegar a los residuos aprovechables donde están los recicladores
+[19:24] y vamos a tener a tres recicladores con los que pueden conversar y hacerles algunas preguntas
+[19:29] que ustedes consideren pertinentes para el funcionamiento del recurso tecnológico.
+[19:34] Pasamos a Brisa, pasamos a la huerta, hacemos lo mismo con puerteros y nos devolvemos aquí abajo.

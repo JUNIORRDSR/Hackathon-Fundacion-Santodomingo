@@ -11,9 +11,8 @@ from sqlalchemy import Connection, func, insert, select
 from sqlalchemy.dialects.postgresql import insert as insertar_o_actualizar
 
 from app.compartido.bd import transaccion
-from app.modulos.clasificacion import contrato as clasificacion
 from app.modulos.directorio import contrato as directorio
-from app.modulos.whatsapp import fotos, registro
+from app.modulos.whatsapp import adjuntos, registro
 from app.modulos.whatsapp import tablas as t
 from app.modulos.whatsapp.contrato import Conversador, Herramientas, MensajeEntrante, MensajeSaliente, Transporte, Turno
 from app.modulos.whatsapp.menu import ConversadorMenu
@@ -123,9 +122,9 @@ def _responder(mensaje: MensajeEntrante, memoria: dict) -> tuple[list[str], dict
         return registro.responder(mensaje.texto, mensaje.telefono, memoria), memoria
     if solicitante.estado != directorio.EstadoSolicitante.HABILITADO:
         return [plantilla("registro_en_revision")], memoria
-    if mensaje.media_url and clasificacion.activa():
-        memoria["foto"] = mensaje.media_url  # la revisión orienta; la foto igual queda para el pedido
-        return fotos.responder(mensaje.media_url, memoria), memoria
+    textos, mensaje = adjuntos.atender(mensaje, memoria)
+    if mensaje is None:
+        return textos, memoria
     turno = Turno(nombre=solicitante.nombre, texto=mensaje.texto, media_url=mensaje.media_url)
     herramientas = Herramientas(solicitante.id)
     try:
@@ -133,7 +132,7 @@ def _responder(mensaje: MensajeEntrante, memoria: dict) -> tuple[list[str], dict
     except Exception:
         log.exception("El conversador falló; responde el menú")
         respuesta = ConversadorMenu().responder(turno, {}, herramientas)
-    return respuesta.textos, respuesta.memoria
+    return textos + respuesta.textos, respuesta.memoria
 
 
 def _registrar(mensaje: MensajeEntrante | MensajeSaliente, direccion: str, autor: str,

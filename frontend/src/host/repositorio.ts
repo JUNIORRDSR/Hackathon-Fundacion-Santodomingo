@@ -110,15 +110,22 @@ export async function capacitacionPublica(): Promise<TrainingResource[]> {
   return (await api<ContenidoVista[]>('/contenidos/publicos')).map(recursoDe)
 }
 
+// Lo que ganó cada recolección, por código: Resultados y el detalle lo muestran.
+const puntosPorCodigo = (signal?: AbortSignal) =>
+  api<Record<string, number>>('/puntos/por-codigo', 'GET', undefined, signal)
+
 export function crearRepositorio(): CoordinatorRepository {
   const zonas = (signal?: AbortSignal) => api<Zone[]>('/directorio/zonas', 'GET', undefined, signal)
   const solicitud = (ruta: string, cuerpo: object) =>
     api<SolicitudVista>('/solicitudes/' + ruta, 'POST', cuerpo).then(solicitudDe)
   return {
-    listRequests: async (c, signal) =>
-      (await api<SolicitudVista[]>('/solicitudes?colectivo=' + colectivoDe(c.grupo), 'GET', undefined, signal)).map(
-        solicitudDe,
-      ),
+    listRequests: async (c, signal) => {
+      const [lista, puntos] = await Promise.all([
+        api<SolicitudVista[]>('/solicitudes?colectivo=' + colectivoDe(c.grupo), 'GET', undefined, signal),
+        puntosPorCodigo(signal),
+      ])
+      return lista.map((v) => ({ ...solicitudDe(v), puntos: puntos[v.codigo] }))
+    },
     listCollectors: async (c, signal) => {
       const [lista, catalogo] = await Promise.all([
         api<EncargadoVista[]>('/directorio/encargados?colectivo=' + colectivoDe(c.grupo), 'GET', undefined, signal),
@@ -131,7 +138,10 @@ export function crearRepositorio(): CoordinatorRepository {
       solicitud(a.solicitudId + '/asignacion', { encargado_id: a.recolectorId, dia: a.fecha, hora: a.hora ?? null }),
     saveResult: (_, r) =>
       r.estado === 'recolectada'
-        ? solicitud(r.solicitudId + '/recoleccion', { kg: r.pesoKg })
+        ? solicitud(r.solicitudId + '/recoleccion', { kg: r.pesoKg }).then(async (s) => ({
+            ...s,
+            puntos: (await puntosPorCodigo())[s.codigo],
+          }))
         : solicitud(r.solicitudId + '/rechazo', { motivo: r.motivoRechazo }),
     cancel: (_, id, motivo) => solicitud(id + '/cancelacion', { motivo }),
     saveCollector: async (c, input, id) => {

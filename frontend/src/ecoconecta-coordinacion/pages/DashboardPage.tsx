@@ -75,8 +75,12 @@ function NextCollection({
     <section className="card bento-panel collection-feature" aria-labelledby="next-heading">
       <div className="panel-heading">
         <div>
-          <h2 id="next-heading">{upcoming.length ? 'Próxima recolección' : 'Por registrar'}</h2>
-          <p>Agenda de tu equipo</p>
+          <h2 id="next-heading">{upcoming.length ? 'Próxima recolección' : 'Por validar'}</h2>
+          <p>
+            {upcoming.length
+              ? 'La que sigue en la agenda. Al volver con la bolsa, valida los kilos.'
+              : 'Ya pasó su hora y aún no tienen kilos registrados.'}
+          </p>
         </div>
         <span className="feature-icon">
           <Icon name="truck" />
@@ -103,15 +107,15 @@ function NextCollection({
           </div>
           <div className="next-actions">
             <button type="button" className="button feature-button" onClick={() => onSelect(next)}>
-              Ver detalle
+              Ver solicitud
             </button>
             <a className="button button-surface" href={href({ page: 'recolecciones', requestId: next.id })}>
-              Registrar
+              <Icon name="scale" /> Validar kilos
             </a>
           </div>
         </div>
       ) : (
-        <p className="feature-empty">No hay recolecciones asignadas.</p>
+        <p className="feature-empty">No hay recolecciones en la agenda. Asigna una solicitud pendiente.</p>
       )}
       {others.length > 0 && (
         <div className="following">

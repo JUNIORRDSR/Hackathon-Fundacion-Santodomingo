@@ -76,6 +76,13 @@ def cambiar_regla(nueva: NuevaRegla) -> ReglaVista:
     return regla_vigente()
 
 
+def puntos_por_codigo() -> dict[str, int]:
+    """Lo que ganó cada recolección, por su código: la tablet lo muestra en Resultados."""
+    with transaccion() as c:
+        filas = c.execute(select(t.movimientos.c.codigo, t.movimientos.c.puntos).where(t.movimientos.c.puntos > 0))
+        return {fila.codigo: fila.puntos for fila in filas}
+
+
 def saldo(solicitante_id: UUID) -> Saldo:
     with transaccion() as c:
         filas = c.execute(select(t.movimientos).where(t.movimientos.c.solicitante_id == solicitante_id)

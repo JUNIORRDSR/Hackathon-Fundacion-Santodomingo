@@ -99,7 +99,7 @@ function App() {
       publicTrainingHref={capacitacionHref}
       extraPages={{
         habilitar: <PorHabilitar />,
-        canjes: <Canjes administrador={usuario.rol === 'administrador'} />,
+        canjes: <Canjes />,
         whatsapp: <Whatsapp />,
       }}
       badges={{ habilitar: porAceptar }}

@@ -68,10 +68,16 @@ export function RequestList({
             <button
               type="button"
               className="button button-quiet request-action"
-              aria-label={'Ver solicitud ' + item.codigo + ' de ' + item.solicitante}
+              aria-label={
+                (item.estado === 'pendiente' ? 'Asignar' : 'Ver') +
+                ' la solicitud ' +
+                item.codigo +
+                ' de ' +
+                item.solicitante
+              }
               onClick={() => onSelect(item)}
             >
-              Ver<span className="sr-only"> solicitud</span>
+              <Icon name="chevron" className="request-chevron" />
             </button>
           </li>
         ))}

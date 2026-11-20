@@ -19,15 +19,18 @@ services:
   app:
     build: .
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
+    env_file:
+      - path: .env
+        required: false
     depends_on:
       db:
         condition: service_healthy
     environment:
       ENTORNO: local
       DATABASE_URL: postgresql+psycopg://ecoconecta:solo-para-desarrollo-local@db:5432/ecoconecta
-      CLAVE_SESION: solo-para-desarrollo-local
-      CLAVE_DEMO: ecoconecta-demo
+      CLAVE_SESION: ${CLAVE_SESION:-solo-para-desarrollo-local}
+      CLAVE_DEMO: ${CLAVE_DEMO:-ecoconecta-demo}
       SEMBRAR_DEMO: "1"
 
 volumes:

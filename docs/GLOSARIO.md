@@ -32,6 +32,10 @@ español; el inglés queda solo para los tipos del framework.
 | Canje | El vecino cambia puntos por un premio: lo pide por WhatsApp (código CAN-0001) y la huerta lo entrega (ADR-0008) | `canjes.py` |
 | Premio | Lo que se puede canjear, con su costo en puntos. Lo edita la administración | `PremioVista` |
 | Puntos apartados | Los de un canje pedido y aún no entregado: no se pueden volver a usar | `disponible()` |
+| Revisión de foto | El bot mira la foto de lo que la persona va a entregar y le dice si está bien separado. Es orientativa: no bloquea ni da puntos | `evaluar`, `EvaluacionFoto` |
+| Veredicto | Resultado de la revisión: bien separado, mal separado o no concluyente | `Veredicto` |
+| Problema de separación | Lo que la revisión le explica a la persona, como comida entre los reciclables | `Problema` |
+| Ordinario | Lo que no se recoge en ningún flujo: papel higiénico, servilletas usadas, pañales | `Problema.ORDINARIO_MEZCLADO` |
 
 ## Términos que no se usan
 

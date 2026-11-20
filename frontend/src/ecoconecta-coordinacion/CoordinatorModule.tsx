@@ -232,6 +232,7 @@ function CoordinatorContent({
           requestId={location.requestId}
           group={coordinator.grupo}
           onSave={saveResult}
+          onOpen={open}
         />
       )
       break

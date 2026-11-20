@@ -53,11 +53,33 @@ Por API: `POST /api/whatsapp/simulador` con `{"telefono": "+573000000001", "text
 
 1. En la consola de Twilio, abre el sandbox de WhatsApp y anota el número y la palabra para unirse.
 2. Arranca la app con `TRANSPORTE=twilio`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` y
-   `TWILIO_WHATSAPP_FROM=whatsapp:+14155238886` (o el número del sandbox).
-3. En el sandbox, en «When a message comes in», pon `https://<url-publicada>/api/whatsapp/twilio` con `POST`.
+   `TWILIO_WHATSAPP_FROM=whatsapp:+14155238886` (o el número del sandbox). En `TWILIO_WEBHOOK_URL` configura
+   la URL HTTPS pública exacta, incluida la ruta `/api/whatsapp/twilio`.
+3. Guarda esa misma URL con método `POST` en «When a message comes in» del Sandbox.
 4. Cada celular de la demo manda primero `join <palabra>` al número del sandbox.
 
-El webhook rechaza con 403 todo lo que no venga firmado por Twilio.
+El webhook comprueba la firma de Twilio y procesa cada identificador de mensaje una sola vez. Opcionalmente,
+`WHATSAPP_PILOT_NUMBERS` limita los remitentes antes de que entren al bot. Si Twilio muestra un BSUID en
+**Sandbox Participants**, configura `WHATSAPP_CONTACT_ALIASES=CO.identificador=+573000000001` con el teléfono
+verificado del participante. Para el envío, la primera asociación de cada teléfono tiene prioridad.
+
+En el Sandbox clásico, `TWILIO_RESPUESTA_TWIML=1` devuelve las respuestas inmediatas en el propio webhook,
+incluidos los avisos generados por ese turno para el remitente. Los avisos posteriores del coordinador usan
+la API de Twilio.
+
+El [prototipo TypeScript](modules/whatsapp-recoleccion/README.md) conserva su propia demo. El webhook integrado
+en el monolito usa el registro, las solicitudes y los avisos del backend común.
+
+## Azure OpenAI para WhatsApp
+
+El conversador opcional entiende frases como «quiero que recojan mis orgánicos» o «cuántos puntos tengo».
+El flujo y las respuestas del sistema se aplican con las mismas reglas del menú. Consulta la
+[guía de Foundry y la prueba local](docs/azure-openai-whatsapp.md).
+
+Para editar textos en ejecución, apunta `WHATSAPP_REPLIES_FILE` a un JSON UTF-8 editable con claves del
+[catálogo de WhatsApp](backend/app/modulos/whatsapp/respuestas.json). Puedes sobrescribir una parte del catálogo
+conservando sus marcadores. Un cambio válido se aplica sin reiniciar. En Docker, monta el directorio que contiene
+el archivo y usa la ruta del contenedor.
 
 ## Cómo entra cada pieza del equipo
 
@@ -79,7 +101,7 @@ Los contratos de esas piezas están en `backend/app/modulos/whatsapp/contrato.py
 | Almacenamiento | Ninguno propio: los contenidos son URLs públicas |
 | Redes | Ingreso HTTPS público de Container Apps, que es también la URL del webhook de WhatsApp |
 
-URL publicada: pendiente.
+URL publicada: <https://ecoconecta.happytree-01383e4e.northcentralus.azurecontainerapps.io> (contratos en `/docs`).
 
 ## Variables de entorno
 
@@ -95,3 +117,7 @@ Los nombres están en [.env.example](.env.example); los valores nunca van al rep
 | `SEMBRAR_DEMO` | `1` carga zonas, encargados, usuarios y contenidos ficticios |
 | `TRANSPORTE` | `simulado` o `twilio` |
 | `CONVERSADOR` | `menu` o `llm` |
+| `OPENAI_BASE_URL` | API v1 de Azure OpenAI: `https://<recurso>.openai.azure.com/openai/v1/`; sin ella, la de OpenAI |
+| `OPENAI_API_KEY` | Clave del recurso de Azure OpenAI (o de OpenAI) |
+| `CLASIFICACION_MODELO` | Nombre del despliegue con visión, por ejemplo `gpt-5-mini` |
+| `CLASIFICACION_ACTIVA` | `true` revisa las fotos que llegan por WhatsApp ([ADR-0011](docs/adr/0011-revision-de-fotos.md)) |

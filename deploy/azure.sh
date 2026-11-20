@@ -5,7 +5,8 @@
 set -euo pipefail
 
 GRUPO="${GRUPO:-rg-ecoconecta}"
-REGION="${REGION:-eastus2}"
+# Azure for Students solo deja crear recursos en unas regiones (Directiva > Asignaciones). La de Leonardo admite esta.
+REGION="${REGION:-northcentralus}"
 APP="${APP:-ecoconecta}"
 ENTORNO_ACA="${ENTORNO_ACA:-ecoconecta-env}"
 SERVIDOR_BD="${SERVIDOR_BD:-ecoconecta-pg}"  # debe ser único en todo Azure
@@ -13,6 +14,11 @@ SERVIDOR_BD="${SERVIDOR_BD:-ecoconecta-pg}"  # debe ser único en todo Azure
 : "${CLAVE_DEMO:?Define CLAVE_DEMO: la clave de los usuarios de demostración}"
 : "${CLAVE_BD:?Define CLAVE_BD: la clave de PostgreSQL, sin @ : / ni # porque va dentro de la URL}"
 
+# Una suscripción nueva no tiene registrados estos proveedores de recursos.
+for proveedor in Microsoft.App Microsoft.OperationalInsights Microsoft.ContainerRegistry Microsoft.DBforPostgreSQL; do
+  az provider register --namespace "$proveedor" --wait --output none
+done
+az extension add --name containerapp --upgrade --yes --output none
 az group create --name "$GRUPO" --location "$REGION" --output none
 
 # PostgreSQL gestionado. 0.0.0.0 abre el firewall solo a los servicios de Azure.
@@ -38,6 +44,14 @@ if [[ -n "${TWILIO_AUTH_TOKEN:-}" ]]; then
   az containerapp update --name "$APP" --resource-group "$GRUPO" --set-env-vars TRANSPORTE=twilio \
     TWILIO_ACCOUNT_SID="$TWILIO_ACCOUNT_SID" TWILIO_WHATSAPP_FROM="$TWILIO_WHATSAPP_FROM" \
     TWILIO_AUTH_TOKEN=secretref:twilio-token
+fi
+
+# Modelo de Azure OpenAI (opcional, ADR-0007): con OPENAI_API_KEY definido, se revisan las fotos de WhatsApp.
+if [[ -n "${OPENAI_API_KEY:-}" ]]; then
+  az containerapp secret set --name "$APP" --resource-group "$GRUPO" --secrets "openai-key=$OPENAI_API_KEY"
+  az containerapp update --name "$APP" --resource-group "$GRUPO" --set-env-vars OPENAI_API_KEY=secretref:openai-key \
+    OPENAI_BASE_URL="$OPENAI_BASE_URL" CLASIFICACION_MODELO="$CLASIFICACION_MODELO" \
+    CLASIFICACION_ACTIVA="${CLASIFICACION_ACTIVA:-true}"
 fi
 
 echo "URL: https://$(az containerapp show --name "$APP" --resource-group "$GRUPO" \

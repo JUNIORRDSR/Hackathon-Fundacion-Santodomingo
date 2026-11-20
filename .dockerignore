@@ -6,3 +6,5 @@
 frontend/dist
 docs
 scripts
+.env
+.env.local

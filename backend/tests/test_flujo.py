@@ -103,3 +103,15 @@ def _consultar_puntos_y_canje(admin: TestClient) -> None:
     assert admin.get(f"/api/puntos/solicitantes/{canje['solicitante_id']}").json()["saldo"] == 2
     mensajes = admin.get("/api/whatsapp/simulador/mensajes", params={"telefono": TELEFONO}).json()
     assert f"Entregamos tu canje {canje['codigo']}: Semillas de cilantro. Te quedan 2 puntos." in mensajes[-1]["texto"]
+
+
+def test_registro_de_coordinacion_con_el_codigo_de_la_fundacion():
+    """Sin el código no hay cuenta; con él, la cuenta entra y solo ve su colectivo (ADR-0009)."""
+    cliente = TestClient(app)
+    datos = {"nombre": "Coordinación de prueba", "usuario": "prueba-recicla", "colectivo": "recicladores",
+             "clave": "clave-de-prueba", "codigo": "otro"}
+    assert cliente.post("/api/acceso/registro", json=datos).status_code == 403
+    respuesta = cliente.post("/api/acceso/registro", json={**datos, "codigo": "villas-2026"})
+    assert respuesta.status_code == 201 and respuesta.json()["colectivo"] == "recicladores"
+    assert cliente.get("/api/acceso/yo").json()["usuario"] == "prueba-recicla"
+    assert cliente.post("/api/acceso/registro", json={**datos, "codigo": "villas-2026"}).status_code == 409

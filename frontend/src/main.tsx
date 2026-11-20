@@ -48,8 +48,9 @@ function Capacitacion() {
 function App() {
   const hash = useSyncExternalStore(suscribir, leerHash)
   const location = readHash(hash)
-  const { usuario, cargando, entrar, salir } = useSesion()
+  const { usuario, cargando, entrar, registrar, salir } = useSesion()
   const [grupo, setGrupo] = useState<Coordinator['grupo']>('organico')
+  const [sugerido, setSugerido] = useState('')
   const [recursos, setRecursos] = useState<TrainingResource[]>()
   useEffect(() => {
     if (usuario) void api<Parameters<typeof recursoDe>[0][]>('/contenidos').then((c) => setRecursos(c.map(recursoDe)))
@@ -59,8 +60,16 @@ function App() {
     return <Capacitacion />
   }
   if (cargando) return <Cargando />
-  if (!usuario) return <Entrar onEntrar={entrar} />
+  if (!usuario) return <Entrar key={sugerido} onEntrar={entrar} onRegistrar={registrar} usuarioInicial={sugerido} />
   const coordinador = coordinadorDe(usuario, grupo)
+  // El administrador cambia de equipo aquí mismo; un coordinador cambia de cuenta: sale y entra con la otra.
+  function elegirEquipo(id: string) {
+    const elegido = id as Coordinator['grupo']
+    if (!usuario?.colectivo) return setGrupo(elegido)
+    if (elegido === coordinador.grupo) return
+    setSugerido(elegido === 'organico' ? 'huerteros' : 'recicladores')
+    void salir()
+  }
   return (
     <CoordinatorModule
       key={coordinador.grupo}
@@ -68,8 +77,8 @@ function App() {
       repository={repositorio}
       location={location}
       href={hashLink}
-      demoChoices={usuario.colectivo ? undefined : EQUIPOS}
-      onDemoChoice={(id) => setGrupo(id as Coordinator['grupo'])}
+      demoChoices={EQUIPOS}
+      onDemoChoice={elegirEquipo}
       trainingResources={recursos}
       publicTrainingHref={capacitacionHref}
       extraPages={{

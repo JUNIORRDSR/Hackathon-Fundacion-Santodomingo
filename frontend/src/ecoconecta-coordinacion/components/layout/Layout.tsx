@@ -1,6 +1,5 @@
-import { useEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
-import mainLogo from '../../../../identidad-visual/Logo EcoConecta - Verde bosque.png'
 import villasLogo from '../../../../identidad-visual/Logo villas de san pablo - transparente.png'
 import foundationLogo from '../../../../identidad-visual/Logo Santo Domingo - transparente.png'
 import { groupLabels } from '../../labels'
@@ -8,6 +7,11 @@ import type { EcoLink, EcoPage } from '../../routes'
 import type { Coordinator } from '../../types'
 import { Icon } from '../ui/Icon'
 import type { IconName } from '../ui/Icon'
+import { BrandLogo } from './BrandLogo'
+import { MotionPills } from '../ui/MotionPills'
+import { animateMotion } from '../ui/motion'
+import { useRouteScene } from './useRouteScene'
+import { useBentoMotion } from './useBentoMotion'
 
 const navigation: { page: EcoPage; label: string; icon: IconName }[] = [
   { page: 'inicio', label: 'Inicio', icon: 'dashboard' },
@@ -17,7 +21,6 @@ const navigation: { page: EcoPage; label: string; icon: IconName }[] = [
   { page: 'capacitacion', label: 'Capacitación', icon: 'book' },
   { page: 'habilitar', label: 'Registros', icon: 'user' },
   { page: 'canjes', label: 'Canjes', icon: 'gift' },
-  { page: 'whatsapp', label: 'WhatsApp', icon: 'inbox' },
 ]
 const modulePages: EcoPage[] = ['inicio', 'solicitudes', 'recolecciones', 'recolectores', 'capacitacion']
 
@@ -102,19 +105,40 @@ export function Layout({
 }) {
   const visible = navigation.filter((item) => modulePages.includes(item.page) || extraPages.includes(item.page))
   const main = useRef<HTMLElement>(null)
+  const stage = useRef<HTMLDivElement>(null)
+  const { visiblePage, content } = useRouteScene(
+    page,
+    <>
+      {demo && page !== 'inicio' && page !== 'capacitacion' && (
+        <span className="demo-note">
+          <Icon name="info" /> Modo demo · Los registros son ficticios
+        </span>
+      )}
+      {children}
+    </>,
+    stage,
+  )
+  useBentoMotion(stage, visiblePage)
   const lastPage = useRef(page)
-  useEffect(() => {
-    const content = main.current
-    document.title = 'EcoConecta | ' + (navigation.find((item) => item.page === page)?.label ?? 'Coordinación')
-    if (lastPage.current !== page) {
+  useLayoutEffect(() => {
+    document.title = 'EcoConecta | ' + (navigation.find((item) => item.page === visiblePage)?.label ?? 'WhatsApp')
+    if (lastPage.current !== visiblePage) {
       window.scrollTo(0, 0)
-      content?.querySelector<HTMLElement>('h1')?.focus({ preventScroll: true })
-      lastPage.current = page
+      main.current?.querySelector<HTMLElement>('h1')?.focus({ preventScroll: true })
+      lastPage.current = visiblePage
     }
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const animation = content?.animate?.([{ opacity: 0.86 }, { opacity: 1 }], { duration: 220, easing: 'ease-out' })
+    const element = stage.current
+    if (!element || element.hasAttribute('data-route-transition')) return
+    const animation = animateMotion(
+      element,
+      [
+        { opacity: 0.88, translate: '0 7px', scale: 0.994 },
+        { opacity: 1, translate: '0 0', scale: 1 },
+      ],
+      '--motion-route',
+    )
     return () => animation?.cancel()
-  }, [page])
+  }, [visiblePage])
 
   return (
     <div className="eco-app">
@@ -130,23 +154,17 @@ export function Layout({
       </a>
       <header className="topbar">
         <div className="site-width topbar-inner">
-          <a
-            className="brand-link"
-            href={href({ page: coordinator ? 'inicio' : 'capacitacion' })}
-            aria-label="EcoConecta Villas de San Pablo"
-          >
-            <img src={mainLogo} alt="" width="168" height="56" />
-          </a>
+          <BrandLogo href={href({ page: coordinator ? 'inicio' : 'capacitacion' })} />
           {coordinator && (
             <>
-              <nav className="main-nav" aria-label="Navegación principal">
+              <MotionPills as="nav" className="main-nav" label="Navegación principal" active={page}>
                 {visible.map(({ page: target, label, icon }) => (
                   <a key={target} href={href({ page: target })} aria-current={page === target ? 'page' : undefined}>
                     <Icon name={icon} />
                     <span>{label}</span>
                   </a>
                 ))}
-              </nav>
+              </MotionPills>
               <div className="topbar-actions">
                 <CoordinatorIdentity coordinator={coordinator} choices={choices} onChange={onChange} demo={demo} />
                 {onSignOut && (
@@ -160,13 +178,16 @@ export function Layout({
         </div>
       </header>
       <main id="eco-main" className="site-width main-content" tabIndex={-1} ref={main}>
-        {demo && page !== 'inicio' && page !== 'capacitacion' && (
-          <span className="demo-note">
-            <Icon name="info" /> Modo demo · Los registros son ficticios
-          </span>
-        )}
-        {children}
+        <div className="motion-route-stage" ref={stage}>
+          {content}
+        </div>
       </main>
+      {coordinator && extraPages.includes('whatsapp') && page !== 'whatsapp' && (
+        <a className="whatsapp-fab" href={href({ page: 'whatsapp' })} aria-label="Abrir el monitor de WhatsApp">
+          <Icon name="chat" />
+          <span>WhatsApp</span>
+        </a>
+      )}
       <footer className="site-width site-footer">
         <p>
           EcoConecta <span>·</span> Villas de San Pablo, Barranquilla

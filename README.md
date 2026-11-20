@@ -85,6 +85,7 @@ Los nombres están en [.env.example](.env.example); los valores nunca van al rep
 | `DATABASE_URL` | Conexión a PostgreSQL; en local, si falta, usa la base de `docker-compose.yml` |
 | `CLAVE_SESION` | Firma la cookie de sesión |
 | `CLAVE_DEMO` | Clave de los usuarios de demostración |
+| `CODIGO_REGISTRO` | Código que la fundación da a quien crea su cuenta de coordinación; en local, `villas-2026` (ADR-0009) |
 | `SEMBRAR_DEMO` | `1` carga zonas, encargados, usuarios y contenidos ficticios |
 | `TRANSPORTE` | `simulado` o `twilio` |
 | `CONVERSADOR` | `menu` o `llm` |

@@ -1,32 +1,20 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Bubble, BubbleContent } from '@/components/ui/bubble'
-import { Marker, MarkerContent } from '@/components/ui/marker'
-import { Message, MessageContent, MessageFooter, MessageHeader } from '@/components/ui/message'
-import {
-  MessageScroller,
-  MessageScrollerButton,
-  MessageScrollerContent,
-  MessageScrollerItem,
-  MessageScrollerProvider,
-  MessageScrollerViewport,
-} from '@/components/ui/message-scroller'
 import { EmptyState, ErrorMessage } from '../../ecoconecta-coordinacion/components/ui/Feedback'
+import { Icon } from '../../ecoconecta-coordinacion/components/ui/Icon'
+import { MotionPills } from '../../ecoconecta-coordinacion/components/ui/MotionPills'
 import { api } from '../api'
+import { Hilo } from './Hilo'
+import type { MensajeVista } from './Hilo'
 import type { ConversacionVista } from './Whatsapp'
-import '../../shadcn.css'
 
-interface MensajeVista {
-  direccion: 'entrante' | 'saliente'
-  autor: 'vecino' | 'bot' | 'aviso' | 'coordinacion'
-  texto: string
-  estado: string | null
-  fecha: string
-}
-const AUTOR = { vecino: 'Vecino', bot: 'Bot', aviso: 'Aviso automático', coordinacion: 'Coordinación' }
-const COLOR = { vecino: 'secondary', bot: 'muted', aviso: 'outline', coordinacion: 'default' } as const
-const hora = new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit' })
 const ruta = (telefono: string) => '/whatsapp/conversaciones/' + encodeURIComponent(telefono)
+export const iniciales = (nombre: string | null) =>
+  (nombre ?? '?')
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((parte) => parte.charAt(0).toUpperCase())
+    .join('')
 
 export function Conversacion({
   conversacion,
@@ -58,67 +46,35 @@ export function Conversacion({
     <section className="card monitor-hilo" aria-label="Conversación">
       {conversacion ? (
         <header className="monitor-cabecera">
-          <div>
+          <span className="monitor-avatar" aria-hidden="true">
+            {iniciales(conversacion.nombre)}
+          </span>
+          <div className="monitor-quien">
             <h2>{conversacion.nombre ?? 'Sin registrar'}</h2>
-            <span className="monitor-telefono">{conversacion.telefono}</span>
+            <span className="monitor-estado" data-control={!!conversacion.control}>
+              {conversacion.telefono} · {conversacion.control ? 'Responde la coordinación' : 'Responde el bot'}
+            </span>
           </div>
           {conversacion.control ? (
             <button type="button" className="button button-secondary" onClick={() => void control(false)}>
-              Devolver al bot
+              <Icon name="spark" /> Devolver al bot
             </button>
           ) : (
             <button type="button" className="button button-primary" onClick={() => void control(true)}>
-              Tomar el control
+              <Icon name="user" /> Tomar el control
             </button>
           )}
         </header>
       ) : (
-        <EmptyState title="Elige una conversación" icon="inbox">
-          O escribe abajo como si fueras un vecino para probar el bot.
-        </EmptyState>
+        <div className="monitor-vacio">
+          <EmptyState title="Elige una conversación" icon="chat">
+            O escribe abajo como si fueras un vecino para probar el bot.
+          </EmptyState>
+        </div>
       )}
-      {conversacion && <Hilo mensajes={mensajes} control={conversacion.control} />}
+      {conversacion && <Hilo mensajes={mensajes} control={!!conversacion.control} />}
       <Redactar telefono={telefono} conControl={!!conversacion?.control} alEnviar={refrescar} alSimular={alSimular} />
     </section>
-  )
-}
-
-function Hilo({ mensajes, control }: { mensajes: MensajeVista[]; control: string | null }) {
-  return (
-    <div className="shadcn monitor-mensajes">
-      <MessageScrollerProvider autoScroll>
-        <MessageScroller>
-          <MessageScrollerViewport>
-            <MessageScrollerContent className="flex flex-col gap-3 p-3">
-              {mensajes.map((m, i) => (
-                <MessageScrollerItem key={i} messageId={String(i)} scrollAnchor={m.direccion === 'entrante'}>
-                  <Message align={m.direccion === 'entrante' ? 'start' : 'end'}>
-                    <MessageContent>
-                      <MessageHeader>{AUTOR[m.autor]}</MessageHeader>
-                      <Bubble variant={COLOR[m.autor]} align={m.direccion === 'entrante' ? 'start' : 'end'}>
-                        <BubbleContent className="whitespace-pre-line">{m.texto}</BubbleContent>
-                      </Bubble>
-                      <MessageFooter>
-                        {hora.format(new Date(m.fecha))}
-                        {m.estado === 'fallido' && ' · No se envió'}
-                      </MessageFooter>
-                    </MessageContent>
-                  </Message>
-                </MessageScrollerItem>
-              ))}
-              {control && (
-                <MessageScrollerItem messageId="control">
-                  <Marker variant="separator">
-                    <MarkerContent>La coordinación tiene el control: el bot no responde</MarkerContent>
-                  </Marker>
-                </MessageScrollerItem>
-              )}
-            </MessageScrollerContent>
-          </MessageScrollerViewport>
-          <MessageScrollerButton />
-        </MessageScroller>
-      </MessageScrollerProvider>
-    </div>
   )
 }
 
@@ -138,6 +94,7 @@ function Redactar({
   const [vecino, setVecino] = useState(telefono ?? '+573000000009')
   const [error, setError] = useState('')
   const responder = modo === 'responder'
+  const bloqueado = responder && !conControl
   useEffect(() => setModo(conControl ? 'responder' : 'simular'), [conControl])
 
   async function enviar(event: FormEvent<HTMLFormElement>) {
@@ -155,16 +112,16 @@ function Redactar({
   }
 
   return (
-    <form className="dialog-form" onSubmit={enviar}>
-      <div className="pills" role="group" aria-label="Quién escribe">
-        <button type="button" className="pill" aria-pressed={responder} onClick={() => setModo('responder')}>
-          Responder como coordinación
+    <form className="monitor-redactar" onSubmit={enviar}>
+      <MotionPills className="segmented-control" label="Quién escribe" active={modo}>
+        <button type="button" aria-pressed={responder} onClick={() => setModo('responder')}>
+          Como coordinación
         </button>
-        <button type="button" className="pill" aria-pressed={!responder} onClick={() => setModo('simular')}>
-          Simular un vecino
+        <button type="button" aria-pressed={!responder} onClick={() => setModo('simular')}>
+          Como vecino (prueba)
         </button>
-      </div>
-      <div className="monitor-redactar">
+      </MotionPills>
+      <div className="monitor-campo">
         {!responder && (
           <input
             className="monitor-telefono-input"
@@ -176,12 +133,12 @@ function Redactar({
         <input
           aria-label="Mensaje"
           value={texto}
-          disabled={responder && !conControl}
-          placeholder={responder && !conControl ? 'Toma el control para escribir' : 'Escribe un mensaje'}
+          disabled={bloqueado}
+          placeholder={bloqueado ? 'Toma el control para responder' : 'Escribe un mensaje'}
           onChange={(e) => setTexto(e.target.value)}
         />
-        <button type="submit" className="button button-primary" disabled={!texto.trim() || (responder && !conControl)}>
-          {responder ? 'Enviar' : 'Enviar como vecino'}
+        <button type="submit" className="monitor-enviar" aria-label="Enviar" disabled={!texto.trim() || bloqueado}>
+          <Icon name="send" />
         </button>
       </div>
       {error && <ErrorMessage message={error} />}

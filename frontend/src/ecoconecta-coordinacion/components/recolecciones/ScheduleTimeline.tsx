@@ -1,12 +1,14 @@
-import { useId, useState, useSyncExternalStore } from 'react'
+import { useId, useRef, useState, useSyncExternalStore } from 'react'
 import type { CSSProperties } from 'react'
 import { formatDay, isLocalDate, shiftDate, statusLabels, timeMinutes } from '../../labels'
 import type { Collector, LocalDate, Request } from '../../types'
-import { StatusBadge } from '../solicitudes/RequestList'
 import { EmptyState } from '../ui/Feedback'
 import { Icon } from '../ui/Icon'
-import { getCollectorNames, getTimelineData, initials } from './timelineData'
+import { MotionPills } from '../ui/MotionPills'
+import { getCollectorNames, getTimelineData } from './timelineData'
 import type { PlannedRequest } from './timelineData'
+import { useTimelineMotion } from './useTimelineMotion'
+import { AgendaList, CollectorAvatar } from './AgendaList'
 
 type View = 'timeline' | 'agenda'
 const compactQuery = '(max-width: 730px)'
@@ -18,54 +20,22 @@ function subscribeToWidth(callback: () => void) {
   return () => query.removeEventListener('change', callback)
 }
 
-function CollectorAvatar({ name }: { name: string }) {
-  return (
-    <span className="collector-avatar" aria-hidden="true">
-      {initials(name)}
-    </span>
-  )
-}
-
-function AgendaList({
-  requests,
-  names,
-  onSelect,
-}: {
-  requests: PlannedRequest[]
-  names: Map<string, string>
-  onSelect: (item: Request) => void
-}) {
-  return (
-    <ul className="timeline-agenda">
-      {requests.map((item) => (
-        <li key={item.id}>
-          <button type="button" className="agenda-task" onClick={() => onSelect(item)}>
-            <span className="agenda-hour">{item.asignacion.hora ?? 'Sin hora'}</span>
-            <span className="agenda-detail">
-              <strong>{item.solicitante}</strong>
-              <span>
-                {names.get(item.asignacion.recolectorId)} · {item.ubicacion}
-              </span>
-            </span>
-            <StatusBadge status={item.estado} />
-          </button>
-        </li>
-      ))}
-    </ul>
-  )
-}
-
 function TimelineGrid({
   requests,
   names,
   clock,
+  selectedId,
   onSelect,
 }: {
   requests: PlannedRequest[]
   names: Map<string, string>
   clock?: string
+  selectedId?: string
   onSelect: (item: Request) => void
 }) {
+  const canvas = useRef<HTMLDivElement>(null)
+  const layout = JSON.stringify(requests.map(({ id, asignacion }) => [id, asignacion.recolectorId, asignacion.hora]))
+  useTimelineMotion(canvas, layout)
   const { byCollector, withoutTime, start, end, range, ticks } = getTimelineData(requests)
   const now = timeMinutes(clock)
   const visibleNow = now !== undefined && now >= start && now <= end ? now : undefined
@@ -75,7 +45,7 @@ function TimelineGrid({
     <>
       {byCollector.size > 0 && (
         <div className="timeline-scroll" role="region" aria-label="Cronograma por hora" tabIndex={0}>
-          <div className="timeline-canvas">
+          <div className="timeline-canvas" ref={canvas}>
             <div className="timeline-axis">
               <span>Recolector</span>
               <div className="timeline-track">
@@ -119,6 +89,9 @@ function TimelineGrid({
                               key={request.id}
                               type="button"
                               className={'timeline-task timeline-task-' + request.estado}
+                              aria-haspopup="dialog"
+                              data-selected={selectedId === request.id}
+                              data-timeline-task={request.id}
                               aria-label={label}
                               title={label}
                               style={{ '--task-position': position(minute) } as CSSProperties}
@@ -152,7 +125,7 @@ function TimelineGrid({
       {withoutTime.length > 0 && (
         <div className="timeline-unscheduled">
           <h3>Recolecciones sin hora</h3>
-          <AgendaList requests={withoutTime} names={names} onSelect={onSelect} />
+          <AgendaList requests={withoutTime} names={names} selectedId={selectedId} onSelect={onSelect} />
         </div>
       )}
     </>
@@ -206,12 +179,14 @@ export function ScheduleTimeline({
   collectors,
   today,
   clock,
+  selectedId,
   onSelect,
 }: {
   planned: PlannedRequest[]
   collectors: Collector[]
   today: LocalDate
   clock: string
+  selectedId?: string
   onSelect: (item: Request) => void
 }) {
   const headingId = useId()
@@ -237,14 +212,14 @@ export function ScheduleTimeline({
             {date === today ? ' · ' + clock + ' en Barranquilla' : ''}
           </p>
         </div>
-        <div className="segmented-control" role="group" aria-label="Vista de la planificación">
+        <MotionPills className="segmented-control" label="Vista de la planificación" active={view}>
           <button type="button" aria-pressed={view === 'timeline'} onClick={() => setSelectedView('timeline')}>
             Cronograma
           </button>
           <button type="button" aria-pressed={view === 'agenda'} onClick={() => setSelectedView('agenda')}>
             Agenda
           </button>
-        </div>
+        </MotionPills>
       </div>
       <div className="timeline-toolbar">
         <DateSelector date={date} today={today} onChange={setSelectedDate} />
@@ -264,18 +239,19 @@ export function ScheduleTimeline({
           <Icon name="chevron" />
         </div>
       </div>
-      <div className="view-content" key={view}>
+      <div className="view-content" key={JSON.stringify([view, date, collectorId])}>
         {visible.length === 0 ? (
           <EmptyState title="Sin recolecciones para este día" icon="calendar">
             Elige otra fecha o cambia el filtro de recolector.
           </EmptyState>
         ) : view === 'agenda' ? (
-          <AgendaList requests={visible} names={names} onSelect={onSelect} />
+          <AgendaList requests={visible} names={names} selectedId={selectedId} onSelect={onSelect} />
         ) : (
           <TimelineGrid
             requests={visible}
             names={names}
             clock={date === today ? clock : undefined}
+            selectedId={selectedId}
             onSelect={onSelect}
           />
         )}

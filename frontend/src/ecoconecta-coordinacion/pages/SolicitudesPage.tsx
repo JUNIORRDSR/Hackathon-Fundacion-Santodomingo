@@ -6,6 +6,7 @@ import { PageHeader } from '../components/layout/Layout'
 import { RequestList } from '../components/solicitudes/RequestList'
 import { EmptyState } from '../components/ui/Feedback'
 import { Icon } from '../components/ui/Icon'
+import { MotionPills } from '../components/ui/MotionPills'
 
 const filters: { label: string; value: 'todas' | RequestStatus }[] = [
   { label: 'Todas', value: 'todas' },
@@ -52,7 +53,7 @@ export function SolicitudesPage({
         description={'Consulta y asigna las solicitudes de ' + wasteLabels[group].toLowerCase() + '.'}
       />
       <div className="filter-bar">
-        <nav className="pills" aria-label="Filtrar por estado">
+        <MotionPills as="nav" className="pills" label="Filtrar por estado" active={current}>
           {filters.map(({ label, value }) => (
             <a
               key={value}
@@ -63,7 +64,7 @@ export function SolicitudesPage({
               {label}
             </a>
           ))}
-        </nav>
+        </MotionPills>
         <div className="search-field">
           <Icon name="search" />
           <label htmlFor="eco-request-search" className="sr-only">

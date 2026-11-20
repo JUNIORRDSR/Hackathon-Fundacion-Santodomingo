@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Despliegue de EcoConecta en Azure (ADR-0005). Lo corre Leonardo con su suscripción. Sin probar todavía: la primera
 # vez, revisa cada comando con --help. Requisitos: az login y az extension add --name containerapp
-# Uso, desde la raíz del repo: CLAVE_SESION=... CLAVE_DEMO=... CLAVE_BD=... bash deploy/azure.sh
+# Uso, desde la raíz del repo: CLAVE_SESION=... CLAVE_DEMO=... CODIGO_REGISTRO=... CLAVE_BD=... bash deploy/azure.sh
 set -euo pipefail
 
 GRUPO="${GRUPO:-rg-ecoconecta}"
@@ -11,6 +11,7 @@ ENTORNO_ACA="${ENTORNO_ACA:-ecoconecta-env}"
 SERVIDOR_BD="${SERVIDOR_BD:-ecoconecta-pg}"  # debe ser único en todo Azure
 : "${CLAVE_SESION:?Define CLAVE_SESION: una cadena larga y aleatoria}"
 : "${CLAVE_DEMO:?Define CLAVE_DEMO: la clave de los usuarios de demostración}"
+: "${CODIGO_REGISTRO:?Define CODIGO_REGISTRO: el código que la fundación da a quien crea una cuenta}"
 : "${CLAVE_BD:?Define CLAVE_BD: la clave de PostgreSQL, sin @ : / ni # porque va dentro de la URL}"
 
 az group create --name "$GRUPO" --location "$REGION" --output none
@@ -27,10 +28,10 @@ az containerapp up --name "$APP" --resource-group "$GRUPO" --location "$REGION" 
 
 # Secretos fuera del repo; la app los lee como variables de entorno. Una réplica evita arranques en frío en la demo.
 az containerapp secret set --name "$APP" --resource-group "$GRUPO" \
-  --secrets "clave-sesion=$CLAVE_SESION" "clave-demo=$CLAVE_DEMO" "url-bd=$URL_BD"
+  --secrets "clave-sesion=$CLAVE_SESION" "clave-demo=$CLAVE_DEMO" "codigo-registro=$CODIGO_REGISTRO" "url-bd=$URL_BD"
 az containerapp update --name "$APP" --resource-group "$GRUPO" --min-replicas 1 --max-replicas 1 \
   --set-env-vars ENTORNO=produccion SEMBRAR_DEMO=1 CLAVE_SESION=secretref:clave-sesion \
-  CLAVE_DEMO=secretref:clave-demo DATABASE_URL=secretref:url-bd
+  CLAVE_DEMO=secretref:clave-demo CODIGO_REGISTRO=secretref:codigo-registro DATABASE_URL=secretref:url-bd
 
 # WhatsApp real (opcional): con TWILIO_AUTH_TOKEN definido, la app usa Twilio en lugar del simulador.
 if [[ -n "${TWILIO_AUTH_TOKEN:-}" ]]; then

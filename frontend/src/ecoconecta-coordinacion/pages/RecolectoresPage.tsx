@@ -15,7 +15,7 @@ export function RecolectoresPage({
   collectors: Collector[]
   zones: Zone[]
   group: WasteType
-  onSave: (input: CollectorInput, id?: string) => Promise<void>
+  onSave: (input: CollectorInput, id?: string) => Promise<() => void>
 }) {
   const [editing, setEditing] = useState<Collector | 'new' | null>(null)
   return (
@@ -74,10 +74,7 @@ export function RecolectoresPage({
           collector={editing === 'new' ? undefined : editing}
           zones={zones}
           onClose={() => setEditing(null)}
-          onSave={async (input, id) => {
-            await onSave(input, id)
-            setEditing(null)
-          }}
+          onSave={onSave}
         />
       )}
     </>

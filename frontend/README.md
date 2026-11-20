@@ -17,7 +17,9 @@ npm run build      # sitio estático en dist/, el que sirve la imagen de Docker
 npx prettier --write "src/**/*.{ts,tsx}"
 ```
 
-Usuarios de la demo: `huerteros`, `recicladores` y `admin`, todos con la clave `ecoconecta-demo`. El coordinador ve
+Usuarios de la demo: `huerteros`, `recicladores` y `admin`, todos con la clave `ecoconecta-demo`. En **Crear cuenta**
+se crea otra coordinación con el código de la fundación (`villas-2026` en local, ADR-0009). Las animaciones
+(logo, transiciones y pastillas) son de Daniela y respetan `prefers-reduced-motion`. El coordinador ve
 solo su colectivo; el administrador cambia de equipo con el selector junto a su nombre.
 
 ## Probar la demo
@@ -30,7 +32,7 @@ solo su colectivo; el administrador cambia de equipo con el selector junto a su 
 4. En **Recolectores**, agrega o edita encargados, sus zonas del catálogo y si están activos.
 5. **Registros**: quienes se registraron por WhatsApp y esperan habilitación. **Canjes**: el vecino muestra su código
    CAN, se entrega el premio y se descuentan los puntos; abajo, el catálogo de premios (lo edita la administración).
-6. **WhatsApp**: el monitor del bot. Simula un vecino, mira lo que responde el bot, toma el control para responder tú y
+6. **WhatsApp** (botón flotante abajo a la derecha): el monitor del bot. Simula un vecino, mira lo que responde el bot, toma el control para responder tú y
    devuélvelo al bot.
 7. **Capacitación** y su vista pública `#/capacitacion?publica=1`, que funciona sin sesión.
 

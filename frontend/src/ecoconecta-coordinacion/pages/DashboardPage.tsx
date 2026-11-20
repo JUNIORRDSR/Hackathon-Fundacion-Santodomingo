@@ -147,11 +147,13 @@ export function DashboardPage({
   requests,
   collectors,
   href,
+  selectedId,
   onSelect,
 }: {
   requests: Request[]
   collectors: Collector[]
   href: EcoLink
+  selectedId?: string
   onSelect: (item: Request) => void
 }) {
   const [clock, setClock] = useState(localTime)
@@ -195,7 +197,14 @@ export function DashboardPage({
         ))}
       </section>
       <div className="dashboard-bento">
-        <ScheduleTimeline planned={planned} collectors={collectors} today={today} clock={clock} onSelect={onSelect} />
+        <ScheduleTimeline
+          planned={planned}
+          collectors={collectors}
+          today={today}
+          clock={clock}
+          selectedId={selectedId}
+          onSelect={onSelect}
+        />
         <NextCollection
           planned={planned}
           collectors={collectors}

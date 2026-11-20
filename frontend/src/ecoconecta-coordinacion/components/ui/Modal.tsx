@@ -2,6 +2,8 @@ import { useEffect, useId, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { Icon } from './Icon'
 
+export type CloseModal = (after?: () => void) => Promise<void>
+
 export function Modal({
   title,
   children,
@@ -9,12 +11,14 @@ export function Modal({
   busy = false,
 }: {
   title: string
-  children: ReactNode
+  children: (close: CloseModal) => ReactNode
   onClose: () => void
   busy?: boolean
 }) {
   const id = useId()
   const dialog = useRef<HTMLDialogElement>(null)
+  const content = useRef<HTMLDivElement>(null)
+  const closing = useRef(false)
 
   useEffect(() => {
     const element = dialog.current
@@ -31,6 +35,19 @@ export function Modal({
     }
   }, [])
 
+  const close: CloseModal = async (after) => {
+    if (closing.current) return
+    closing.current = true
+    const element = dialog.current
+    if (element?.isConnected) {
+      element.dataset.closing = 'true'
+      if (content.current) content.current.inert = true
+      await Promise.allSettled(element.getAnimations?.().map((animation) => animation.finished) ?? [])
+    }
+    after?.()
+    if (element?.isConnected) onClose()
+  }
+
   return (
     <dialog
       ref={dialog}
@@ -38,17 +55,23 @@ export function Modal({
       aria-labelledby={id}
       onCancel={(event) => {
         event.preventDefault()
-        if (!busy) onClose()
+        if (!busy) void close()
       }}
     >
-      <div className="dialog-content">
+      <div ref={content} className="dialog-content">
         <div className="dialog-header">
           <h2 id={id}>{title}</h2>
-          <button type="button" className="icon-button" aria-label="Cerrar" onClick={onClose} disabled={busy}>
+          <button
+            type="button"
+            className="icon-button"
+            aria-label="Cerrar"
+            onClick={() => void close()}
+            disabled={busy}
+          >
             <Icon name="close" />
           </button>
         </div>
-        {children}
+        {children(close)}
       </div>
     </dialog>
   )

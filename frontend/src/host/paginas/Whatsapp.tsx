@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { PageHeader } from '../../ecoconecta-coordinacion/components/layout/Layout'
 import { EmptyState } from '../../ecoconecta-coordinacion/components/ui/Feedback'
 import { api } from '../api'
@@ -10,6 +10,7 @@ export interface ConversacionVista {
   control: string | null
   ultimo: string
   fecha: string
+  sin_leer: number
 }
 
 // El monitor reemplaza al simulador: se ve lo que hace el bot y se puede tomar el control (ADR-0007).
@@ -19,13 +20,26 @@ const hora = new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', hour
 export function Whatsapp() {
   const [conversaciones, setConversaciones] = useState<ConversacionVista[]>([])
   const [elegido, setElegido] = useState<string>()
+  const solicitud = useRef<AbortController | null>(null)
   const cargar = useCallback(() => {
-    void api<ConversacionVista[]>('/whatsapp/conversaciones').then(setConversaciones)
+    solicitud.current?.abort()
+    const actual = new AbortController()
+    solicitud.current = actual
+    void api<ConversacionVista[]>('/whatsapp/conversaciones', 'GET', undefined, actual.signal)
+      .then((datos) => {
+        if (!actual.signal.aborted) setConversaciones(datos)
+      })
+      .catch(() => {
+        // El siguiente refresco vuelve a intentar la carga.
+      })
   }, [])
   useEffect(() => {
     cargar()
     const intervalo = window.setInterval(cargar, REFRESCO_MS)
-    return () => window.clearInterval(intervalo)
+    return () => {
+      window.clearInterval(intervalo)
+      solicitud.current?.abort()
+    }
   }, [cargar])
   const actual = conversaciones.find((c) => c.telefono === elegido)
 
@@ -48,7 +62,12 @@ export function Whatsapp() {
             <ul>
               {conversaciones.map((c) => (
                 <li key={c.telefono}>
-                  <button type="button" aria-pressed={c.telefono === elegido} onClick={() => setElegido(c.telefono)}>
+                  <button
+                    type="button"
+                    aria-pressed={c.telefono === elegido}
+                    data-sin-leer={c.sin_leer > 0}
+                    onClick={() => setElegido(c.telefono)}
+                  >
                     <span className="monitor-avatar" aria-hidden="true">
                       {iniciales(c.nombre)}
                     </span>
@@ -57,7 +76,17 @@ export function Whatsapp() {
                         <strong>{c.nombre ?? 'Sin registrar'}</strong>
                         <time dateTime={c.fecha}>{hora.format(new Date(c.fecha))}</time>
                       </span>
-                      <span className="monitor-ultimo">{c.ultimo.replace(/\*/g, '')}</span>
+                      <span className="monitor-previa">
+                        <span className="monitor-ultimo">{c.ultimo.replace(/\*/g, '')}</span>
+                        {c.sin_leer > 0 && (
+                          <span className="monitor-sin-leer">
+                            <span aria-hidden="true">{c.sin_leer}</span>
+                            <span className="sr-only">
+                              {c.sin_leer} {c.sin_leer === 1 ? 'mensaje sin leer' : 'mensajes sin leer'}
+                            </span>
+                          </span>
+                        )}
+                      </span>
                       {c.control && <span className="monitor-insignia">Coordinación al mando</span>}
                     </span>
                   </button>

@@ -4,6 +4,7 @@ import hashlib
 import hmac
 from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
+from urllib.error import HTTPError
 from urllib.parse import parse_qsl, urlencode
 from xml.etree import ElementTree
 
@@ -12,7 +13,8 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.modulos.directorio import contrato as directorio
-from app.modulos.whatsapp import bot, transporte_twilio
+from app.modulos.whatsapp import bot, monitor, transporte_twilio
+from app.modulos.whatsapp.contrato import MensajeSaliente
 from app.modulos.whatsapp.transporte_twilio import TransporteTwilio
 
 RUTA = "/api/whatsapp/twilio"
@@ -40,6 +42,7 @@ def cliente_twilio(monkeypatch, request):
         "WHATSAPP_CONTACT_ALIASES": f"{ALIAS}={TELEFONO_ALIAS}, {ALIAS_PORTAFOLIO}={TELEFONO_ALIAS}",
         "WHATSAPP_PILOT_NUMBERS": ",".join(telefonos),
         "TWILIO_RESPUESTA_TWIML": "1" if getattr(request, "param", False) else "0",
+        "TWILIO_COORDINACION_EN_WEBHOOK": "1" if getattr(request, "param", False) == "cola" else "0",
     }
     for nombre, valor in valores.items():
         monkeypatch.setenv(nombre, valor)
@@ -162,3 +165,50 @@ def test_aviso_de_solicitud_sale_en_twiml_y_habilitacion_fuera_del_webhook_sale_
     mensaje, = ElementTree.fromstring(respuesta.content).findall("Message")
     assert "Recibimos tu solicitud ORG-" in "".join(mensaje.itertext())
     assert salidas == [aviso_habilitacion]
+
+
+@pytest.mark.parametrize("cliente_twilio", ["cola"], indirect=True)
+def test_la_coordinacion_en_cola_se_entrega_en_twiml_por_orden_y_sin_repetir(cliente_twilio):
+    cliente, salidas = cliente_twilio
+    monitor.tomar_control(TELEFONO_TWIML, "Prueba")
+    textos = [f"Respuesta de coordinación {i}" for i in range(11)]
+    for texto in textos:
+        mensaje = MensajeSaliente(telefono=TELEFONO_TWIML, texto=texto)
+        assert bot.enviar_coordinacion(mensaje) == "en_cola"
+    assert not salidas
+
+    ajena = _entregar(cliente, _parametros(TELEFONO, 20))
+    assert not any(texto in ajena.text for texto in textos)
+    parametros = _parametros(TELEFONO_TWIML, 21)
+    assert _entregar(cliente, parametros, "firma-incorrecta").status_code == 403
+    assert _cuerpos_twiml(_entregar(cliente, parametros)) == textos[:10]
+    assert _cuerpos_twiml(_entregar(cliente, parametros)) == []
+    assert _cuerpos_twiml(_entregar(cliente, _parametros(TELEFONO_TWIML, 22))) == textos[10:]
+    coordinacion = [m for m in monitor.mensajes_de(TELEFONO_TWIML) if m.autor == "coordinacion"]
+    assert [m.texto for m in coordinacion] == textos
+    assert all(m.estado == "emitido" for m in coordinacion)
+    assert not salidas
+
+
+def _cuerpos_twiml(respuesta) -> list[str]:
+    assert respuesta.status_code == 200
+    return ["".join(m.itertext()) for m in ElementTree.fromstring(respuesta.content).findall("Message")]
+
+
+def test_la_cola_requiere_respuestas_twiml(cliente_twilio, monkeypatch):
+    monkeypatch.setenv("TWILIO_COORDINACION_EN_WEBHOOK", "1")
+    with pytest.raises(RuntimeError, match="requiere TWILIO_RESPUESTA_TWIML"):
+        TransporteTwilio.desde_entorno()
+
+
+def test_rest_registra_el_fallo_sin_datos_del_mensaje(cliente_twilio, monkeypatch, caplog):
+    def rechazar(pedido, *, timeout):
+        cuerpo = BytesIO(b'{"code":0,"message":"datos privados del proveedor"}')
+        raise HTTPError(pedido.full_url, 400, "Bad Request", {}, cuerpo)
+
+    monkeypatch.setattr(transporte_twilio.urllib.request, "urlopen", rechazar)
+    mensaje = MensajeSaliente(telefono=TELEFONO_AVISOS, texto="Mensaje ficticio")
+    assert bot.enviar_coordinacion(mensaje) == "fallido"
+    assert monitor.mensajes_de(TELEFONO_AVISOS)[-1].estado == "fallido"
+    assert "HTTP 400, código 0" in caplog.text
+    assert "datos privados del proveedor" not in caplog.text

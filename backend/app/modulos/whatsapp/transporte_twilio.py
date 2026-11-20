@@ -1,10 +1,12 @@
 """Transporte de WhatsApp: autentica webhooks de Twilio y entrega respuestas y avisos."""
 import base64
+import json
 import os
 import re
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field
+from urllib.error import HTTPError
 
 from starlette.datastructures import FormData
 from twilio.request_validator import RequestValidator
@@ -23,6 +25,13 @@ SID_MENSAJE = re.compile(r"(?:SM|MM)[0-9a-fA-F]{32}")
 PREFIJO = "whatsapp:"
 
 
+class ErrorEnvioTwilio(RuntimeError):
+    def __init__(self, http: int, codigo: int | None):
+        super().__init__("Twilio rechazó el envío")
+        self.http = http
+        self.codigo = codigo
+
+
 @dataclass(frozen=True)
 class TransporteTwilio:
     cuenta: str
@@ -32,6 +41,7 @@ class TransporteTwilio:
     alias: dict[str, str] = field(default_factory=dict)
     telefonos_piloto: frozenset[str] = frozenset()
     respuesta_twiml: bool = False
+    coordinacion_en_webhook: bool = False
 
     @classmethod
     def desde_entorno(cls) -> "TransporteTwilio":
@@ -40,8 +50,12 @@ class TransporteTwilio:
             raise RuntimeError("TWILIO_ACCOUNT_SID debe contener el SID de la cuenta de Twilio.")
         if not remitente.startswith(PREFIJO) or not TELEFONO.fullmatch(remitente.removeprefix(PREFIJO)):
             raise RuntimeError("TWILIO_WHATSAPP_FROM debe contener whatsapp: seguido del teléfono en formato E.164.")
+        twiml = os.getenv("TWILIO_RESPUESTA_TWIML", "").strip() == "1"
+        coordinacion_en_webhook = os.getenv("TWILIO_COORDINACION_EN_WEBHOOK", "").strip() == "1"
+        if coordinacion_en_webhook and not twiml:
+            raise RuntimeError("TWILIO_COORDINACION_EN_WEBHOOK requiere TWILIO_RESPUESTA_TWIML=1.")
         return cls(cuenta, token, remitente, _url_publica(url), _alias_configurados(), _telefonos_piloto(),
-                   respuesta_twiml=os.getenv("TWILIO_RESPUESTA_TWIML", "").strip() == "1")
+                   respuesta_twiml=twiml, coordinacion_en_webhook=coordinacion_en_webhook)
 
     def firma_valida(self, parametros: FormData, firma: str) -> bool:
         if not FIRMA.fullmatch(firma):
@@ -72,8 +86,13 @@ class TransporteTwilio:
         credencial = base64.b64encode(f"{self.cuenta}:{self.token}".encode()).decode()
         pedido = urllib.request.Request(MENSAJES.format(cuenta=self.cuenta), urllib.parse.urlencode(datos).encode(),
                                         {"Authorization": f"Basic {credencial}"})
-        with urllib.request.urlopen(pedido, timeout=10) as respuesta:
-            respuesta.read()
+        try:
+            with urllib.request.urlopen(pedido, timeout=10) as respuesta:
+                respuesta.read()
+        except HTTPError as error:
+            with error:
+                codigo = _codigo_error(error)
+            raise ErrorEnvioTwilio(error.code, codigo) from None
 
     @staticmethod
     def serializar_twiml(mensajes: list[MensajeSaliente]) -> str:
@@ -87,6 +106,15 @@ class TransporteTwilio:
             else:
                 respuesta.message(mensaje.texto)
         return str(respuesta)
+
+
+def _codigo_error(respuesta: HTTPError) -> int | None:
+    try:
+        cuerpo = json.loads(respuesta.read(4096))
+    except (OSError, ValueError):
+        return None
+    codigo = cuerpo.get("code") if isinstance(cuerpo, dict) else None
+    return codigo if type(codigo) is int else None
 
 
 def _variable(nombre: str) -> str:

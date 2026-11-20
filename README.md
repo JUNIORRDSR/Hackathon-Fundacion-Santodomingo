@@ -71,6 +71,11 @@ En el Sandbox clásico, `TWILIO_RESPUESTA_TWIML=1` devuelve las respuestas inmed
 incluidos los avisos generados por ese turno para el remitente. Los avisos posteriores del coordinador usan
 la API de Twilio.
 
+Si la cuenta Trial rechaza el texto libre por API, `TWILIO_COORDINACION_EN_WEBHOOK=1` deja las respuestas
+del monitor en cola y las entrega por TwiML la próxima vez que el vecino escriba. Actívalo junto con
+`TWILIO_RESPUESTA_TWIML=1`. Un remitente que admite texto libre por API puede enviar desde el monitor
+sin esperar otro mensaje del vecino.
+
 El [prototipo TypeScript](modules/whatsapp-recoleccion/README.md) queda como referencia histórica. Las pruebas y el
 desarrollo del canal se hacen en `backend/app/modulos/whatsapp/` y en el monitor del frontend.
 

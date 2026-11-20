@@ -24,7 +24,10 @@ az group create --name "$GRUPO" --location "$REGION" --output none
 # PostgreSQL gestionado. 0.0.0.0 abre el firewall solo a los servicios de Azure.
 az postgres flexible-server create --resource-group "$GRUPO" --name "$SERVIDOR_BD" --location "$REGION" \
   --tier Burstable --sku-name Standard_B1ms --storage-size 32 --version 16 \
-  --admin-user ecoconecta --admin-password "$CLAVE_BD" --database-name ecoconecta --public-access 0.0.0.0 --yes
+  --admin-user ecoconecta --admin-password "$CLAVE_BD" --public-access 0.0.0.0 --yes --output none
+# Desde la CLI 2.93, --database-name en create solo aplica a clústeres elásticos: la base se crea aparte.
+az postgres flexible-server db create --resource-group "$GRUPO" --server-name "$SERVIDOR_BD" --name ecoconecta \
+  --output none
 URL_BD="postgresql+psycopg://ecoconecta:$CLAVE_BD@$SERVIDOR_BD.postgres.database.azure.com:5432/ecoconecta?sslmode=require"
 
 # Construye la imagen en Azure (ACR) desde el Dockerfile y crea o actualiza la app con HTTPS público.

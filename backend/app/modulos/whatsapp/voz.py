@@ -1,8 +1,9 @@
-"""Notas de voz (ADR-0012): Whisper de Azure OpenAI las vuelve texto y el turno sigue como si la persona lo hubiera
+"""Notas de voz (ADR-0013): Whisper de Azure OpenAI las vuelve texto y el turno sigue como si la persona lo hubiera
 escrito. Solo de vecinos habilitados: antes de autorizar sus datos, su voz no se envía a nadie (Ley 1581)."""
 import json
 import logging
 import os
+import urllib.parse
 import urllib.request
 import uuid
 
@@ -18,6 +19,7 @@ NUMEROS = {"uno": "1", "una": "1", "dos": "2", "tres": "3", "cuatro": "4", "cinc
            "ocho": "8", "nueve": "9"}
 EXTENSIONES = {"audio/ogg": ".ogg", "audio/mpeg": ".mp3", "audio/mp4": ".m4a", "audio/wav": ".wav",
                "audio/x-wav": ".wav", "audio/webm": ".webm"}
+VERSION_AZURE = "2024-06-01"  # la API v1 de Azure no enruta Whisper (404): se usa la ruta clásica del despliegue
 
 
 def activa() -> bool:
@@ -44,10 +46,20 @@ def transcribir(audio: bytes, tipo: str) -> str:
     campos = {"model": os.environ["TRANSCRIPCION_MODELO"], "language": "es", "prompt": VOCABULARIO,
               "response_format": "json"}
     cuerpo, tipo_cuerpo = _formulario(audio, tipo, campos)
-    url = (os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1/").rstrip("/") + "/audio/transcriptions"
-    cabeceras = {"Authorization": f"Bearer {os.environ['OPENAI_API_KEY']}", "Content-Type": tipo_cuerpo}
+    url, credencial = _destino(campos["model"])
+    cabeceras = {**credencial, "Content-Type": tipo_cuerpo}
     with urllib.request.urlopen(urllib.request.Request(url, cuerpo, cabeceras), timeout=TIEMPO_MAXIMO) as respuesta:
         return json.load(respuesta)["text"]
+
+
+def _destino(despliegue: str) -> tuple[str, dict[str, str]]:
+    """Azure atiende Whisper en la ruta clásica del despliegue, con api-key; OpenAI, en la API v1."""
+    base, clave = os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1/", os.environ["OPENAI_API_KEY"]
+    partes = urllib.parse.urlparse(base)
+    if (partes.hostname or "").endswith(".azure.com"):
+        ruta = f"/openai/deployments/{despliegue}/audio/transcriptions?api-version={VERSION_AZURE}"
+        return f"{partes.scheme}://{partes.hostname}{ruta}", {"api-key": clave}
+    return base.rstrip("/") + "/audio/transcriptions", {"Authorization": f"Bearer {clave}"}
 
 
 def como_opcion(texto: str) -> str:

@@ -36,6 +36,8 @@ español; el inglés queda solo para los tipos del framework.
 | Veredicto | Resultado de la revisión: bien separado, mal separado o no concluyente | `Veredicto` |
 | Problema de separación | Lo que la revisión le explica a la persona, como comida entre los reciclables | `Problema` |
 | Ordinario | Lo que no se recoge en ningún flujo: papel higiénico, servilletas usadas, pañales | `Problema.ORDINARIO_MEZCLADO` |
+| Nota de voz | Audio que manda un vecino habilitado: se vuelve texto y el bot responde como si lo hubiera escrito | `voz.responder` |
+| Salvaguardas | Límites a lo que entra y sale de los modelos: filtros de Azure y reglas del código (ADR-0013) | `adjuntos.py` |
 
 ## Términos que no se usan
 

@@ -1,4 +1,4 @@
-"""Adjuntos de WhatsApp (ADR-0012): se descargan solo de Twilio por HTTPS o de un data: del simulador, y se reparten
+"""Adjuntos de WhatsApp (ADR-0013): se descargan solo de Twilio por HTTPS o de un data: del simulador, y se reparten
 por tipo: las fotos van a revisión (ADR-0011) y las notas de voz se vuelven texto para el conversador."""
 import base64
 import logging

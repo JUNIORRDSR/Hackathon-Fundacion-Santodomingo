@@ -106,6 +106,9 @@ if [[ -n "${OPENAI_API_KEY:-}" ]]; then
   if [[ -n "${CLASIFICACION_MODELO:-}" ]]; then
     VARIABLES+=("CLASIFICACION_MODELO=$CLASIFICACION_MODELO" "CLASIFICACION_ACTIVA=${CLASIFICACION_ACTIVA:-true}")
   fi
+  if [[ -n "${TRANSCRIPCION_MODELO:-}" ]]; then
+    VARIABLES+=("TRANSCRIPCION_MODELO=$TRANSCRIPCION_MODELO")  # notas de voz (ADR-0013)
+  fi
 fi
 
 # La base se reinicia una sola vez por sello: la app lo guarda y no vuelve a borrar si se reinicia (ADR-0012).

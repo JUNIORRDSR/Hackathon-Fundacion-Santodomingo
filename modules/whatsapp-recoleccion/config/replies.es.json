@@ -1,0 +1,22 @@
+{
+  "maxCharacters": 700,
+  "messages": {
+    "menu": "Hola, somos EcoConecta. ¿Qué residuos quieres que recojamos?\n1. Orgánicos, como cáscaras y restos de frutas.\n2. Reciclables, como papel, cartón o botellas limpias.",
+    "askGenerator": "¿Desde dónde pides la recolección?\n1. Hogar\n2. Negocio o unidad productiva",
+    "askAddress": "Usaremos tu número y los datos de esta solicitud para coordinar la recolección. Escribe la dirección o una referencia para encontrar el lugar. Usa hasta 120 caracteres.",
+    "askAvailability": "¿Qué día o franja horaria te sirve? Usa hasta 80 caracteres. El equipo confirmará el horario.",
+    "askNotes": "¿Qué más debemos saber? Puedes indicar la cantidad de bolsas. Usa hasta 160 caracteres o escribe NINGUNA.",
+    "confirm": "Revisa tu solicitud:\nResiduos: {{wasteType}}\nLugar: {{generatorType}}\nDirección: {{address}}\nDisponibilidad: {{availability}}\nObservaciones: {{notes}}\n\nEscribe SÍ para enviar los datos al equipo de recolección o CANCELAR para empezar de nuevo.",
+    "received": "Recibimos tu solicitud {{id}}. El equipo revisará tu disponibilidad y confirmará la visita. Escribe ESTADO para ver el último registro.",
+    "simulated": "Esta es una prueba de EcoConecta. Referencia {{id}}. No se ha solicitado una visita real.",
+    "lastRequest": "Tu última solicitud registrada por este chat es {{id}}. Es el comprobante de recepción.",
+    "lastSimulated": "Tu última prueba en EcoConecta tiene la referencia {{id}}.",
+    "noRequest": "Aún no hay una solicitud registrada en este chat. Escribe MENÚ para continuar.",
+    "cancelled": "Descartamos el borrador. Escribe MENÚ si quieres pedir otra recolección.",
+    "nothingToCancel": "No tienes un borrador abierto. Escribe MENÚ para continuar.",
+    "textOnly": "Envíanos tu respuesta como texto. Escribe MENÚ si quieres retomar la solicitud.",
+    "invalidConfirmation": "Escribe SÍ para enviar la solicitud, CANCELAR para descartarla o MENÚ para revisar los datos.",
+    "serviceUnavailable": "No pudimos confirmar la recepción. Guardamos tus datos de esta solicitud. Escribe SÍ para volver a intentar.",
+    "pilotOnly": "Por ahora EcoConecta está disponible para los números inscritos en la prueba piloto."
+  }
+}

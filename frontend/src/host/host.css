@@ -34,11 +34,14 @@
   & .premio-ejemplo { background: #fbf0c4; color: var(--accent-ink); }
 
   /* Botón flotante de WhatsApp */
-  /* El pie le deja al botón su lugar a la derecha, en la misma fila: sin franja vacía debajo. */
-  &:has(> .whatsapp-fab) .site-footer { padding-right: 11.5rem; }
+  /* El botón vive en un carril sticky al final del contenido: baja con la pantalla y se detiene encima del pie. */
+  & .fab-lane { position: sticky; bottom: 0; z-index: 4; display: flex; justify-content: flex-end; height: 0; margin-top: 4.75rem; pointer-events: none; }
+  /* El contenido ocupa el alto disponible: el carril queda siempre al fondo, justo encima del pie. */
+  &:has(.fab-lane) .main-content { display: flex; flex-direction: column; padding-bottom: 0; }
+  &:has(.fab-lane) .motion-route-stage { flex: 1; }
   /* Con nombre propio en la View Transition de Daniela, el botón queda encima del contenido que cambia. */
   & .whatsapp-fab { view-transition-name: eco-whatsapp; }
-  & .whatsapp-fab { position: fixed; z-index: 4; right: max(1.25rem, env(safe-area-inset-right)); bottom: max(1.25rem, env(safe-area-inset-bottom)); display: inline-flex; align-items: center; gap: .6rem; min-height: 54px; padding: .45rem 1.2rem .45rem .45rem; border-radius: 9999px; background: #f28c00; color: #063b2e; font-weight: 700; text-decoration: none; box-shadow: 0 12px 26px -10px #f28c00aa, 0 3px 8px #2d4b3f26; transition: transform 180ms, background-color 180ms; }
+  & .whatsapp-fab { position: absolute; right: 0; bottom: max(1.25rem, env(safe-area-inset-bottom)); pointer-events: auto; display: inline-flex; align-items: center; gap: .6rem; min-height: 54px; padding: .45rem 1.2rem .45rem .45rem; border-radius: 9999px; background: #f28c00; color: #063b2e; font-weight: 700; text-decoration: none; box-shadow: 0 12px 26px -10px #f28c00aa, 0 3px 8px #2d4b3f26; transition: transform 180ms, background-color 180ms; }
   & .whatsapp-fab:hover { background: #f69a1f; transform: translateY(-2px); }
   & .whatsapp-fab svg { width: 2.6rem; height: 2.6rem; padding: .6rem; border-radius: 50%; background: #ffffff; --icon-stroke: #168a2e; stroke-width: 2.4; }
 
@@ -90,7 +93,6 @@
 
   @media (max-width: 575px) {
     & .whatsapp-fab span { display: none; }
-    &:has(> .whatsapp-fab) .site-footer { padding-right: 0; padding-bottom: 5rem; }
     & .whatsapp-fab { padding: .85rem; }
   }
 

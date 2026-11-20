@@ -55,6 +55,11 @@
         background-color var(--motion-control), border-color var(--motion-control),
         color var(--motion-control), box-shadow var(--motion-control), filter var(--motion-control);
     }
+    & .motion-pills[data-pill-sliding] > :is(a, button) {
+      background-color: transparent;
+      border-color: transparent;
+      transition-property: transform, color, box-shadow, filter;
+    }
     & :is(button, .button):is(:disabled, [aria-disabled="true"]) { transition: none; }
     & .guide-details summary svg { transition: transform var(--motion-control) var(--motion-ease); }
 

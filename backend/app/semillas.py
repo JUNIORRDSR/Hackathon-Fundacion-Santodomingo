@@ -1,6 +1,5 @@
 """Datos de demostración, todos ficticios (Ley 1581). Las zonas salen de docs/reto/contexto-barrio.md."""
-import os
-
+from app.compartido.configuracion import variable
 from app.compartido.tipos import Colectivo, Flujo
 from app.modulos.acceso import contrato as acceso
 from app.modulos.contenidos import contrato as contenidos
@@ -13,7 +12,7 @@ def sembrar() -> None:
     if directorio.zonas():
         return
     _zonas_y_encargados()
-    _usuarios(os.getenv("CLAVE_DEMO", "ecoconecta-demo"))
+    _usuarios(variable("CLAVE_DEMO", "ecoconecta-demo"))
     for pieza in PIEZAS:
         contenidos.crear(pieza)
 

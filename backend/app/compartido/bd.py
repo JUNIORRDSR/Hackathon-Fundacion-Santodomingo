@@ -1,13 +1,14 @@
 """PostgreSQL (ADR-0001): un esquema por módulo, sin claves foráneas entre módulos y create_all al arrancar.
 Una operación es una transacción; si ya hay una abierta, se une a ella (así puntos y recolección van juntos).
 Los efectos hacia afuera (WhatsApp) corren después del commit."""
-import os
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 
 from sqlalchemy import Engine, MetaData, create_engine, text
 from sqlalchemy.engine import Connection
+
+from app.compartido.configuracion import variable
 
 # La base de docker-compose.yml; en producción DATABASE_URL es obligatoria.
 LOCAL = "postgresql+psycopg://ecoconecta:solo-para-desarrollo-local@localhost:5440/ecoconecta"
@@ -21,10 +22,7 @@ _despues: ContextVar[list[Callable] | None] = ContextVar("despues", default=None
 def motor() -> Engine:
     global _motor
     if _motor is None:
-        url = os.getenv("DATABASE_URL")
-        if not url and os.getenv("ENTORNO") == "produccion":
-            raise RuntimeError("Falta DATABASE_URL.")
-        _motor = create_engine(url or LOCAL, pool_pre_ping=True)
+        _motor = create_engine(variable("DATABASE_URL", LOCAL), pool_pre_ping=True)
     return _motor
 
 

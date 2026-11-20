@@ -10,6 +10,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app import semillas
 from app.compartido import bd
+from app.compartido.configuracion import variable
 from app.compartido.tipos import ErrorDeNegocio, NoEncontrado
 from app.modulos.acceso import api as acceso_api
 from app.modulos.contenidos import api as contenidos_api
@@ -29,7 +30,7 @@ ROUTERS = (acceso_api, solicitudes_api, directorio_api, puntos_api, contenidos_a
 def crear_app() -> FastAPI:
     app = FastAPI(title="EcoConecta", version="0.1.0",
                   description="Cada etiqueta es un módulo y su contrato (docs/arquitectura.md).")
-    app.add_middleware(SessionMiddleware, secret_key=os.getenv("CLAVE_SESION", "solo-para-desarrollo-local"),
+    app.add_middleware(SessionMiddleware, secret_key=variable("CLAVE_SESION", "solo-para-desarrollo-local"),
                        max_age=30 * 24 * 3600, same_site="lax", https_only=os.getenv("ENTORNO") == "produccion")
     for modulo in ROUTERS:
         app.include_router(modulo.router)

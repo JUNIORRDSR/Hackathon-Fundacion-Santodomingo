@@ -1,8 +1,13 @@
 .git
+.env
+.env.*
+**/.env
+**/.env.*
 **/.venv
 **/__pycache__
 **/.pytest_cache
 **/node_modules
 frontend/dist
+modules/whatsapp-recoleccion
 docs
 scripts

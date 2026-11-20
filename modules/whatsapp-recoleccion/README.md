@@ -1,5 +1,8 @@
 # EcoConecta por WhatsApp
 
+Este prototipo tiene su propio servidor de demostración. El flujo integrado del equipo se ejecuta en el
+[backend FastAPI](../../README.md#whatsapp-real-con-el-sandbox-de-twilio).
+
 Módulo TypeScript para que hogares y unidades productivas de Villas de San Pablo soliciten una recolección por WhatsApp. El módulo indica al backend qué coordinación recibe la solicitud: huerteros para orgánicos y recicladores para reciclables. El backend registra la solicitud y devuelve su identificador.
 
 - [Dominio](src/domain) define los pasos de la conversación y el enrutamiento.

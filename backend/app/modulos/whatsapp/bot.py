@@ -5,7 +5,7 @@ import logging
 import os
 from datetime import datetime, timezone
 
-from sqlalchemy import insert, select
+from sqlalchemy import Connection, func, insert, select
 from sqlalchemy.dialects.postgresql import insert as insertar_o_actualizar
 
 from app.compartido.bd import transaccion
@@ -14,9 +14,9 @@ from app.modulos.whatsapp import registro
 from app.modulos.whatsapp import tablas as t
 from app.modulos.whatsapp.contrato import Conversador, Herramientas, MensajeEntrante, MensajeSaliente, Transporte, Turno
 from app.modulos.whatsapp.menu import ConversadorMenu
+from app.modulos.whatsapp.respuestas import texto
 
 log = logging.getLogger("whatsapp")
-EN_REVISION = "Tu registro está en revisión. Te avisamos por aquí cuando quedes habilitado."
 
 
 class TransporteSimulado:
@@ -51,13 +51,16 @@ def configurar_desde_entorno() -> None:
         configurar(conversador=modulo.ConversadorLLM.desde_entorno())
 
 
-def recibir(mensaje: MensajeEntrante) -> list[str]:
+def recibir(mensaje: MensajeEntrante, sid: str | None = None) -> list[str]:
     """Entrada de todo mensaje, del webhook real o del simulador. Las respuestas salen después del commit."""
-    with transaccion():
+    with transaccion() as c:
+        c.execute(select(func.pg_advisory_xact_lock(func.hashtextextended(mensaje.telefono, 0))))
+        if sid is not None and not _registrar_entrega(c, sid):
+            return []
         textos, memoria = _responder(mensaje, _memoria(mensaje.telefono))
         _guardar_memoria(mensaje.telefono, memoria)
-    for texto in textos:
-        enviar(MensajeSaliente(telefono=mensaje.telefono, texto=texto))
+    for respuesta in textos:
+        enviar(MensajeSaliente(telefono=mensaje.telefono, texto=respuesta))
     return textos
 
 
@@ -66,8 +69,8 @@ def enviar(mensaje: MensajeSaliente) -> None:
     try:
         _transporte.enviar(mensaje)
         estado = "enviado"
-    except Exception:
-        log.exception("No se pudo enviar un mensaje de WhatsApp")
+    except Exception as error:
+        log.warning("No se pudo enviar un mensaje de WhatsApp (%s)", type(error).__name__)
         estado = "fallido"
     with transaccion() as c:
         c.execute(insert(t.mensajes).values(**mensaje.model_dump(), estado=estado,
@@ -88,7 +91,7 @@ def _responder(mensaje: MensajeEntrante, memoria: dict) -> tuple[list[str], dict
     if solicitante is None:
         return registro.responder(mensaje.texto, mensaje.telefono, memoria), memoria
     if solicitante.estado != directorio.EstadoSolicitante.HABILITADO:
-        return [EN_REVISION], memoria
+        return [texto("registro_en_revision")], memoria
     turno = Turno(nombre=solicitante.nombre, texto=mensaje.texto, media_url=mensaje.media_url)
     herramientas = Herramientas(solicitante.id)
     try:
@@ -103,6 +106,11 @@ def _memoria(telefono: str) -> dict:
     with transaccion() as c:
         fila = c.execute(select(t.conversaciones.c.memoria).where(t.conversaciones.c.telefono == telefono)).first()
     return dict(fila.memoria) if fila else {}
+
+
+def _registrar_entrega(conexion: Connection, sid: str) -> bool:
+    consulta = insertar_o_actualizar(t.entregas).values(sid=sid).on_conflict_do_nothing()
+    return conexion.execute(consulta.returning(t.entregas.c.sid)).scalar_one_or_none() is not None
 
 
 def _guardar_memoria(telefono: str, memoria: dict) -> None:

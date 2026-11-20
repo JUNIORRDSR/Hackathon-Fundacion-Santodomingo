@@ -1,0 +1,56 @@
+/* Pantallas del host (entrar, registros, canjes, WhatsApp) con los tokens del módulo de Daniela (.eco-app). */
+.eco-app {
+  & ::selection { background: #f6c40066; color: var(--ink); }
+  & input, & textarea { caret-color: var(--highlight); }
+
+  & .login { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); overflow: hidden; max-width: 60rem; margin: clamp(.5rem, 4vh, 3rem) auto 0; }
+  & .login-ciclo { padding: 2rem; background: var(--highlight); color: var(--on-highlight); --icon-stroke: var(--accent-on-highlight); }
+  & .login-ciclo h2 { color: var(--on-highlight); font-size: 1.5rem; letter-spacing: -.03em; margin-bottom: 1.5rem; }
+  & .login-ciclo ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 1.1rem; }
+  & .login-ciclo li { display: flex; gap: .85rem; align-items: flex-start; }
+  & .login-ciclo li > svg { width: 2.25rem; height: 2.25rem; padding: .5rem; border-radius: .7rem; background: var(--highlight-hover); }
+  & .login-ciclo strong { display: block; font-size: 1rem; }
+  & .login-ciclo span { color: var(--on-highlight-muted); font-size: .9rem; }
+  & .login-form { display: grid; align-content: center; gap: .95rem; padding: 2rem; }
+  & .login-form .button { justify-self: start; min-width: 8rem; }
+  & .login-publica { display: inline-flex; align-items: center; gap: .45rem; color: var(--muted); font-size: .875rem; font-weight: 600; text-underline-offset: .2em; }
+
+  & .canje-codigo { font-size: 1.35rem; font-weight: 700; color: var(--highlight); }
+  & .canje-acciones { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: auto; }
+  & .canje-acciones .button { margin-top: 0; }
+  & .premios { margin-top: 2rem; }
+  & .premios h2 { margin-bottom: .85rem; }
+  & .premio-fila { display: grid; grid-template-columns: minmax(0, 1fr) 7rem auto auto; gap: .65rem; align-items: center; padding: .65rem 1rem; border-top: 1px solid var(--line); }
+  & .premio-fila:first-child { border-top: 0; }
+  & .premio-fila input:not([type="checkbox"]) { min-height: 44px; width: 100%; padding: .5rem .7rem; border: 1px solid var(--control-line); border-radius: .65rem; background: var(--surface); }
+  & .premio-nota { color: var(--muted); font-size: .8125rem; padding: .65rem 1rem 0; }
+
+  & .monitor { display: grid; grid-template-columns: minmax(15rem, 1fr) minmax(0, 2.2fr); gap: 1rem; min-height: 34rem; }
+  & .monitor-lista { padding: .5rem; overflow-y: auto; max-height: 40rem; }
+  & .monitor-lista button { display: grid; gap: .15rem; width: 100%; padding: .75rem; border: 0; border-radius: 1rem; background: transparent; text-align: left; }
+  & .monitor-lista button:hover { background: var(--surface-muted); }
+  & .monitor-lista button[aria-pressed="true"] { background: var(--highlight); color: var(--on-highlight); }
+  & .monitor-lista button[aria-pressed="true"] :is(.monitor-telefono, .monitor-ultimo) { color: var(--on-highlight-muted); }
+  & .monitor-nombre { display: flex; justify-content: space-between; gap: .5rem; font-weight: 650; }
+  & .monitor-telefono, & .monitor-ultimo { color: var(--muted); font-size: .8125rem; }
+  & .monitor-ultimo { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  & .monitor-hilo { display: flex; flex-direction: column; min-height: 0; padding: 1rem; gap: .85rem; }
+  & .monitor-cabecera { display: flex; justify-content: space-between; align-items: center; gap: .75rem; flex-wrap: wrap; }
+  /* --muted es texto en el módulo de Daniela y fondo en shadcn: dentro del hilo manda shadcn. */
+  & .shadcn { --muted: var(--surface-muted); --muted-foreground: #515e56; --secondary: #ffffff; --secondary-foreground: var(--ink); }
+  & .monitor-mensajes { flex: 1; min-height: 22rem; max-height: 30rem; border-radius: 1rem; background: var(--background); }
+  & .monitor-redactar { display: flex; gap: .5rem; flex-wrap: wrap; }
+  & .monitor-redactar input { flex: 1 1 12rem; min-height: 44px; padding: .5rem .8rem; border: 1px solid var(--control-line); border-radius: 9999px; background: var(--surface); }
+  & .monitor-redactar .monitor-telefono-input { flex: 0 1 11rem; }
+
+  @media (max-width: 575px) {
+    & .main-nav { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; scrollbar-width: none; }
+    & .main-nav a { flex: 0 0 auto; }
+  }
+
+  @media (max-width: 790px) {
+    & .login, & .monitor { grid-template-columns: minmax(0, 1fr); }
+    & .login-ciclo, & .login-form { padding: 1.25rem; }
+    & .premio-fila { grid-template-columns: minmax(0, 1fr) 5.5rem; }
+  }
+}

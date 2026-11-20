@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Badge } from '@/components/ui/badge'
 import { PageHeader } from '../../ecoconecta-coordinacion/components/layout/Layout'
 import { EmptyState } from '../../ecoconecta-coordinacion/components/ui/Feedback'
 import { api } from '../api'
 import { Conversacion } from './Conversacion'
-import '../../shadcn.css'
 
 export interface ConversacionVista {
   telefono: string
@@ -36,27 +34,22 @@ export function Whatsapp() {
         title="WhatsApp"
         description="Lo que el bot conversa con cada vecino. Toma el control para responder tú."
       />
-      <div className="shadcn grid min-h-[32rem] grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-4">
-        <ul className="card flex flex-col gap-2 overflow-y-auto">
+      <div className="monitor">
+        <ul className="card monitor-lista" aria-label="Conversaciones">
           {conversaciones.length === 0 && (
             <EmptyState title="Todavía no hay conversaciones" icon="inbox">
-              Usa el simulador para escribir como un vecino.
+              Escribe como un vecino con «Simular un vecino».
             </EmptyState>
           )}
           {conversaciones.map((c) => (
             <li key={c.telefono}>
-              <button
-                type="button"
-                className="flex w-full flex-col gap-1 rounded-lg p-3 text-left data-[activa=true]:bg-muted"
-                data-activa={c.telefono === elegido}
-                onClick={() => setElegido(c.telefono)}
-              >
-                <span className="flex items-center justify-between gap-2 font-medium">
+              <button type="button" aria-pressed={c.telefono === elegido} onClick={() => setElegido(c.telefono)}>
+                <span className="monitor-nombre">
                   {c.nombre ?? 'Sin registrar'}
-                  {c.control && <Badge>Coordinación</Badge>}
+                  {c.control && <span className="status-badge">Coordinación</span>}
                 </span>
-                <span className="text-sm text-muted-foreground">{c.telefono}</span>
-                <span className="truncate text-sm text-muted-foreground">{c.ultimo}</span>
+                <span className="monitor-telefono">{c.telefono}</span>
+                <span className="monitor-ultimo">{c.ultimo}</span>
               </button>
             </li>
           ))}

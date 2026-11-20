@@ -70,6 +70,10 @@ export function RequestDetail({
       </div>
       <dl className="detail-data">
         <div>
+          <dt>Código en la bolsa</dt>
+          <dd className="detail-codigo">{request.codigo}</dd>
+        </div>
+        <div>
           <dt>Tipo de residuo</dt>
           <dd>{wasteLabels[request.tipo]}</dd>
         </div>

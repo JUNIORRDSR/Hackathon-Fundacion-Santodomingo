@@ -4,9 +4,8 @@ export const routes = [
   'recolecciones',
   'recolectores',
   'capacitacion',
-  'registro',
   'habilitar',
-  'panel',
+  'canjes',
   'whatsapp',
 ] as const
 export type EcoPage = (typeof routes)[number]

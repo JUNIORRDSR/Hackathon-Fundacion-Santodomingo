@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import mainLogo from '../../../../identidad-visual/Logo EcoConecta - Verde bosque.png'
-import villasLogo from '../../../../identidad-visual/Logo villas de san pablo.png'
-import foundationLogo from '../../../../identidad-visual/Logo Santo Domingo V1.png'
+import villasLogo from '../../../../identidad-visual/Logo villas de san pablo - transparente.png'
+import foundationLogo from '../../../../identidad-visual/Logo Santo Domingo - transparente.png'
 import { groupLabels } from '../../labels'
 import type { EcoLink, EcoPage } from '../../routes'
 import type { Coordinator } from '../../types'
@@ -15,9 +15,8 @@ const navigation: { page: EcoPage; label: string; icon: IconName }[] = [
   { page: 'recolecciones', label: 'Recolecciones', icon: 'truck' },
   { page: 'recolectores', label: 'Recolectores', icon: 'users' },
   { page: 'capacitacion', label: 'Capacitación', icon: 'book' },
-  { page: 'registro', label: 'Registro asistido', icon: 'plus' },
-  { page: 'habilitar', label: 'Por habilitar', icon: 'user' },
-  { page: 'panel', label: 'Panel', icon: 'scale' },
+  { page: 'habilitar', label: 'Registros', icon: 'user' },
+  { page: 'canjes', label: 'Canjes', icon: 'gift' },
   { page: 'whatsapp', label: 'WhatsApp', icon: 'inbox' },
 ]
 const modulePages: EcoPage[] = ['inicio', 'solicitudes', 'recolecciones', 'recolectores', 'capacitacion']
@@ -148,12 +147,14 @@ export function Layout({
                   </a>
                 ))}
               </nav>
-              <CoordinatorIdentity coordinator={coordinator} choices={choices} onChange={onChange} demo={demo} />
-              {onSignOut && (
-                <button type="button" className="button button-secondary" onClick={onSignOut}>
-                  Salir
-                </button>
-              )}
+              <div className="topbar-actions">
+                <CoordinatorIdentity coordinator={coordinator} choices={choices} onChange={onChange} demo={demo} />
+                {onSignOut && (
+                  <button type="button" className="icon-button" onClick={onSignOut} aria-label="Salir" title="Salir">
+                    <Icon name="logout" />
+                  </button>
+                )}
+              </div>
             </>
           )}
         </div>

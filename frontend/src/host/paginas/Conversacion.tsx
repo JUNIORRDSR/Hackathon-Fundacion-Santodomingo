@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Badge } from '@/components/ui/badge'
 import { Bubble, BubbleContent } from '@/components/ui/bubble'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Marker, MarkerContent } from '@/components/ui/marker'
 import { Message, MessageContent, MessageFooter, MessageHeader } from '@/components/ui/message'
 import {
@@ -14,9 +11,10 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from '@/components/ui/message-scroller'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { EmptyState, ErrorMessage } from '../../ecoconecta-coordinacion/components/ui/Feedback'
 import { api } from '../api'
 import type { ConversacionVista } from './Whatsapp'
+import '../../shadcn.css'
 
 interface MensajeVista {
   direccion: 'entrante' | 'saliente'
@@ -26,8 +24,8 @@ interface MensajeVista {
   fecha: string
 }
 const AUTOR = { vecino: 'Vecino', bot: 'Bot', aviso: 'Aviso automático', coordinacion: 'Coordinación' }
-const COLOR = { vecino: 'muted', bot: 'secondary', aviso: 'outline', coordinacion: 'default' } as const
-const hora = new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', hour: '2-digit', minute: '2-digit' })
+const COLOR = { vecino: 'secondary', bot: 'muted', aviso: 'outline', coordinacion: 'default' } as const
+const hora = new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit' })
 const ruta = (telefono: string) => '/whatsapp/conversaciones/' + encodeURIComponent(telefono)
 
 export function Conversacion({
@@ -57,23 +55,29 @@ export function Conversacion({
   }
 
   return (
-    <section className="card flex min-h-0 flex-col gap-3">
-      {conversacion && (
-        <header className="flex flex-wrap items-center justify-between gap-2">
+    <section className="card monitor-hilo" aria-label="Conversación">
+      {conversacion ? (
+        <header className="monitor-cabecera">
           <div>
-            <strong>{conversacion.nombre ?? 'Sin registrar'}</strong>
-            <p className="text-sm text-muted-foreground">{conversacion.telefono}</p>
+            <h2>{conversacion.nombre ?? 'Sin registrar'}</h2>
+            <span className="monitor-telefono">{conversacion.telefono}</span>
           </div>
           {conversacion.control ? (
-            <Button variant="outline" onClick={() => void control(false)}>
+            <button type="button" className="button button-secondary" onClick={() => void control(false)}>
               Devolver al bot
-            </Button>
+            </button>
           ) : (
-            <Button onClick={() => void control(true)}>Tomar el control</Button>
+            <button type="button" className="button button-primary" onClick={() => void control(true)}>
+              Tomar el control
+            </button>
           )}
         </header>
+      ) : (
+        <EmptyState title="Elige una conversación" icon="inbox">
+          O escribe abajo como si fueras un vecino para probar el bot.
+        </EmptyState>
       )}
-      <Hilo mensajes={mensajes} control={conversacion?.control ?? null} />
+      {conversacion && <Hilo mensajes={mensajes} control={conversacion.control} />}
       <Redactar telefono={telefono} conControl={!!conversacion?.control} alEnviar={refrescar} alSimular={alSimular} />
     </section>
   )
@@ -81,11 +85,11 @@ export function Conversacion({
 
 function Hilo({ mensajes, control }: { mensajes: MensajeVista[]; control: string | null }) {
   return (
-    <div className="min-h-64 flex-1">
+    <div className="shadcn monitor-mensajes">
       <MessageScrollerProvider autoScroll>
         <MessageScroller>
           <MessageScrollerViewport>
-            <MessageScrollerContent className="flex flex-col gap-3 p-2">
+            <MessageScrollerContent className="flex flex-col gap-3 p-3">
               {mensajes.map((m, i) => (
                 <MessageScrollerItem key={i} messageId={String(i)} scrollAnchor={m.direccion === 'entrante'}>
                   <Message align={m.direccion === 'entrante' ? 'start' : 'end'}>
@@ -96,7 +100,7 @@ function Hilo({ mensajes, control }: { mensajes: MensajeVista[]; control: string
                       </Bubble>
                       <MessageFooter>
                         {hora.format(new Date(m.fecha))}
-                        {m.estado === 'fallido' && <Badge variant="destructive">No se envió</Badge>}
+                        {m.estado === 'fallido' && ' · No se envió'}
                       </MessageFooter>
                     </MessageContent>
                   </Message>
@@ -105,7 +109,7 @@ function Hilo({ mensajes, control }: { mensajes: MensajeVista[]; control: string
               {control && (
                 <MessageScrollerItem messageId="control">
                   <Marker variant="separator">
-                    <MarkerContent>{control} tiene el control: el bot no responde</MarkerContent>
+                    <MarkerContent>La coordinación tiene el control: el bot no responde</MarkerContent>
                   </Marker>
                 </MessageScrollerItem>
               )}
@@ -129,55 +133,58 @@ function Redactar({
   alEnviar: () => void
   alSimular: (telefono: string) => void
 }) {
+  const [modo, setModo] = useState<'responder' | 'simular'>(conControl ? 'responder' : 'simular')
   const [texto, setTexto] = useState('')
   const [vecino, setVecino] = useState(telefono ?? '+573000000009')
   const [error, setError] = useState('')
-  const enviar = (accion: () => Promise<unknown>) => async (event: FormEvent<HTMLFormElement>) => {
+  const responder = modo === 'responder'
+  useEffect(() => setModo(conControl ? 'responder' : 'simular'), [conControl])
+
+  async function enviar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
     try {
-      await accion()
+      if (responder) await api(ruta(telefono ?? '') + '/mensajes', 'POST', { texto })
+      else await api('/whatsapp/simulador', 'POST', { telefono: vecino, texto })
       setTexto('')
+      if (!responder) alSimular(vecino)
       alEnviar()
     } catch (e) {
       setError((e as Error).message)
     }
   }
-  const responder = enviar(() => api(ruta(telefono ?? '') + '/mensajes', 'POST', { texto }))
-  const simular = enviar(async () => {
-    await api('/whatsapp/simulador', 'POST', { telefono: vecino, texto })
-    alSimular(vecino)
-  })
 
   return (
-    <Tabs defaultValue={conControl ? 'responder' : 'simular'}>
-      <TabsList>
-        <TabsTrigger value="responder">Responder como coordinación</TabsTrigger>
-        <TabsTrigger value="simular">Simular un vecino</TabsTrigger>
-      </TabsList>
-      <TabsContent value="responder">
-        <form className="flex gap-2" onSubmit={responder}>
-          <Input
-            value={texto}
-            disabled={!conControl}
-            onChange={(e) => setTexto(e.target.value)}
-            placeholder={conControl ? 'Escribe tu respuesta' : 'Toma el control para escribir'}
+    <form className="dialog-form" onSubmit={enviar}>
+      <div className="pills" role="group" aria-label="Quién escribe">
+        <button type="button" className="pill" aria-pressed={responder} onClick={() => setModo('responder')}>
+          Responder como coordinación
+        </button>
+        <button type="button" className="pill" aria-pressed={!responder} onClick={() => setModo('simular')}>
+          Simular un vecino
+        </button>
+      </div>
+      <div className="monitor-redactar">
+        {!responder && (
+          <input
+            className="monitor-telefono-input"
+            aria-label="Teléfono del vecino"
+            value={vecino}
+            onChange={(e) => setVecino(e.target.value)}
           />
-          <Button type="submit" disabled={!conControl || !texto.trim()}>
-            Enviar
-          </Button>
-        </form>
-      </TabsContent>
-      <TabsContent value="simular">
-        <form className="flex flex-wrap gap-2" onSubmit={simular}>
-          <Input className="w-44" value={vecino} onChange={(e) => setVecino(e.target.value)} aria-label="Teléfono" />
-          <Input className="flex-1" value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Hola" />
-          <Button type="submit" variant="secondary" disabled={!texto.trim()}>
-            Enviar como vecino
-          </Button>
-        </form>
-      </TabsContent>
-      {error && <p className="text-sm text-destructive">{error}</p>}
-    </Tabs>
+        )}
+        <input
+          aria-label="Mensaje"
+          value={texto}
+          disabled={responder && !conControl}
+          placeholder={responder && !conControl ? 'Toma el control para escribir' : 'Escribe un mensaje'}
+          onChange={(e) => setTexto(e.target.value)}
+        />
+        <button type="submit" className="button button-primary" disabled={!texto.trim() || (responder && !conControl)}>
+          {responder ? 'Enviar' : 'Enviar como vecino'}
+        </button>
+      </div>
+      {error && <ErrorMessage message={error} />}
+    </form>
   )
 }

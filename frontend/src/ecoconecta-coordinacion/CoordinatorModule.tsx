@@ -32,7 +32,7 @@ interface CoordinatorModuleProps {
   onDemoChoice?: (id: string) => void
   trainingResources?: TrainingResource[]
   publicTrainingHref?: string
-  // Páginas que pone el host (registro asistido, por habilitar, panel, WhatsApp) y salida de la sesión.
+  // Páginas que pone el host (registros por habilitar, canjes, WhatsApp) y salida de la sesión.
   extraPages?: Partial<Record<EcoPage, ReactNode>>
   onSignOut?: () => void
 }

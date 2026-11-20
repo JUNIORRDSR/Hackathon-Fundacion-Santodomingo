@@ -35,7 +35,10 @@ export function PorHabilitar() {
 
   return (
     <>
-      <PageHeader title="Por habilitar" description="Vecinos y negocios que se registraron por WhatsApp." />
+      <PageHeader
+        title="Registros"
+        description="Vecinos y negocios que se registraron por WhatsApp y esperan habilitación."
+      />
       {error && <ErrorMessage message={error} retry={cargar} />}
       {pendientes.length === 0 ? (
         <div className="card">

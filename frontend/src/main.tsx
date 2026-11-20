@@ -4,14 +4,15 @@ import { CoordinatorModule, PublicTrainingModule } from './ecoconecta-coordinaci
 import type { Coordinator, TrainingResource } from './ecoconecta-coordinacion'
 import { hashLink, readHash } from './ecoconecta-coordinacion/routes'
 import { LoadingState } from './ecoconecta-coordinacion/components/ui/Feedback'
+import { Layout } from './ecoconecta-coordinacion/components/layout/Layout'
+import './host/host.css'
 import { api } from './host/api'
 import { capacitacionPublica, crearRepositorio, recursoDe } from './host/repositorio'
 import { useSesion } from './host/sesion'
 import type { Usuario } from './host/sesion'
+import { Canjes } from './host/paginas/Canjes'
 import { Entrar } from './host/paginas/Entrar'
-import { Panel } from './host/paginas/Panel'
 import { PorHabilitar } from './host/paginas/PorHabilitar'
-import { RegistroAsistido } from './host/paginas/RegistroAsistido'
 import { Whatsapp } from './host/paginas/Whatsapp'
 
 const suscribir = (aviso: () => void) => (
@@ -32,10 +33,16 @@ function coordinadorDe(usuario: Usuario, grupo: Coordinator['grupo']): Coordinat
   return { id: propio, nombre: usuario.nombre, grupo: propio }
 }
 
+const Cargando = () => (
+  <Layout page="inicio" href={hashLink} demo={false}>
+    <LoadingState />
+  </Layout>
+)
+
 function Capacitacion() {
   const [recursos, setRecursos] = useState<TrainingResource[]>()
   useEffect(() => void capacitacionPublica().then(setRecursos), [])
-  return recursos ? <PublicTrainingModule resources={recursos} href={() => capacitacionHref} /> : <LoadingState />
+  return recursos ? <PublicTrainingModule resources={recursos} href={() => capacitacionHref} /> : <Cargando />
 }
 
 function App() {
@@ -51,7 +58,7 @@ function App() {
   if (location.page === 'capacitacion' && new URLSearchParams(hash.split('?')[1]).get('publica') === '1') {
     return <Capacitacion />
   }
-  if (cargando) return <LoadingState />
+  if (cargando) return <Cargando />
   if (!usuario) return <Entrar onEntrar={entrar} />
   const coordinador = coordinadorDe(usuario, grupo)
   return (
@@ -66,9 +73,8 @@ function App() {
       trainingResources={recursos}
       publicTrainingHref={capacitacionHref}
       extraPages={{
-        registro: <RegistroAsistido />,
         habilitar: <PorHabilitar />,
-        panel: <Panel grupo={coordinador.grupo} />,
+        canjes: <Canjes administrador={usuario.rol === 'administrador'} />,
         whatsapp: <Whatsapp />,
       }}
       onSignOut={() => void salir()}

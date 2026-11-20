@@ -25,11 +25,11 @@ solo su colectivo; el administrador cambia de equipo con el selector junto a su 
 1. En **Inicio**, abre **Ver pendientes**. Busca por código, nombre o ubicación y abre el detalle de una solicitud.
 2. Asigna un encargado y un día. Con hora, la solicitud queda programada y el vecino recibe el aviso por WhatsApp; sin
    hora queda asignada y aparece en **Recolecciones sin hora**.
-3. Abre una recolección y registra los kilos, o un rechazo con su motivo. Una solicitud pendiente o asignada se puede
+3. En **Recolecciones**, busca el código escrito en la bolsa, abre la recolección y registra los kilos, o un rechazo con su motivo. Una solicitud pendiente o asignada se puede
    cancelar con motivo.
 4. En **Recolectores**, agrega o edita encargados, sus zonas del catálogo y si están activos.
-5. **Registro asistido**: para quien llama o llega en persona. **Por habilitar**: quienes se registraron por WhatsApp.
-   **Panel**: resumen del último mes y CSV sin datos personales.
+5. **Registros**: quienes se registraron por WhatsApp y esperan habilitación. **Canjes**: el vecino muestra su código
+   CAN, se entrega el premio y se descuentan los puntos; abajo, el catálogo de premios (lo edita la administración).
 6. **WhatsApp**: el monitor del bot. Simula un vecino, mira lo que responde el bot, toma el control para responder tú y
    devuélvelo al bot.
 7. **Capacitación** y su vista pública `#/capacitacion?publica=1`, que funciona sin sesión.
@@ -43,7 +43,8 @@ Los datos son ficticios. Las fechas y horas se muestran en hora de Colombia.
   por props: coordinador, repositorio, rutas, recursos de capacitación y `extraPages`.
 - `src/host/repositorio.ts`: cumple `CoordinatorRepository` contra la API y traduce estados (recibida → pendiente,
   asignada y programada → asignada). `src/host/api.ts` hace las llamadas con la cookie de sesión.
-- `src/host/paginas/`: entrar, registro asistido, por habilitar, panel y el monitor de WhatsApp.
+- `src/host/paginas/`: entrar, registros por habilitar, canjes con su catálogo de premios y el monitor de WhatsApp.
+  Sus estilos están en `src/host/host.css`, con los tokens del módulo de Daniela.
 - `src/components/ui/`: componentes de shadcn (chat: `MessageScroller`, `Message`, `Bubble`, `Marker`). Los escribe
   el CLI (`npx shadcn@latest add …`), no se editan a mano, y sus estilos (`src/shadcn.css`) solo aplican dentro de
   un contenedor `.shadcn` para no pisar los de Daniela.

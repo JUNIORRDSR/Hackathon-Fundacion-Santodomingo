@@ -25,11 +25,17 @@ export function RecoleccionesPage({
 }) {
   const [view, setView] = useState<'programadas' | 'resultados'>('programadas')
   const [selectedId, setSelectedId] = useState(requestId)
+  const [code, setCode] = useState('')
+  const query = code.trim().toLowerCase()
+  const matches = (item: Request) => !query || (item.codigo + ' ' + item.solicitante).toLowerCase().includes(query)
   const scheduled = requests
-    .filter((item): item is AssignedRequest => item.estado === 'asignada')
+    .filter((item): item is AssignedRequest => item.estado === 'asignada' && matches(item))
     .sort((a, b) => compareAssignments(a.asignacion, b.asignacion))
   const resolved = requests
-    .filter((item): item is ResolvedRequest => item.estado === 'recolectada' || item.estado === 'rechazada')
+    .filter(
+      (item): item is ResolvedRequest =>
+        (item.estado === 'recolectada' || item.estado === 'rechazada') && matches(item),
+    )
     .sort((a, b) => compareAssignments(b.asignacion, a.asignacion))
   const selected = scheduled.find((item) => item.id === selectedId)
   const today = localDate()
@@ -44,23 +50,42 @@ export function RecoleccionesPage({
         title="Recolecciones"
         description={'Consulta tu agenda y registra los resultados de ' + wasteLabels[group].toLowerCase() + '.'}
       />
-      <div className="pills collection-filters" role="group" aria-label="Filtrar recolecciones">
-        <button
-          className="pill"
-          type="button"
-          aria-pressed={view === 'programadas'}
-          onClick={() => setView('programadas')}
+      <div className="filter-bar">
+        <div className="pills collection-filters" role="group" aria-label="Filtrar recolecciones">
+          <button
+            className="pill"
+            type="button"
+            aria-pressed={view === 'programadas'}
+            onClick={() => setView('programadas')}
+          >
+            Programadas ({scheduled.length})
+          </button>
+          <button
+            className="pill"
+            type="button"
+            aria-pressed={view === 'resultados'}
+            onClick={() => setView('resultados')}
+          >
+            Resultados ({resolved.length})
+          </button>
+        </div>
+        <form
+          className="search-field"
+          role="search"
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (scheduled.length === 1) setSelectedId(scheduled[0].id)
+          }}
         >
-          Programadas ({scheduled.length})
-        </button>
-        <button
-          className="pill"
-          type="button"
-          aria-pressed={view === 'resultados'}
-          onClick={() => setView('resultados')}
-        >
-          Resultados ({resolved.length})
-        </button>
+          <Icon name="search" />
+          <input
+            type="search"
+            aria-label="Buscar por el código escrito en la bolsa"
+            placeholder="Código de la bolsa (ORG-0001)"
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
+          />
+        </form>
       </div>
       <div className="view-content" key={view}>
         {view === 'programadas' ? (

@@ -43,7 +43,7 @@ flowchart LR
 |---|---|---|---|---|---|
 | solicitudes | Núcleo: ciclo de vida, bandeja, asignación (con o sin hora), cancelación y resultado | SolicitudRecibida, SolicitudProgramada, RecoleccionRegistrada, SolicitudRechazada, SolicitudCancelada | — | Jairo | — |
 | directorio | Solicitantes (alta y habilitación), encargados y zonas | SolicitanteHabilitado | — | Jairo | — |
-| puntos | Regla con versión y libro de movimientos | PuntosAcreditados | RecoleccionRegistrada | Jairo | — |
+| puntos | Regla con versión, libro de movimientos, premios y canjes (ADR-0008) | PuntosAcreditados, CanjeEntregado | RecoleccionRegistrada | Jairo | — |
 | whatsapp | Registro por WhatsApp, bot, avisos y monitor con toma de control | — | los eventos de arriba | Jairo: menú, simulador y monitor | Conversador LLM: Leonardo · Transporte: Jorge |
 | contenidos | Educación ambiental y tutoriales por audiencia | — | — | Jairo | — |
 | reportes | Resumen por flujo, estado y periodo; CSV sin datos personales | — | — | Jairo | — |

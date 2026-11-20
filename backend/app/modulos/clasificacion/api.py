@@ -1,4 +1,4 @@
-"""API de clasificacion: revisar una foto desde /docs, sin WhatsApp. Sirve de plan B en la demo (ADR-0007)."""
+"""API de clasificacion: revisar una foto desde /docs, sin WhatsApp. Sirve de plan B en la demo (ADR-0011)."""
 from fastapi import APIRouter, Depends, Request
 from starlette.concurrency import run_in_threadpool
 

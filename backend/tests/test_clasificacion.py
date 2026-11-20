@@ -1,4 +1,4 @@
-"""Revisión de fotos de residuos (ADR-0007): orientativa, no frena la solicitud y al modelo solo llegan la foto y el
+"""Revisión de fotos de residuos (ADR-0011): orientativa, no frena la solicitud y al modelo solo llegan la foto y el
 flujo. Se sustituye únicamente la llamada a Azure, que es lo externo."""
 import base64
 import email.message
@@ -14,7 +14,7 @@ from app.modulos.clasificacion import contrato as clasificacion
 from app.modulos.clasificacion import vision
 from app.modulos.whatsapp import fotos
 
-TELEFONO = "+573000000005"  # ficticio
+TELEFONO = "+573000000009"  # ficticio; el 5 lo usa la prueba de concurrencia de Twilio
 JPEG = b"\xff\xd8\xff\xe0foto-de-prueba"
 MAL_SEPARADA = {"veredicto": "mal_separado", "flujo_detectado": "reciclable",
                 "problemas": ["organico_en_reciclables", "envases_sucios"]}
@@ -117,7 +117,7 @@ def test_una_foto_por_whatsapp_trae_su_revision_y_la_pieza_del_flujo_sin_frenar_
     assert admin.post("/api/directorio/solicitantes", json=vecina).status_code == 201
     _whatsapp(admin, "2")  # empieza a pedir reciclables
     textos = _whatsapp(admin, "", media_url="data:image/jpeg;base64," + base64.b64encode(JPEG).decode())
-    assert "comida" in textos[0] and "Qué va en la bolsa de reciclables" in textos[1]
+    assert "comida" in textos[0] and "Residuos reciclables" in textos[1]  # la guía de reciclables de Daniela
     foto, tipo, pedido = falso.pedidos[0]
     assert (foto, tipo) == (JPEG, "image/jpeg") and "reciclables" in pedido
     assert TELEFONO not in pedido and "Vecina" not in pedido  # §9: al modelo, solo la foto y el flujo

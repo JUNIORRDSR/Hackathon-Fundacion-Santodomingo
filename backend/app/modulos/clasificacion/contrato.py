@@ -1,4 +1,4 @@
-"""Contrato de clasificacion: revisa si los residuos de una foto están bien separados (ADR-0007). Es orientativo: no
+"""Contrato de clasificacion: revisa si los residuos de una foto están bien separados (ADR-0011). Es orientativo: no
 bloquea ni cambia la solicitud, y al modelo solo llegan la foto y el flujo (§9)."""
 import logging
 import os

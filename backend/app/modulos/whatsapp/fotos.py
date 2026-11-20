@@ -1,5 +1,5 @@
 """Fotos que manda un solicitante habilitado: se revisa si los residuos están bien separados y se responde con texto
-fijo y la pieza educativa del flujo. Es orientativo: no frena el pedido (ADR-0007)."""
+fijo y la pieza educativa del flujo. Es orientativo: no frena el pedido (ADR-0011)."""
 import base64
 import logging
 import os

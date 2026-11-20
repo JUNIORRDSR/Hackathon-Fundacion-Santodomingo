@@ -1,4 +1,4 @@
-"""Llamada al modelo con visión por la API v1 de Azure OpenAI, compatible con la de OpenAI (ADR-0007). Solo viajan
+"""Llamada al modelo con visión por la API v1 de Azure OpenAI, compatible con la de OpenAI (ADR-0011). Solo viajan
 la foto y el pedido, y el proveedor no guarda la respuesta (store: false)."""
 import base64
 import json

@@ -1,0 +1,11 @@
+# Local: docker compose up --build → http://localhost:8000 (los contratos están en /docs)
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      ENTORNO: local
+      CLAVE_SESION: solo-para-desarrollo-local
+      CLAVE_DEMO: ecoconecta-demo
+      SEMBRAR_DEMO: "1"

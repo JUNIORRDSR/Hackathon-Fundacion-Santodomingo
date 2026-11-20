@@ -4,7 +4,7 @@ import logo from '../../../../identidad-visual/Logo EcoConecta - Verde bosque.pn
 const width = 2172
 const height = 724
 
-// The two masks follow the wings in the coordinate space of the original PNG.
+// The outlines isolate the wings without redrawing the rest of the original PNG.
 const wings = [
   {
     side: 'left',
@@ -22,7 +22,6 @@ export function BrandLogo({ href }: { href: string }) {
   const image = useRef<HTMLImageElement>(null)
   const [flapping, setFlapping] = useState(false)
   const bitmap = id + '-bitmap'
-  const body = id + '-body'
 
   function flap() {
     if (image.current?.naturalWidth) setFlapping(true)
@@ -36,15 +35,13 @@ export function BrandLogo({ href }: { href: string }) {
         <svg className="brand-motion" viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
           <defs>
             <image id={bitmap} href={logo} width={width} height={height} />
-            <mask id={body} maskUnits="userSpaceOnUse" width={width} height={height}>
-              <rect width={width} height={height} fill="white" />
-              {wings.map(({ side, outline }) => <path key={side} d={outline} fill="black" />)}
-            </mask>
             {wings.map(({ side, outline }) => (
               <clipPath id={id + '-' + side} key={side}><path d={outline} /></clipPath>
             ))}
           </defs>
-          <use href={'#' + bitmap} mask={`url(#${body})`} />
+          <g className="brand-wing-cover">
+            {wings.map(({ side, outline }) => <path key={side} d={outline} />)}
+          </g>
           {wings.map(({ side }) => (
             <g key={side} className={'brand-wing brand-wing-' + side} onAnimationEnd={() => setFlapping(false)}>
               <use href={'#' + bitmap} clipPath={`url(#${id}-${side})`} />

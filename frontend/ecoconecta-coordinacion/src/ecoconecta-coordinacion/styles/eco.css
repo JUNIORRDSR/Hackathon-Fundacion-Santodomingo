@@ -71,6 +71,7 @@ body:has(> #root > .eco-app) {
   & .brand-mark { position: relative; display: block; width: 176px; }
   & .brand-mark img { width: 100%; height: auto; }
   & .brand-motion { position: absolute; inset: 0; width: 100%; height: 100%; stroke: none; visibility: hidden; pointer-events: none; }
+  & .brand-wing-cover { fill: var(--background); }
   & .brand-wing { transform-box: view-box; transform-origin: 423px 247px; }
   & .brand-wing-left { --wing-fold: .46; }
   & .brand-wing-right { --wing-fold: .62; }
@@ -239,7 +240,6 @@ body:has(> #root > .eco-app) {
   & .partner-logos img { object-fit: contain; padding: .25rem; background: var(--surface); border-radius: .35rem; width: 6.25rem; height: 2.5rem; }
 
   @media (prefers-reduced-motion: no-preference) {
-    & .brand-mark[data-flapping="true"] img { visibility: hidden; }
     & .brand-mark[data-flapping="true"] .brand-motion { visibility: visible; }
     & .brand-mark[data-flapping="true"] .brand-wing { animation: eco-wing-flap 680ms ease-in-out 3; }
     & .view-content { animation: eco-view-enter 180ms ease-out; }

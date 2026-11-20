@@ -19,8 +19,7 @@ def nueva() -> Solicitud:
 
 def programada() -> Solicitud:
     solicitud = nueva()
-    solicitud.asignar(uuid4(), uuid4())
-    solicitud.programar(DIA, HORA, uuid4())
+    solicitud.asignar(uuid4(), DIA, HORA, uuid4())
     return solicitud
 
 
@@ -28,26 +27,25 @@ def test_el_ciclo_completo_queda_en_el_historial():  # RN-04
     solicitud = programada()
     solicitud.registrar_recoleccion(Decimal("2.5"), uuid4())
     assert solicitud.estado == Estado.RECOLECTADA
-    assert [c.estado for c in solicitud.historial] == [Estado.RECIBIDA, Estado.ASIGNADA, Estado.PROGRAMADA,
-                                                       Estado.RECOLECTADA]
+    assert [c.estado for c in solicitud.historial] == [Estado.RECIBIDA, Estado.PROGRAMADA, Estado.RECOLECTADA]
 
 
-def test_no_se_programa_sin_encargado():  # RN-02
-    with pytest.raises(ErrorDeNegocio):
-        nueva().programar(DIA, HORA, uuid4())
-
-
-def test_no_se_recoge_lo_que_no_esta_programado():
+def test_sin_hora_queda_asignada_y_con_hora_programada():  # RN-02
     solicitud = nueva()
-    solicitud.asignar(uuid4(), uuid4())
+    solicitud.asignar(uuid4(), DIA, None, uuid4())
+    assert (solicitud.estado, solicitud.dia, solicitud.hora) == (Estado.ASIGNADA, DIA, None)
+    solicitud.asignar(solicitud.encargado_id, DIA, HORA, uuid4())
+    assert solicitud.estado == Estado.PROGRAMADA
+
+
+def test_no_se_recoge_lo_que_no_esta_asignado():
     with pytest.raises(ErrorDeNegocio):
-        solicitud.registrar_recoleccion(None, uuid4())
+        nueva().registrar_recoleccion(None, uuid4())
 
 
 def test_se_reasigna_y_reprograma_antes_del_resultado():
     solicitud, otro = programada(), uuid4()
-    solicitud.asignar(otro, uuid4())
-    solicitud.programar(date(2026, 11, 22), HORA, uuid4())
+    solicitud.asignar(otro, date(2026, 11, 22), HORA, uuid4())
     assert (solicitud.estado, solicitud.encargado_id, solicitud.dia) == (Estado.PROGRAMADA, otro, date(2026, 11, 22))
 
 

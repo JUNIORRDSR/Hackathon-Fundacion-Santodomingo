@@ -150,35 +150,30 @@ def test_sin_print():
 FRONTEND = RAIZ.parent / "frontend" / "src"
 
 
-def test_frontend_tamanos_y_modulos_que_no_se_importan_entre_si():
-    """En el host React rigen los mismos tamaños, y un módulo no importa a otro: comparten solo host/ y api/."""
+def test_frontend_tamanos_y_modulo_que_no_conoce_al_host():
+    """En el frontend rigen los mismos tamaños, y el módulo de Daniela no importa del host: todo le llega por props."""
     violaciones = []
     for archivo in _archivos_ts():
         lineas = archivo.read_text(encoding="utf-8").splitlines()
         violaciones += [f"{archivo.name}: {len(lineas)} líneas"] if len(lineas) > 300 else []
         violaciones += [f"{archivo.name}:{i}: {len(linea)} caracteres"
                         for i, linea in enumerate(lineas, start=1) if len(linea) > 120]
-        violaciones += _imports_entre_modulos(archivo)
+        violaciones += _imports_al_host(archivo)
     _sin_violaciones(violaciones)
 
 
 def _archivos_ts() -> list[Path]:
-    """El esquema generado del OpenAPI no cuenta: lo escribe la herramienta, no una persona."""
+    """components/ui lo escribe el CLI de shadcn, no una persona: no cuenta."""
     if not FRONTEND.exists():
         return []
-    return sorted(p for p in FRONTEND.rglob("*.ts*") if p.name != "esquema.d.ts")
+    return sorted(p for p in FRONTEND.rglob("*.ts*") if "ui" not in p.relative_to(FRONTEND).parts[1:2])
 
 
-def _imports_entre_modulos(archivo: Path) -> list[str]:
-    partes = archivo.relative_to(FRONTEND).parts
-    if partes[0] != "modulos":
+def _imports_al_host(archivo: Path) -> list[str]:
+    if archivo.relative_to(FRONTEND).parts[0] != "ecoconecta-coordinacion":
         return []
-    violaciones = []
-    for ruta in re.findall(r'from "(\.[^"]+)"', archivo.read_text(encoding="utf-8")):
-        destino = (archivo.parent / ruta).resolve().relative_to(FRONTEND.resolve()).parts
-        if destino[0] == "modulos" and destino[1] != partes[1]:
-            violaciones.append(f"{archivo.name} importa {ruta}")
-    return violaciones
+    rutas = re.findall(r"from '([^']+)'", archivo.read_text(encoding="utf-8"))
+    return [f"{archivo.name} importa {r}" for r in rutas if r.startswith("@/") or "/host" in r]
 
 
 def test_solo_telefonos_ficticios():

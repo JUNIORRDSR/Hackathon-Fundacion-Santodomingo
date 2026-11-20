@@ -24,6 +24,7 @@ class NuevaSolicitud(BaseModel):
     preferencia: Franja
     observaciones: str = Field("", max_length=500)
     canal: Canal
+    foto_url: str | None = None
 
 
 class CambioVista(BaseModel):
@@ -46,9 +47,11 @@ class SolicitudVista(BaseModel):
     solicitante_nombre: str
     telefono: str
     zona_id: UUID
+    zona: str
     direccion: str
     preferencia: Franja
     observaciones: str
+    foto_url: str | None
     encargado_id: UUID | None
     asignada_por: UUID | None
     dia: date | None
@@ -109,20 +112,21 @@ def registrar(nueva: NuevaSolicitud, por: str = "solicitante") -> SolicitudVista
         return _vista(solicitud)
 
 
-def asignar(id: UUID, encargado_id: UUID, por: UUID) -> SolicitudVista:
+def asignar(id: UUID, encargado_id: UUID, dia: date, hora: time | None, por: UUID) -> SolicitudVista:
+    """Una sola acción: encargado, día y hora opcional. Solo con hora se avisa al vecino (RN-02)."""
     encargado = directorio.encargado(encargado_id)
 
     def accion(s: Solicitud) -> None:
         if encargado.colectivo != COLECTIVO_DEL_FLUJO[s.flujo]:
             raise ErrorDeNegocio("Ese encargado no es del colectivo de la solicitud (RN-01).")
-        s.asignar(encargado_id, por)
+        if not encargado.activo:
+            raise ErrorDeNegocio("Ese encargado está inactivo.")
+        s.asignar(encargado_id, dia, hora, por)
 
-    return _operar(id, accion)
+    def programada(s: Solicitud) -> SolicitudProgramada:
+        return SolicitudProgramada(**_ids(s), encargado_id=encargado_id, dia=dia, hora=hora)
 
-
-def programar(id: UUID, dia: date, hora: time, por: UUID) -> SolicitudVista:
-    return _operar(id, lambda s: s.programar(dia, hora, por),
-                   lambda s: SolicitudProgramada(**_ids(s), encargado_id=s.encargado_id, dia=dia, hora=hora))
+    return _operar(id, accion, programada if hora else None)
 
 
 def registrar_recoleccion(id: UUID, kg: Decimal | None, por: UUID) -> SolicitudVista:
@@ -211,4 +215,5 @@ def _ids(s: Solicitud) -> dict:
 def _vista(s: Solicitud) -> SolicitudVista:
     solicitante = directorio.solicitante(s.solicitante_id)
     return SolicitudVista(**asdict(s), colectivo=COLECTIVO_DEL_FLUJO[s.flujo], solicitante_nombre=solicitante.nombre,
-                          telefono=solicitante.telefono, recibida=s.historial[0].fecha)
+                          telefono=solicitante.telefono, recibida=s.historial[0].fecha,
+                          zona=directorio.zona(s.zona_id).nombre)

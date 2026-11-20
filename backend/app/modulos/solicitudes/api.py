@@ -24,11 +24,8 @@ class Asistida(BaseModel):
 
 class Asignacion(BaseModel):
     encargado_id: UUID
-
-
-class Programacion(BaseModel):
     dia: date
-    hora: time
+    hora: time | None = None  # sin hora queda asignada; con hora, programada (RN-02)
 
 
 class Recoleccion(BaseModel):
@@ -75,13 +72,7 @@ def sugerencias(id: UUID, u: acceso.Usuario = Sesion) -> list[directorio.Encarga
 @router.post("/{id}/asignacion")
 def asignar(id: UUID, datos: Asignacion, u: acceso.Usuario = Sesion) -> solicitudes.SolicitudVista:
     _visible(id, u)
-    return solicitudes.asignar(id, datos.encargado_id, u.id)
-
-
-@router.post("/{id}/programacion")
-def programar(id: UUID, datos: Programacion, u: acceso.Usuario = Sesion) -> solicitudes.SolicitudVista:
-    _visible(id, u)
-    return solicitudes.programar(id, datos.dia, datos.hora, u.id)
+    return solicitudes.asignar(id, datos.encargado_id, datos.dia, datos.hora, u.id)
 
 
 @router.post("/{id}/recoleccion")

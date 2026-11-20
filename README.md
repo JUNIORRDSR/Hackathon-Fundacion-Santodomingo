@@ -34,11 +34,20 @@ pytest
 `pytest` también corre las reglas de arquitectura y de tamaño: si una falla, se corrige el código, no la regla
 ([ADR-0006](docs/adr/0006-reglas-de-arquitectura-en-pruebas.md)).
 
+## Un día completo de demo
+
+`python scripts/dia_de_demo.py` (o `python scripts/dia_de_demo.py https://<url-publicada>`) carga por la API 16 vecinos
+ficticios con sus solicitudes del día: pendientes, programadas a distintas horas, recolectadas con kilos (y sus puntos),
+una rechazada y dos canjes pedidos por WhatsApp. Se puede correr varias veces sin duplicar.
+
 ## Probar el bot sin WhatsApp
 
-1. `POST /api/acceso/entrar` con `{"usuario": "admin", "clave": "ecoconecta-demo"}`.
-2. `POST /api/whatsapp/simulador` con `{"telefono": "+573000000001", "texto": "Hola"}`, y sigue la conversación.
-3. `GET /api/whatsapp/simulador/mensajes` muestra todo lo que el sistema envió, avisos incluidos.
+Entra a la app (usuario `admin`, clave `ecoconecta-demo`) y abre **WhatsApp**: a la izquierda las conversaciones, a la
+derecha el hilo. En **Simular un vecino** escribes como si fueras un celular (`+573000000009`, «Hola»). Con **Tomar el
+control** el bot calla y respondes como coordinación; **Devolver al bot** lo reactiva (ADR-0007).
+
+Por API: `POST /api/whatsapp/simulador` con `{"telefono": "+573000000001", "texto": "Hola"}`, y
+`GET /api/whatsapp/conversaciones/{telefono}/mensajes` para el hilo, avisos incluidos.
 
 ## WhatsApp real con el sandbox de Twilio
 
@@ -82,6 +91,7 @@ Los nombres están en [.env.example](.env.example); los valores nunca van al rep
 | `DATABASE_URL` | Conexión a PostgreSQL; en local, si falta, usa la base de `docker-compose.yml` |
 | `CLAVE_SESION` | Firma la cookie de sesión |
 | `CLAVE_DEMO` | Clave de los usuarios de demostración |
+| `CODIGO_REGISTRO` | Código que la fundación da a quien crea su cuenta de coordinación; en local, `villas-2026` (ADR-0009) |
 | `SEMBRAR_DEMO` | `1` carga zonas, encargados, usuarios y contenidos ficticios |
 | `TRANSPORTE` | `simulado` o `twilio` |
 | `CONVERSADOR` | `menu` o `llm` |

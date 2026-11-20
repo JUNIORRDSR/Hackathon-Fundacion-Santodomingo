@@ -21,3 +21,9 @@ dispositivo principal es una tablet.
 
 - Flask: para publicar OpenAPI necesita una librería que no está en la lista permitida.
 - Django: trae el panel de administración, pero su ORM no es SQLAlchemy y pesa más para un día.
+
+## Nota · 2026-11-20
+
+Con el [ADR-0007](0007-frontend-de-daniela-y-monitor-de-whatsapp.md) el frontend pasa a ser la app de Daniela: los
+tipos de la API los escribe a mano el host (`frontend/src/host/repositorio.ts`) en lugar de generarse del OpenAPI, y el
+manifiesto de la PWA queda pendiente.

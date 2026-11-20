@@ -23,6 +23,15 @@ class Audiencia(StrEnum):
     ENCARGADO = "encargado"  # el coordinador se lo muestra en la tablet: video o imagen, sin texto
 
 
+class Categoria(StrEnum):
+    """Cómo agrupa la capacitación sus piezas."""
+
+    ORGANICO = "organico"
+    RECICLABLE = "reciclable"
+    MEZCLAS = "mezclas"
+    PRACTICAS = "practicas"
+
+
 class Formato(StrEnum):
     VIDEO = "video"
     IMAGEN = "imagen"
@@ -38,6 +47,10 @@ class NuevoContenido(BaseModel):
     texto_corto: str = Field(max_length=600)  # cuerpo del mensaje de WhatsApp
     url: str | None = None  # video o imagen pública
     activo: bool = True
+    categoria: Categoria = Categoria.PRACTICAS
+    pasos: list[str] = []  # guía paso a paso
+    subtitulos_url: str | None = None  # WebVTT del video
+    transcripcion: str | None = None
 
 
 class ContenidoVista(NuevoContenido):
@@ -71,6 +84,11 @@ def actualizar(id: UUID, datos: NuevoContenido) -> ContenidoVista:
         if c.execute(update(t.contenidos).where(t.contenidos.c.id == id).values(**datos.model_dump())).rowcount == 0:
             raise NoEncontrado(f"No existe el contenido {id}.")
     return ContenidoVista(id=id, **datos.model_dump())
+
+
+def capacitacion_publica(flujo: Flujo | None = None) -> list[ContenidoVista]:
+    """Lo que ve cualquiera sin sesión y lo que el bot ofrece en «Aprender»: todo para el solicitante menos el canje."""
+    return [c for c in listar(Audiencia.SOLICITANTE, flujo) if c.proposito != Proposito.CANJE]
 
 
 def para_rechazo(flujo: Flujo) -> ContenidoVista | None:

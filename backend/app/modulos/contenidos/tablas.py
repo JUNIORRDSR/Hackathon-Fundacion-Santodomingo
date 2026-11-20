@@ -1,5 +1,6 @@
 """Tablas de contenidos, en su propio esquema (ADR-0001)."""
 from sqlalchemy import Boolean, Column, DateTime, String, Table, Text, Uuid
+from sqlalchemy.dialects.postgresql import JSONB
 
 from app.compartido.bd import metadata
 
@@ -14,6 +15,10 @@ contenidos = Table(
     Column("texto_corto", String(600), nullable=False),
     Column("url", Text),
     Column("activo", Boolean, nullable=False),
+    Column("categoria", String(12), nullable=False),
+    Column("pasos", JSONB, nullable=False),
+    Column("subtitulos_url", Text),
+    Column("transcripcion", Text),
     Column("creado", DateTime(timezone=True), nullable=False),
     schema="contenidos",
 )

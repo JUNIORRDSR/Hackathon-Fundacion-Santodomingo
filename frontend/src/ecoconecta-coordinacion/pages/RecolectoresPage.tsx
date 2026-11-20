@@ -34,7 +34,7 @@ export function RecolectoresPage({
           {[...collectors]
             .sort((a, b) => Number(b.activo) - Number(a.activo) || a.nombre.localeCompare(b.nombre, 'es'))
             .map((item) => (
-              <li className="card collection-card" key={item.id}>
+              <li className="card collection-card clickable-card" key={item.id}>
                 <div className="collection-card-top">
                   <span className="icon-tile">
                     <Icon name="user" />
@@ -53,11 +53,11 @@ export function RecolectoresPage({
                 </div>
                 <button
                   type="button"
-                  className="button button-secondary"
+                  className="icon-button card-action"
                   aria-label={'Editar a ' + item.nombre}
                   onClick={() => setEditing(item)}
                 >
-                  <Icon name="edit" /> Editar
+                  <Icon name="edit" />
                 </button>
               </li>
             ))}

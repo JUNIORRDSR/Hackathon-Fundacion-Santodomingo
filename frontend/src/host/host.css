@@ -1,6 +1,6 @@
 /* Pantallas del host (entrar, registros, canjes, WhatsApp) con los tokens del módulo de Daniela (.eco-app). */
 .eco-app {
-  & ::selection { background: #f6c40055; color: inherit; }
+  & ::selection { background: #f6c40066; color: var(--ink); }
   & input, & textarea { caret-color: var(--highlight); }
   & .field-help { color: var(--muted); font-size: .8125rem; }
 
@@ -20,16 +20,8 @@
   & .acceso-guias { display: inline-flex; align-items: center; gap: .45rem; color: var(--muted); font-size: .875rem; font-weight: 600; text-underline-offset: .2em; }
 
   /* Canjes */
-  & .canje-cifras { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 1.4rem; }
-  & .canje-tarjeta { gap: .85rem; }
-  & .canje-tarjeta[data-estado="cancelado"] { opacity: .72; }
-  & .canje-codigo { padding: .2rem .65rem; border-radius: 9999px; background: #fbf0c4; color: var(--accent-ink); font-size: .9rem; font-weight: 750; letter-spacing: .02em; }
-  & .canje-premio { display: flex; gap: .75rem; align-items: center; }
-  & .canje-premio h2 { font-size: 1.15rem; }
-  & .canje-costo { color: var(--muted); font-size: .875rem; font-weight: 600; }
-  & .canje-acciones { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: auto; }
-  & .canje-acciones .button { margin-top: 0; }
-  & .premios { margin-top: 2.5rem; }
+  & .canje-vista { margin-bottom: 1.1rem; }
+  & .premio-nota { margin-bottom: .9rem; }
   & .premios .panel-heading { margin-bottom: 1rem; align-items: end; }
   & .premios .panel-heading h2 { font-size: 1.35rem; }
   & .premios-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr)); gap: .9rem; }
@@ -40,11 +32,16 @@
   & .premio-costo span { font-size: .875rem; font-weight: 600; letter-spacing: 0; color: var(--muted); }
   & .premio-etiquetas { display: flex; gap: .35rem; flex-wrap: wrap; }
   & .premio-ejemplo { background: #fbf0c4; color: var(--accent-ink); }
-  & .premio .button { justify-self: start; margin-top: .25rem; }
 
   /* Botón flotante de WhatsApp */
-  &:has(> .whatsapp-fab) .site-footer { padding-bottom: 5.5rem; }
-  & .whatsapp-fab { position: fixed; z-index: 4; right: max(1.25rem, env(safe-area-inset-right)); bottom: max(1.25rem, env(safe-area-inset-bottom)); display: inline-flex; align-items: center; gap: .6rem; min-height: 54px; padding: .45rem 1.2rem .45rem .45rem; border-radius: 9999px; background: #f28c00; color: #063b2e; font-weight: 700; text-decoration: none; box-shadow: 0 12px 26px -10px #f28c00aa, 0 3px 8px #2d4b3f26; transition: transform 180ms, background-color 180ms; }
+  /* El botón vive en un carril sticky al final del contenido: baja con la pantalla y se detiene encima del pie. */
+  & .fab-lane { position: sticky; bottom: 0; z-index: 4; display: flex; justify-content: flex-end; height: 0; margin-top: 4.75rem; pointer-events: none; }
+  /* El contenido ocupa el alto disponible: el carril queda siempre al fondo, justo encima del pie. */
+  &:has(.fab-lane) .main-content { display: flex; flex-direction: column; padding-bottom: 0; }
+  &:has(.fab-lane) .motion-route-stage { flex: 1; }
+  /* Con nombre propio en la View Transition de Daniela, el botón queda encima del contenido que cambia. */
+  & .whatsapp-fab { view-transition-name: eco-whatsapp; }
+  & .whatsapp-fab { position: absolute; right: 0; bottom: max(1.25rem, env(safe-area-inset-bottom)); pointer-events: auto; display: inline-flex; align-items: center; gap: .6rem; min-height: 54px; padding: .45rem 1.2rem .45rem .45rem; border-radius: 9999px; background: #f28c00; color: #063b2e; font-weight: 700; text-decoration: none; box-shadow: 0 12px 26px -10px #f28c00aa, 0 3px 8px #2d4b3f26; transition: transform 180ms, background-color 180ms; }
   & .whatsapp-fab:hover { background: #f69a1f; transform: translateY(-2px); }
   & .whatsapp-fab svg { width: 2.6rem; height: 2.6rem; padding: .6rem; border-radius: 50%; background: #ffffff; --icon-stroke: #168a2e; stroke-width: 2.4; }
 
@@ -103,6 +100,11 @@
     & .monitor { grid-template-columns: minmax(0, 1fr); height: auto; }
     & .monitor-lista { max-height: 16rem; }
     & .monitor-hilo { height: 34rem; }
-    & .canje-cifras { grid-template-columns: minmax(0, 1fr); }
   }
 }
+
+/* La barra y el botón no se funden ni se mueven al cambiar de pantalla: solo se muestra su versión real. */
+::view-transition-old(eco-topbar),
+::view-transition-old(eco-whatsapp) { display: none; }
+::view-transition-new(eco-topbar),
+::view-transition-new(eco-whatsapp) { animation: none; }

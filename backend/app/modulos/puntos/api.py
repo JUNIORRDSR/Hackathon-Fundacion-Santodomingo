@@ -26,20 +26,24 @@ def saldo(solicitante_id: UUID, _: acceso.Usuario = Sesion) -> puntos.Saldo:
     return puntos.saldo(solicitante_id)
 
 
+@router.get("/por-codigo")
+def por_codigo(_: acceso.Usuario = Sesion) -> dict[str, int]:
+    return puntos.puntos_por_codigo()
+
+
 @router.get("/premios")
 def premios(_: acceso.Usuario = Sesion) -> list[puntos.PremioVista]:
     return puntos.premios()
 
 
 @router.post("/premios", status_code=201)
-def crear_premio(datos: puntos.NuevoPremio, u: acceso.Usuario = Sesion) -> puntos.PremioVista:
-    acceso.exigir_administrador(u)
+def crear_premio(datos: puntos.NuevoPremio, _: acceso.Usuario = Sesion) -> puntos.PremioVista:
+    """La coordinación y la administración editan el catálogo: la huerta es quien entrega (ADR-0008)."""
     return puntos.guardar_premio(datos)
 
 
 @router.put("/premios/{id}")
-def editar_premio(id: UUID, datos: puntos.NuevoPremio, u: acceso.Usuario = Sesion) -> puntos.PremioVista:
-    acceso.exigir_administrador(u)
+def editar_premio(id: UUID, datos: puntos.NuevoPremio, _: acceso.Usuario = Sesion) -> puntos.PremioVista:
     return puntos.guardar_premio(datos, id)
 
 

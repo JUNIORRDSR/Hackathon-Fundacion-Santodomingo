@@ -221,13 +221,15 @@ export function Layout({
         <div className="motion-route-stage" ref={stage}>
           {content}
         </div>
+        {coordinator && extraPages.includes('whatsapp') && page !== 'whatsapp' && (
+          <div className="fab-lane">
+            <a className="whatsapp-fab" href={href({ page: 'whatsapp' })} aria-label="Abrir el monitor de WhatsApp">
+              <Icon name="chat" />
+              <span>WhatsApp</span>
+            </a>
+          </div>
+        )}
       </main>
-      {coordinator && extraPages.includes('whatsapp') && page !== 'whatsapp' && (
-        <a className="whatsapp-fab" href={href({ page: 'whatsapp' })} aria-label="Abrir el monitor de WhatsApp">
-          <Icon name="chat" />
-          <span>WhatsApp</span>
-        </a>
-      )}
       <footer className="site-width site-footer">
         <p>
           EcoConecta <span>·</span> Villas de San Pablo, Barranquilla

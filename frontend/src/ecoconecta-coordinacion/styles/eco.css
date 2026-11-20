@@ -68,7 +68,7 @@ html:has(.eco-app), body:has(> #root > .eco-app) {
   & .skip-link { position: fixed; z-index: 6; top: .65rem; left: .65rem; transform: translateY(-160%); }
   & .skip-link:focus { transform: none; padding: .65rem 1rem; background: var(--surface); border-radius: .5rem; }
 
-  & .topbar { position: sticky; top: 0; z-index: 5; background: var(--background); }
+  & .topbar { position: sticky; top: 0; z-index: 5; background: var(--background); view-transition-name: eco-topbar; }
   & .topbar-actions { display: flex; align-items: center; gap: .15rem; justify-self: end; }
   & .topbar-inner { min-height: 4rem; display: grid; grid-template-columns: auto 1fr auto; align-items: center; column-gap: 1rem; }
   & .brand-link { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; border-radius: .65rem; }
@@ -148,6 +148,27 @@ html:has(.eco-app), body:has(> #root > .eco-app) {
   & .request-tablet-type { display: none; font-size: .8125rem; color: var(--muted); }
   & .request-date { color: var(--muted); font-variant-numeric: tabular-nums; }
   & .request-action { justify-self: end; padding-inline: .6rem; min-width: 44px; }
+  /* Toda la fila abre la solicitud: el botón sigue para el teclado y su área cubre la fila. */
+  & .request-row { position: relative; cursor: pointer; transition: background-color 160ms; }
+  & .request-row:hover { background: var(--surface-muted); }
+  & .request-row:hover .request-chevron { translate: 3px 0; }
+  & .request-action::after { content: ""; position: absolute; inset: 0; }
+  & .request-chevron { rotate: -90deg; transition: translate 160ms; }
+  & .data-table :is(.request-columns, .request-row) { grid-template-columns: var(--columns); }
+  /* Catálogos en tarjetas: toda la tarjeta abre la edición; el botón del lápiz cubre la tarjeta. */
+  & .clickable-card { position: relative; cursor: pointer; transition: background-color 160ms, box-shadow 160ms; }
+  & .clickable-card:hover { background: var(--surface-muted); box-shadow: 0 12px 26px -14px #2d4b3f45; }
+  & .card-action { align-self: flex-end; justify-self: end; margin-top: auto; }
+  & .card-action::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+  & .clickable-card .card-action.icon-button[type="button"]:is(:hover, :active) { transform: none; filter: none; }
+  & .data-cell { min-width: 0; color: var(--muted); overflow-wrap: anywhere; }
+  & .data-cell:first-child { color: var(--ink); }
+  & .data-cell .request-name { margin-bottom: .1rem; }
+  & .data-cell strong { color: var(--ink); font-weight: 650; }
+  & .data-code { font-weight: 750; color: var(--highlight); white-space: nowrap; }
+  & .data-points { font-weight: 700; color: #168a2e; font-variant-numeric: tabular-nums; }
+  /* Sin el salto de los botones: con transform, el área de clic se encogería al botón. */
+  & .request-list .request-row .request-action[type="button"]:is(:hover, :active) { transform: none; filter: none; }
   & .status-badge { display: inline-flex; justify-self: start; align-items: center; gap: .38rem; width: fit-content; max-width: 100%; border-radius: 99px; padding: .25rem .58rem; white-space: nowrap; font-size: .8125rem; font-weight: 650; background: var(--surface-muted); color: var(--ink); }
   & .status-badge > svg { width: .875rem; height: .875rem; }
 
@@ -313,6 +334,9 @@ html:has(.eco-app), body:has(> #root > .eco-app) {
     & .request-type { font-size: .8125rem; grid-row: 2; grid-column: 1; }
     & .request-date { font-size: .8125rem; grid-row: 3; grid-column: 1; }
     & .request-row .status-badge { grid-row: 2; grid-column: 2; justify-self: end; }
+    & .data-table .request-row { grid-template-columns: minmax(0, 1fr) auto; }
+    & .data-table .data-cell { grid-column: 1; grid-row: auto; font-size: .8125rem; }
+    & .data-table .request-action { grid-column: 2; grid-row: 1; }
     & .page-header, & .training-hero { flex-wrap: wrap; align-items: start; }
     & .training-hero { padding: 1.1rem; }
     & .site-footer { justify-content: center; text-align: center; }

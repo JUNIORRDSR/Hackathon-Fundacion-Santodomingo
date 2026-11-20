@@ -16,8 +16,8 @@ interface Premio {
 }
 const NUEVO: Premio = { nombre: '', costo: 30, activo: true }
 
-// El catálogo lo edita la administración; la coordinación lo consulta para orientar al vecino (ADR-0008).
-export function Premios({ administrador }: { administrador: boolean }) {
+// La coordinación y la administración editan el catálogo: tocar un premio lo abre (ADR-0008).
+export function Premios({ nuevo }: { nuevo: number }) {
   const [premios, setPremios] = useState<Premio[]>([])
   const [editando, setEditando] = useState<Premio>()
   const [error, setError] = useState('')
@@ -27,30 +27,19 @@ export function Premios({ administrador }: { administrador: boolean }) {
       .catch((e: Error) => setError(e.message))
   }, [])
   useEffect(cargar, [cargar])
+  useEffect(() => {
+    if (nuevo) setEditando(NUEVO)
+  }, [nuevo])
 
   return (
-    <section className="premios" aria-labelledby="premios-titulo">
-      <div className="panel-heading">
-        <div>
-          <h2 id="premios-titulo">Premios del canje</h2>
-          <p>
-            {premios.some((p) => p.ejemplo)
-              ? 'Los de ejemplo quedan así hasta que la fundación fije sus valores.'
-              : 'Lo que el vecino puede pedir con sus puntos.'}
-          </p>
-        </div>
-        {administrador ? (
-          <button type="button" className="button button-primary" onClick={() => setEditando(NUEVO)}>
-            <Icon name="plus" /> Agregar premio
-          </button>
-        ) : (
-          <span className="muted">Los edita la administración</span>
-        )}
-      </div>
+    <section className="premios" aria-label="Premios del canje">
+      {premios.some((p) => p.ejemplo) && (
+        <p className="muted premio-nota">Los premios de ejemplo quedan así hasta que la fundación fije sus valores.</p>
+      )}
       {error && <ErrorMessage message={error} retry={cargar} />}
       <ul className="premios-grid">
         {premios.map((p) => (
-          <li key={p.id} className="card premio" data-activo={p.activo}>
+          <li key={p.id} className="card premio clickable-card" data-activo={p.activo}>
             <span className="icon-tile">
               <Icon name="gift" />
             </span>
@@ -62,17 +51,20 @@ export function Premios({ administrador }: { administrador: boolean }) {
               <span className="status-badge">{p.activo ? 'Disponible' : 'No disponible'}</span>
               {p.ejemplo && <span className="status-badge premio-ejemplo">Ejemplo</span>}
             </span>
-            {administrador && (
-              <button type="button" className="button button-secondary" onClick={() => setEditando(p)}>
-                <Icon name="edit" /> Editar
-              </button>
-            )}
+            <button
+              type="button"
+              className="icon-button card-action"
+              aria-label={'Editar ' + p.nombre}
+              onClick={() => setEditando(p)}
+            >
+              <Icon name="edit" />
+            </button>
           </li>
         ))}
       </ul>
       {editando && (
         <FormularioPremio
-          key={editando.id ?? 'nuevo'}
+          key={editando.id ?? 'nuevo-' + nuevo}
           premio={editando}
           onClose={() => setEditando(undefined)}
           alGuardar={cargar}

@@ -77,3 +77,12 @@ def _cambiar_control(telefono: str, control: str | None) -> None:
     with transaccion() as c:
         c.execute(insertar_o_actualizar(t.conversaciones).values(nueva).on_conflict_do_update(
             index_elements=[t.conversaciones.c.telefono], set_={"control": control, "actualizada": ahora}))
+
+
+def pedidos_en_espera() -> dict[str, dict]:
+    """El primer pedido que dejó cada vecino al registrarse, por teléfono, mientras espera que lo acepten (ADR-0010)."""
+    columnas = t.conversaciones.c
+    with transaccion() as c:
+        consulta = select(columnas.telefono, columnas.memoria).where(columnas.memoria.has_key("pedido_en_espera"))
+        filas = c.execute(consulta)
+        return {fila.telefono: fila.memoria["pedido_en_espera"] for fila in filas}

@@ -32,6 +32,8 @@ interface RequestDetails {
   detalle?: string
   // Franja que eligió el vecino al pedir: orienta la hora de la asignación.
   horario?: string
+  // Puntos que ganó el vecino con esta recolección (solo las recolectadas).
+  puntos?: number
   motivo?: string // de la cancelación o del rechazo
 }
 

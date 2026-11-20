@@ -1,4 +1,5 @@
-"""Avisos al solicitante: plantillas fijas que salen por WhatsApp después del commit de cada evento (ADR-0003)."""
+"""Avisos al solicitante que salen por WhatsApp después del commit de cada evento (ADR-0003).
+Los textos viven en respuestas.json (Jorge)."""
 from uuid import UUID
 
 from app.compartido.eventos import suscribir_despues
@@ -12,6 +13,9 @@ from app.modulos.whatsapp import bot
 from app.modulos.whatsapp.bot import enviar
 from app.modulos.whatsapp.contrato import Herramientas, MensajeSaliente
 from app.modulos.whatsapp.menu import texto_de_pieza
+from app.modulos.whatsapp.respuestas import texto as plantilla
+
+OPCION_PUNTOS = "4"
 
 
 def escuchar() -> None:
@@ -30,25 +34,22 @@ def _avisar(solicitante_id: UUID, texto: str) -> None:
 
 def _al_recibir(e: solicitudes.SolicitudRecibida) -> None:
     colectivo = "huerteros" if e.flujo == Flujo.ORGANICO else "recicladores"
-    _avisar(e.solicitante_id, f"Recibimos tu solicitud {e.codigo} de {NOMBRE_FLUJO[e.flujo]}. "
-                              f"Tu código es *{e.codigo}*: Escríbelo en tu bolsa con marcador para que la huerta "
-                              "la identifique al pesarla. "
-                              f"La coordinación de {colectivo} te confirma día, hora y quién pasa.")
+    _avisar(e.solicitante_id, plantilla("aviso_solicitud_recibida", codigo=e.codigo, flujo=NOMBRE_FLUJO[e.flujo],
+                                        colectivo=colectivo))
 
 
 def _al_programar(e: solicitudes.SolicitudProgramada) -> None:
     encargado = directorio.encargado(e.encargado_id).nombre
-    # hora_corta ya termina en «a. m.» o «p. m.»: la frase no lleva punto final propio.
-    _avisar(e.solicitante_id, f"{encargado} pasa por tu recolección {e.codigo} el {fecha_larga(e.dia)} a las "
-                              f"{hora_corta(e.hora)}")
+    _avisar(e.solicitante_id, plantilla("aviso_solicitud_programada", encargado=encargado, codigo=e.codigo,
+                                        dia=fecha_larga(e.dia), hora=hora_corta(e.hora)))
 
 
 def _al_acreditar(e: puntos.PuntosAcreditados) -> None:
     peso = f": {kilos(e.kg)} kg" if e.kg else ""
     disponible = puntos.disponible(e.solicitante_id)
-    _avisar(e.solicitante_id, f"¡Gracias por separar! Recibimos tus {NOMBRE_FLUJO[e.flujo]} de {e.codigo}{peso}. "
-                              f"Ganaste {e.puntos} puntos ({e.explicacion}). Ahora tienes {disponible} puntos.\n\n"
-                              + _lo_que_alcanza(disponible))
+    _avisar(e.solicitante_id, plantilla("aviso_puntos_acreditados", flujo=NOMBRE_FLUJO[e.flujo], codigo=e.codigo,
+                                        peso=peso, puntos=e.puntos, explicacion=e.explicacion, saldo=disponible,
+                                        alcance=_lo_que_alcanza(disponible)))
 
 
 def _lo_que_alcanza(disponible: int) -> str:
@@ -56,37 +57,34 @@ def _lo_que_alcanza(disponible: int) -> str:
     premios = puntos.premios(solo_activos=True)
     alcanza = [p for p in premios if p.costo <= disponible]
     if alcanza:
-        return f"Ya te alcanza para {alcanza[-1].nombre}. Escribe 4 para pedir tu premio."
+        return plantilla("aviso_premio_alcanza", premio=alcanza[-1].nombre, opcion=OPCION_PUNTOS)
     if premios:
-        faltan = premios[0].costo - disponible
-        return f"Te faltan {faltan} puntos para {premios[0].nombre}. Escribe 4 para ver los premios."
-    return "Escribe 4 para ver tus puntos."
-
+        return plantilla("aviso_premio_falta", faltan=premios[0].costo - disponible, premio=premios[0].nombre,
+                         opcion=OPCION_PUNTOS)
+    return plantilla("aviso_ver_puntos", opcion=OPCION_PUNTOS)
 
 
 def _al_entregar_canje(e: puntos.CanjeEntregado) -> None:
-    _avisar(e.solicitante_id, f"Entregamos tu canje {e.codigo}: {e.premio}. Te quedan {e.saldo} puntos. ¡Gracias por "
-                              "separar!")
+    _avisar(e.solicitante_id, plantilla("aviso_canje_entregado", codigo=e.codigo, premio=e.premio, saldo=e.saldo))
 
 
 def _al_rechazar(e: solicitudes.SolicitudRechazada) -> None:
     pieza = contenidos.para_rechazo(e.flujo)
-    texto = f"No pudimos recibir {e.codigo}: {e.motivo}."
+    texto = plantilla("aviso_solicitud_rechazada", codigo=e.codigo, motivo=e.motivo)
     _avisar(e.solicitante_id, texto + (f"\n\n{texto_de_pieza(pieza)}" if pieza else ""))
 
 
 def _al_cancelar(e: solicitudes.SolicitudCancelada) -> None:
-    _avisar(e.solicitante_id, f"Cancelamos la solicitud {e.codigo}.")
+    _avisar(e.solicitante_id, plantilla("aviso_solicitud_cancelada", codigo=e.codigo))
 
 
 def _al_habilitar(e: directorio.SolicitanteHabilitado) -> None:
     """Si dejó su primer pedido al registrarse, entra ahora: el aviso de «recibida» le da el código de la bolsa."""
     pedido = bot.tomar_pedido_en_espera(directorio.solicitante(e.solicitante_id).telefono)
     if pedido is None:
-        _avisar(e.solicitante_id, "¡Listo! Ya puedes pedir recolecciones. Escribe MENÚ para empezar.")
+        _avisar(e.solicitante_id, plantilla("aviso_solicitante_habilitado", comando="MENÚ"))
         return
-    _avisar(e.solicitante_id, "¡Bienvenido a EcoConecta! La coordinación aprobó tu registro y ya entra tu "
-                              "primer pedido.")
+    _avisar(e.solicitante_id, plantilla("aviso_bienvenida_con_pedido"))
     try:
         Herramientas(e.solicitante_id).pedir_recoleccion(Flujo(pedido["flujo"]), Franja(pedido["preferencia"]))
     except ErrorDeNegocio as error:

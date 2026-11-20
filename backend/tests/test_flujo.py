@@ -21,6 +21,8 @@ def test_escenario_de_demostracion():
     _buscar_por_el_codigo_de_la_bolsa(huerteros, recicladores, solicitud)
     _asignar_programar_y_recoger(huerteros, solicitud)
     assert admin.get(f"/api/puntos/solicitantes/{solicitante['id']}").json()["saldo"] == 12  # RN-05, RN-06
+    assert admin.get("/api/puntos/por-codigo").json()[solicitud["codigo"]] == 12
+    assert huerteros.post("/api/puntos/premios", json={"nombre": "Abono", "costo": 80}).status_code == 201
     _comprobar_avisos(admin)
     _consultar_puntos_y_canje(admin)
     assert huerteros.get("/api/reportes/resumen").json()["total_solicitudes"] >= 1
@@ -37,7 +39,10 @@ def _registrar_por_whatsapp_y_habilitar(admin: TestClient) -> dict:
     for texto in ("Hola", "1", "2", "2", "Restaurante La Esquina, local 3", "La Esquina", "1"):
         _whatsapp(admin, texto)
     assert "te enviamos el código para tu bolsa" in _whatsapp(admin, "3")[0]
-    assert admin.get("/api/solicitudes").json() == []  # el pedido espera la aprobación (RN-08)
+    solicitudes = admin.get("/api/solicitudes").json()
+    assert all(s["telefono"] != TELEFONO for s in solicitudes)  # el pedido espera la aprobación (RN-08)
+    en_espera = admin.get("/api/whatsapp/pedidos-en-espera").json()
+    assert en_espera[TELEFONO] == {"flujo": "organico", "preferencia": "noche"}
     pendientes = admin.get("/api/directorio/solicitantes", params={"estado": "pendiente"}).json()
     solicitante = next(s for s in pendientes if s["telefono"] == TELEFONO)
     assert admin.post(f"/api/directorio/solicitantes/{solicitante['id']}/habilitacion").status_code == 200

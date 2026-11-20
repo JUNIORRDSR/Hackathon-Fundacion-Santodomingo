@@ -148,6 +148,14 @@ html:has(.eco-app), body:has(> #root > .eco-app) {
   & .request-tablet-type { display: none; font-size: .8125rem; color: var(--muted); }
   & .request-date { color: var(--muted); font-variant-numeric: tabular-nums; }
   & .request-action { justify-self: end; padding-inline: .6rem; min-width: 44px; }
+  /* Toda la fila abre la solicitud: el botón sigue para el teclado y su área cubre la fila. */
+  & .request-row { position: relative; cursor: pointer; transition: background-color 160ms; }
+  & .request-row:hover { background: var(--surface-muted); }
+  & .request-row:hover .request-chevron { translate: 3px 0; }
+  & .request-action::after { content: ""; position: absolute; inset: 0; }
+  & .request-chevron { rotate: -90deg; transition: translate 160ms; }
+  /* Sin el salto de los botones: con transform, el área de clic se encogería al botón. */
+  & .request-list .request-row .request-action[type="button"]:is(:hover, :active) { transform: none; filter: none; }
   & .status-badge { display: inline-flex; justify-self: start; align-items: center; gap: .38rem; width: fit-content; max-width: 100%; border-radius: 99px; padding: .25rem .58rem; white-space: nowrap; font-size: .8125rem; font-weight: 650; background: var(--surface-muted); color: var(--ink); }
   & .status-badge > svg { width: .875rem; height: .875rem; }
 

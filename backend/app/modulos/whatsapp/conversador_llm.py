@@ -118,7 +118,7 @@ def _host_recurso(base_url: str) -> str:
 
 
 def _texto_para_clasificar(turno: Turno, memoria: dict) -> str:
-    if "pidiendo" in memoria or turno.media_url or len(turno.texto) > 160:
+    if "pidiendo" in memoria or "canjeando" in memoria or turno.media_url or len(turno.texto) > 160:
         return ""
     texto = "".join(letra for letra in normalize("NFKD", turno.texto.casefold()) if not combining(letra))
     if _DATO_EXPLICITO.search(texto):

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
-import mainLogo from '../../../../identidad-visual/Logo EcoConecta.png'
+import mainLogo from '../../../../identidad-visual/Logo EcoConecta - Verde bosque.png'
 import villasLogo from '../../../../identidad-visual/Logo villas de san pablo.png'
 import foundationLogo from '../../../../identidad-visual/Logo Santo Domingo V1.png'
 import { groupLabels } from '../../labels'

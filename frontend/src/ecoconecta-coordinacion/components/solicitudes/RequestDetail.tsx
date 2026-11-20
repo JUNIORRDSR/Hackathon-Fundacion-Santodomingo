@@ -117,6 +117,12 @@ export function RequestDetail({
                 <dd>{request.motivo}</dd>
               </div>
             )}
+            {request.horario && (
+              <div>
+                <dt>Horario que prefiere</dt>
+                <dd>{request.horario}</dd>
+              </div>
+            )}
             {request.detalle && (
               <div className="detail-wide">
                 <dt>Observaciones</dt>

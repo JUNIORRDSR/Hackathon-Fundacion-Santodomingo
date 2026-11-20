@@ -92,6 +92,7 @@ export function Layout({
   onChange,
   demo,
   extraPages = [],
+  badges = {},
   onSignOut,
   children,
 }: {
@@ -102,6 +103,7 @@ export function Layout({
   onChange?: (id: string) => void
   demo: boolean
   extraPages?: EcoPage[]
+  badges?: Partial<Record<EcoPage, number>>
   onSignOut?: () => void
   children: ReactNode
 }) {
@@ -109,6 +111,8 @@ export function Layout({
   const inBar = visible.filter((item) => mainPages.includes(item.page))
   const inMore = visible.filter((item) => !mainPages.includes(item.page))
   const currentInMore = inMore.find((item) => item.page === page)
+  const moreBadge = inMore.reduce((total, item) => total + (badges[item.page] ?? 0), 0)
+  const badge = (count?: number) => (count ? <span className="nav-badge">{count}</span> : null)
   const main = useRef<HTMLElement>(null)
   const stage = useRef<HTMLDivElement>(null)
   const { visiblePage, content } = useRouteScene(
@@ -167,6 +171,7 @@ export function Layout({
                   <a key={target} href={href({ page: target })} aria-current={page === target ? 'page' : undefined}>
                     <Icon name={icon} />
                     <span>{label}</span>
+                    {badge(badges[target])}
                   </a>
                 ))}
                 {inMore.length > 0 && (
@@ -181,6 +186,7 @@ export function Layout({
                     <summary>
                       <Icon name={currentInMore?.icon ?? 'more'} />
                       <span>{currentInMore?.label ?? 'Más'}</span>
+                      {badge(moreBadge)}
                       <Icon name="chevron" className="nav-more-chevron" />
                     </summary>
                     <div className="nav-more-menu">
@@ -192,6 +198,7 @@ export function Layout({
                         >
                           <Icon name={icon} />
                           <span>{label}</span>
+                          {badge(badges[target])}
                         </a>
                       ))}
                     </div>

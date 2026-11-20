@@ -12,9 +12,14 @@ interface Solicitante {
   telefono: string
 }
 
+const DESCRIPCION =
+  'Vecinos y negocios nuevos de WhatsApp. Al aceptarlos, su primer pedido entra a Solicitudes ' +
+  'y reciben su código para la bolsa.'
+
 // RN-08: quien se registró solo por WhatsApp entra al piloto cuando la coordinación lo habilita.
 export function PorHabilitar() {
   const [pendientes, setPendientes] = useState<Solicitante[]>([])
+  const [aceptado, setAceptado] = useState('')
   const [error, setError] = useState('')
   const cargar = useCallback(() => {
     api<Solicitante[]>('/directorio/solicitantes?estado=pendiente')
@@ -23,10 +28,12 @@ export function PorHabilitar() {
   }, [])
   useEffect(cargar, [cargar])
 
-  async function habilitar(id: string) {
+  async function habilitar({ id, nombre }: Solicitante) {
     setError('')
     try {
       await api('/directorio/solicitantes/' + id + '/habilitacion', 'POST')
+      setAceptado(nombre)
+      window.dispatchEvent(new Event('registros-cambiaron'))
       cargar()
     } catch (e) {
       setError((e as Error).message)
@@ -35,10 +42,7 @@ export function PorHabilitar() {
 
   return (
     <>
-      <PageHeader
-        title="Registros"
-        description="Vecinos y negocios que se registraron por WhatsApp y esperan habilitación."
-      />
+      <PageHeader title="Registros" description={DESCRIPCION} />
       {error && <ErrorMessage message={error} retry={cargar} />}
       {pendientes.length === 0 ? (
         <div className="card">
@@ -61,12 +65,22 @@ export function PorHabilitar() {
                 </span>
                 <span>{s.telefono}</span>
               </div>
-              <button type="button" className="button button-primary" onClick={() => habilitar(s.id)}>
-                <Icon name="check" /> Habilitar
+              <button type="button" className="button button-primary" onClick={() => habilitar(s)}>
+                <Icon name="check" /> Aceptar vecino
               </button>
             </li>
           ))}
         </ul>
+      )}
+      {aceptado && (
+        <div className="confirmation-anchor">
+          <p className="confirmation" role="status">
+            <Icon name="check" /> {aceptado} ya es parte del piloto. Su primer pedido entró a Solicitudes.
+            <a className="button button-surface" href="#/solicitudes?estado=pendiente">
+              Ver solicitudes
+            </a>
+          </p>
+        </div>
       )}
     </>
   )

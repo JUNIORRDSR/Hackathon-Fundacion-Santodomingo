@@ -85,6 +85,7 @@ html:has(.eco-app), body:has(> #root > .eco-app) {
   & .main-nav a:hover { background: var(--surface-muted); }
   & .main-nav a[aria-current="page"] { color: var(--on-highlight); background: var(--highlight); }
   & .nav-more { position: relative; z-index: 2; }
+  & .nav-badge { display: inline-grid; place-items: center; min-width: 1.3rem; height: 1.3rem; padding-inline: .3rem; border-radius: 9999px; background: var(--yellow); color: var(--highlight); font-size: .72rem; font-weight: 750; font-variant-numeric: tabular-nums; }
   & .nav-more summary { display: inline-flex; gap: .42rem; align-items: center; padding: .5rem .92rem; min-height: 44px; border-radius: 9999px; list-style: none; cursor: pointer; white-space: nowrap; font-weight: 550; font-size: .85rem; }
   & .nav-more summary::-webkit-details-marker { display: none; }
   & .nav-more summary:hover { background: var(--surface-muted); }

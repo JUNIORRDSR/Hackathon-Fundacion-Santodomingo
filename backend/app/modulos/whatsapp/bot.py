@@ -117,6 +117,15 @@ def _conversacion(telefono: str) -> tuple[dict, str | None]:
     return (dict(fila.memoria), fila.control) if fila else ({}, None)
 
 
+def tomar_pedido_en_espera(telefono: str) -> dict | None:
+    """El primer pedido que dejó el vecino al registrarse; se saca de la memoria para que entre una sola vez."""
+    memoria, _ = _conversacion(telefono)
+    pedido = memoria.pop("pedido_en_espera", None)
+    if pedido is not None:
+        _guardar_memoria(telefono, memoria)
+    return pedido
+
+
 def _guardar_memoria(telefono: str, memoria: dict) -> None:
     valores = {"telefono": telefono, "memoria": memoria, "actualizada": datetime.now(timezone.utc)}
     with transaccion() as c:

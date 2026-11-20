@@ -52,8 +52,12 @@ def salir(request: Request) -> None:
 
 
 @router.get("/yo")
-def yo(u: acceso.Usuario = Depends(acceso.usuario_actual)) -> acceso.Usuario:
-    return u
+def yo(request: Request) -> acceso.Usuario | None:
+    """Sin sesión responde null, no 401: abrir la pantalla de entrar no es un error."""
+    try:
+        return acceso.usuario_actual(request)
+    except HTTPException:
+        return None
 
 
 @router.post("/usuarios", status_code=201)

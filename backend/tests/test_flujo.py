@@ -33,9 +33,11 @@ def _whatsapp(cliente: TestClient, texto: str) -> list[str]:
 
 
 def _registrar_por_whatsapp_y_habilitar(admin: TestClient) -> dict:
-    """Una unidad productiva se registra por WhatsApp y queda pendiente hasta que la habilitan (RN-08)."""
-    for texto in ("Hola", "1", "2", "2", "Restaurante La Esquina, local 3", "La Esquina"):
+    """Una unidad productiva se registra por WhatsApp con su primer pedido y queda pendiente hasta que la habilitan."""
+    for texto in ("Hola", "1", "2", "2", "Restaurante La Esquina, local 3", "La Esquina", "1"):
         _whatsapp(admin, texto)
+    assert "te enviamos el código para tu bolsa" in _whatsapp(admin, "3")[0]
+    assert admin.get("/api/solicitudes").json() == []  # el pedido espera la aprobación (RN-08)
     pendientes = admin.get("/api/directorio/solicitantes", params={"estado": "pendiente"}).json()
     solicitante = next(s for s in pendientes if s["telefono"] == TELEFONO)
     assert admin.post(f"/api/directorio/solicitantes/{solicitante['id']}/habilitacion").status_code == 200
@@ -43,9 +45,7 @@ def _registrar_por_whatsapp_y_habilitar(admin: TestClient) -> dict:
 
 
 def _pedir_organicos(admin: TestClient, huerteros: TestClient) -> dict:
-    """Pide orgánicos para la noche y la solicitud llega a la bandeja de huerteros (RN-01)."""
-    _whatsapp(admin, "1")
-    _whatsapp(admin, "3")
+    """Al habilitarlo, su primer pedido (orgánicos, en la noche) llega solo a la bandeja de huerteros (RN-01)."""
     recibidas = huerteros.get("/api/solicitudes", params={"estado": "recibida"}).json()
     return next(s for s in recibidas if s["telefono"] == TELEFONO)
 
@@ -79,7 +79,8 @@ def _comprobar_avisos(admin: TestClient) -> None:
     """El solicitante recibió cada aviso por WhatsApp."""
     mensajes = admin.get("/api/whatsapp/simulador/mensajes", params={"telefono": TELEFONO}).json()
     textos = " | ".join(m["texto"] for m in mensajes)
-    assert "Recibimos tu solicitud ORG-" in textos and "en tu bolsa con marcador" in textos
+    assert "Recibimos tu solicitud ORG-" in textos and "Escríbelo en tu bolsa con marcador" in textos
+    assert "aprobó tu registro" in textos
     assert "Huertero Uno pasa por tu recolección ORG-" in textos
     assert "el sábado 21 de noviembre a las 7:00 p. m. |" in textos
     assert "Ganaste 12 puntos" in textos and "Ahora tienes 12 puntos" in textos
@@ -108,6 +109,7 @@ def _consultar_puntos_y_canje(admin: TestClient) -> None:
 def test_registro_de_coordinacion_con_el_codigo_de_la_fundacion():
     """Sin el código no hay cuenta; con él, la cuenta entra y solo ve su colectivo (ADR-0009)."""
     cliente = TestClient(app)
+    assert cliente.get("/api/acceso/yo").json() is None  # sin sesión: null, no un error
     datos = {"nombre": "Coordinación de prueba", "usuario": "prueba-recicla", "colectivo": "recicladores",
              "clave": "clave-de-prueba", "codigo": "otro"}
     assert cliente.post("/api/acceso/registro", json=datos).status_code == 403

@@ -34,6 +34,8 @@ interface CoordinatorModuleProps {
   publicTrainingHref?: string
   // Páginas que pone el host (registros por habilitar, canjes, WhatsApp) y salida de la sesión.
   extraPages?: Partial<Record<EcoPage, ReactNode>>
+  // Contadores junto a las opciones del menú, como los vecinos por aceptar en Registros.
+  badges?: Partial<Record<EcoPage, number>>
   onSignOut?: () => void
 }
 
@@ -48,6 +50,7 @@ export function CoordinatorModule({
   trainingResources,
   publicTrainingHref,
   extraPages = {},
+  badges,
   onSignOut,
 }: CoordinatorModuleProps) {
   const { page } = location
@@ -61,6 +64,7 @@ export function CoordinatorModule({
       href={href}
       demo={demo}
       extraPages={pages}
+      badges={badges}
       onSignOut={onSignOut}
     >
       {extraPages[page] ?? (

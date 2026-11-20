@@ -33,6 +33,21 @@ function coordinadorDe(usuario: Usuario, grupo: Coordinator['grupo']): Coordinat
   return { id: propio, nombre: usuario.nombre, grupo: propio }
 }
 
+// Los vecinos que esperan que la coordinación los acepte: el contador del menú se refresca solo.
+function usePorAceptar(activo: boolean) {
+  const [cantidad, setCantidad] = useState(0)
+  useEffect(() => {
+    if (!activo) return
+    const contar = () =>
+      void api<unknown[]>('/directorio/solicitantes?estado=pendiente').then((lista) => setCantidad(lista.length))
+    contar()
+    const intervalo = window.setInterval(contar, 8000)
+    window.addEventListener('registros-cambiaron', contar)
+    return () => (window.clearInterval(intervalo), window.removeEventListener('registros-cambiaron', contar))
+  }, [activo])
+  return cantidad
+}
+
 const Cargando = () => (
   <Layout page="inicio" href={hashLink} demo={false}>
     <LoadingState />
@@ -51,6 +66,7 @@ function App() {
   const { usuario, cargando, entrar, registrar, salir } = useSesion()
   const [grupo, setGrupo] = useState<Coordinator['grupo']>('organico')
   const [sugerido, setSugerido] = useState('')
+  const porAceptar = usePorAceptar(!!usuario)
   const [recursos, setRecursos] = useState<TrainingResource[]>()
   useEffect(() => {
     if (usuario) void api<Parameters<typeof recursoDe>[0][]>('/contenidos').then((c) => setRecursos(c.map(recursoDe)))
@@ -86,6 +102,7 @@ function App() {
         canjes: <Canjes administrador={usuario.rol === 'administrador'} />,
         whatsapp: <Whatsapp />,
       }}
+      badges={{ habilitar: porAceptar }}
       onSignOut={() => void salir()}
     />
   )

@@ -1,5 +1,6 @@
-"""Alta por WhatsApp, determinista: autorización de datos (Ley 1581) y datos mínimos. Queda PENDIENTE (RN-08)."""
-from app.compartido.tipos import TipoGenerador
+"""Alta por WhatsApp, determinista: autorización (Ley 1581), datos mínimos y primer pedido. Queda PENDIENTE (RN-08)."""
+from app.compartido.formato import NOMBRE_FLUJO
+from app.compartido.tipos import Flujo, Franja, TipoGenerador
 from app.modulos.directorio import contrato as directorio
 
 AUTORIZACION = ("¡Hola! Soy EcoConecta, de la Fundación Santo Domingo. Para coordinar tus recolecciones guardamos tu "
@@ -47,14 +48,37 @@ def _direccion(texto: str, telefono: str, memoria: dict) -> list[str]:
     return ["¿Cómo te llamamos?"]
 
 
+PRIMER_FLUJO = "¿Qué quieres entregar primero?\n1 Orgánicos (restos de comida)\n2 Reciclables (papel, plástico, vidrio)"
+FRANJAS = {"1": Franja.MANANA, "2": Franja.TARDE, "3": Franja.NOCHE}
+NOMBRE_FRANJA = {Franja.MANANA: "en la mañana", Franja.TARDE: "en la tarde", Franja.NOCHE: "en la noche"}
+
+
 def _nombre_o_alias(texto: str, telefono: str, memoria: dict) -> list[str]:
     if len(texto) < 2:
         return ["Escribe tu nombre o cómo quieres que te llamemos."]
+    memoria.update(paso="primer_flujo", nombre=texto[:60])
+    return [PRIMER_FLUJO]
+
+
+def _primer_flujo(texto: str, telefono: str, memoria: dict) -> list[str]:
+    if texto not in ("1", "2"):
+        return [PRIMER_FLUJO]
+    memoria.update(paso="primera_franja", flujo=(Flujo.ORGANICO if texto == "1" else Flujo.RECICLABLE).value)
+    return ["¿A qué hora te queda mejor que pasen?\n1 Mañana\n2 Tarde\n3 Noche"]
+
+
+def _primera_franja(texto: str, telefono: str, memoria: dict) -> list[str]:
+    """Registra al vecino pendiente y guarda su primer pedido: entra solo cuando la coordinación lo acepte."""
+    if texto not in FRANJAS:
+        return ["Responde 1 para la mañana, 2 para la tarde o 3 para la noche."]
     directorio.registrar_solicitante(directorio.NuevoSolicitante(
-        telefono=telefono, nombre=texto[:60], tipo=memoria["tipo"], zona_id=memoria["zona_id"],
+        telefono=telefono, nombre=memoria["nombre"], tipo=memoria["tipo"], zona_id=memoria["zona_id"],
         direccion=memoria["direccion"], autoriza_datos=True), habilitado=False)
+    nombre, flujo, franja = memoria["nombre"], Flujo(memoria["flujo"]), FRANJAS[texto]
     memoria.clear()
-    return [f"Listo, {texto[:60]}. La coordinación revisa tu registro y te avisamos por aquí."]
+    memoria["pedido_en_espera"] = {"flujo": flujo.value, "preferencia": franja.value}
+    return [f"Listo, {nombre}. Guardamos tu pedido de {NOMBRE_FLUJO[flujo]} {NOMBRE_FRANJA[franja]}. Cuando la "
+            "coordinación apruebe tu registro te enviamos el código para tu bolsa."]
 
 
 def _menu_zonas() -> str:
@@ -69,4 +93,6 @@ _PASOS = {
     "zona": _zona,
     "direccion": _direccion,
     "nombre": _nombre_o_alias,
+    "primer_flujo": _primer_flujo,
+    "primera_franja": _primera_franja,
 }

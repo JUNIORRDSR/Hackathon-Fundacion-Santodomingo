@@ -30,6 +30,8 @@ interface RequestDetails {
   fecha: LocalDate
   fotoUrl?: string
   detalle?: string
+  // Franja que eligió el vecino al pedir: orienta la hora de la asignación.
+  horario?: string
   motivo?: string // de la cancelación o del rechazo
 }
 

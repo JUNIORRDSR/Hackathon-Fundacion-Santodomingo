@@ -19,6 +19,7 @@ interface SolicitudVista {
   zona: string
   direccion: string
   observaciones: string
+  preferencia: 'manana' | 'tarde' | 'noche'
   foto_url: string | null
   encargado_id: string | null
   dia: string | null
@@ -67,6 +68,7 @@ export function solicitudDe(v: SolicitudVista): Request {
     fecha: fechaLocal.format(new Date(v.recibida)),
     fotoUrl: v.foto_url ?? undefined,
     detalle: v.observaciones || undefined,
+    horario: { manana: 'Mañana', tarde: 'Tarde', noche: 'Noche' }[v.preferencia],
     motivo: v.motivo || undefined,
   }
   const asignacion =

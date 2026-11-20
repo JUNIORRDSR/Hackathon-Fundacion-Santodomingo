@@ -12,6 +12,7 @@ from app import semillas
 from app.compartido import bd
 from app.compartido.tipos import ErrorDeNegocio, NoEncontrado
 from app.modulos.acceso import api as acceso_api
+from app.modulos.clasificacion import api as clasificacion_api
 from app.modulos.contenidos import api as contenidos_api
 from app.modulos.directorio import api as directorio_api
 from app.modulos.puntos import api as puntos_api
@@ -23,7 +24,8 @@ from app.modulos.whatsapp import avisos, bot
 
 logging.basicConfig(level=logging.INFO)
 SPA = Path(__file__).resolve().parents[2] / "frontend" / "dist"
-ROUTERS = (acceso_api, solicitudes_api, directorio_api, puntos_api, contenidos_api, reportes_api, whatsapp_api)
+ROUTERS = (acceso_api, solicitudes_api, directorio_api, puntos_api, contenidos_api, reportes_api, whatsapp_api,
+           clasificacion_api)
 
 
 def crear_app() -> FastAPI:

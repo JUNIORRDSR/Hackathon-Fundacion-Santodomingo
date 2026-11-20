@@ -28,6 +28,10 @@ español; el inglés queda solo para los tipos del framework.
 | Herramientas | Lo único que el bot puede hacer en nombre de un solicitante | `Herramientas` |
 | Código | Identifica una solicitud (ORG-0042, REC-0017). La persona lo escribe en la bolsa y la coordinación lo busca al pesar | `codigo` |
 | Canje | Cambiar puntos por algo de la huerta o del territorio. Por ahora el bot solo informa qué se puede canjear | `Proposito.CANJE` |
+| Revisión de foto | El bot mira la foto de lo que la persona va a entregar y le dice si está bien separado. Es orientativa: no bloquea ni da puntos | `evaluar`, `EvaluacionFoto` |
+| Veredicto | Resultado de la revisión: bien separado, mal separado o no concluyente | `Veredicto` |
+| Problema de separación | Lo que la revisión le explica a la persona, como comida entre los reciclables | `Problema` |
+| Ordinario | Lo que no se recoge en ningún flujo: papel higiénico, servilletas usadas, pañales | `Problema.ORDINARIO_MEZCLADO` |
 
 ## Términos que no se usan
 

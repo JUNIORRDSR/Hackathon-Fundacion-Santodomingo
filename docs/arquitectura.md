@@ -46,6 +46,7 @@ flowchart LR
 | puntos | Regla con versión y libro de movimientos | PuntosAcreditados | RecoleccionRegistrada | Jairo | — |
 | whatsapp | Registro por WhatsApp, bot y avisos | — | los eventos de arriba | Jairo: menú y simulador | Conversador LLM: Leonardo · Transporte: Jorge |
 | contenidos | Educación ambiental y tutoriales por audiencia | — | — | Jairo | — |
+| clasificacion | Revisa si los residuos de una foto están bien separados; orientativo (ADR-0007) | — | — | Leonardo | — |
 | reportes | Resumen por flujo, estado y periodo; CSV sin datos personales | — | — | Jairo | — |
 | acceso | Login, roles y colectivo del coordinador | — | — | Jairo | — |
 | frontend | Host React (PWA) y pantallas de la tablet | — | — | Jairo: estructura | Daniela: identidad y pantallas |

@@ -87,6 +87,19 @@ def _comprobar_avisos(admin: TestClient) -> None:
 
 
 def _consultar_puntos_y_canje(admin: TestClient) -> None:
-    """La opción 4 del menú da el saldo y lo que se puede canjear."""
+    """Opción 4: saldo y premios. El canje aparta los puntos y al entregarlo se descuentan del libro (ADR-0008)."""
     respuesta = _whatsapp(admin, "4")[0]
-    assert "Llevas 12 puntos." in respuesta and "Qué puedes canjear" in respuesta
+    assert "Llevas 12 puntos." in respuesta and "Plántula de la huerta: 30 puntos" in respuesta
+    assert "Te faltan 18 puntos" in _whatsapp(admin, "1")[0]
+    admin.post("/api/puntos/premios", json={"nombre": "Semillas de cilantro", "costo": 10})
+    _whatsapp(admin, "4")
+    assert "con el código *CAN-" in _whatsapp(admin, "1")[0]
+    assert "Llevas 2 puntos." in _whatsapp(admin, "4")[0]
+    _whatsapp(admin, "0")
+    canje = admin.get("/api/puntos/canjes", params={"estado": "pedido"}).json()[0]
+    assert canje["solicitante_nombre"] == "La Esquina" and canje["costo"] == 10
+    assert admin.post(f"/api/puntos/canjes/{canje['codigo']}/entrega").json()["estado"] == "entregado"
+    assert admin.post(f"/api/puntos/canjes/{canje['codigo']}/entrega").status_code == 409
+    assert admin.get(f"/api/puntos/solicitantes/{canje['solicitante_id']}").json()["saldo"] == 2
+    mensajes = admin.get("/api/whatsapp/simulador/mensajes", params={"telefono": TELEFONO}).json()
+    assert f"Entregamos tu canje {canje['codigo']}: Semillas de cilantro. Te quedan 2 puntos." in mensajes[-1]["texto"]

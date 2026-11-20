@@ -1,4 +1,6 @@
 """Conversador por defecto: menú numerado. El LLM de Leonardo lo reemplaza con CONVERSADOR=llm (ADR-0003)."""
+from uuid import UUID
+
 from app.compartido.formato import NOMBRE_FLUJO, fecha_larga, hora_corta
 from app.compartido.tipos import ErrorDeNegocio, Flujo, Franja, NoEncontrado
 from app.modulos.contenidos import contrato as contenidos
@@ -16,7 +18,7 @@ ESTADO = {"recibida": "recibida; la coordinación la está revisando", "asignada
 
 
 class ConversadorMenu:
-    """Responde a los números del menú; la memoria solo guarda qué flujo se está pidiendo."""
+    """Responde a los números del menú; la memoria guarda qué flujo se pide o qué premios se ofrecieron."""
 
     def responder(self, turno: Turno, memoria: dict, herramientas: Herramientas) -> Respuesta:
         texto = turno.texto.strip().lower()
@@ -24,6 +26,8 @@ class ConversadorMenu:
             memoria["foto"] = turno.media_url  # la foto es opcional y se guarda con el pedido
         if "pidiendo" in memoria:
             textos = _pedir(texto, memoria, herramientas)
+        elif "canjeando" in memoria:
+            textos = _canjear(texto, memoria.pop("canjeando"), herramientas)
         elif texto in _OPCIONES:
             textos = _OPCIONES[texto](memoria, herramientas)
         elif texto.startswith("cancelar"):
@@ -77,8 +81,24 @@ def _linea_de_estado(s: SolicitudResumida) -> str:
 
 
 def _puntos(memoria: dict, herramientas: Herramientas) -> list[str]:
-    canje = [texto_de_pieza(c) for c in herramientas.que_puedo_canjear()]
-    return ["\n\n".join([f"Llevas {herramientas.mis_puntos()} puntos.", *canje])]
+    saldo, premios = f"Llevas {herramientas.mis_puntos()} puntos.", herramientas.premios()
+    if not premios:
+        return [saldo]
+    memoria["canjeando"] = [str(p.id) for p in premios]
+    lista = "\n".join(f"{i} {p.nombre}: {p.costo} puntos" for i, p in enumerate(premios, start=1))
+    ejemplo = "\n(Valores de ejemplo: los fija la fundación.)" if any(p.ejemplo for p in premios) else ""
+    return [f"{saldo}\n\nPuedes canjear:\n{lista}{ejemplo}\n\nEscribe el número del premio, o 0 para volver."]
+
+
+def _canjear(texto: str, ofrecidos: list[str], herramientas: Herramientas) -> list[str]:
+    if not texto.isdigit() or not 1 <= int(texto) <= len(ofrecidos):
+        return [MENU]
+    try:
+        canje = herramientas.pedir_canje(UUID(ofrecidos[int(texto) - 1]))
+    except (ErrorDeNegocio, NoEncontrado) as error:
+        return [str(error)]
+    return [f"Listo: apartamos {canje.premio} con el código *{canje.codigo}*. Muéstralo en la huerta para "
+            f"recibirlo; ahí se descuentan tus {canje.costo} puntos."]
 
 
 def _aprender(memoria: dict, herramientas: Herramientas) -> list[str]:

@@ -4,11 +4,15 @@ from app.compartido.tipos import Colectivo, Flujo
 from app.modulos.acceso import contrato as acceso
 from app.modulos.contenidos import contrato as contenidos
 from app.modulos.directorio import contrato as directorio
+from app.modulos.puntos import contrato as puntos
 
 C = contenidos
 
 
 def sembrar() -> None:
+    if not puntos.premios():
+        for nombre, costo in PREMIOS:
+            puntos.guardar_premio(puntos.NuevoPremio(nombre=nombre, costo=costo), ejemplo=True)
     if directorio.zonas():
         return
     _zonas_y_encargados()
@@ -77,8 +81,6 @@ PIEZAS = [
                      audiencia=C.Audiencia.COORDINADOR, formato=C.Formato.TEXTO,
                      texto_corto="Abre una solicitud pendiente, elige al encargado que sugiere el sistema, pon día y "
                                  "hora y confirma. Cuando te reporten la recolección, registra los kilos."),
-    C.NuevoContenido(titulo="Qué puedes canjear", proposito=C.Proposito.CANJE, audiencia=C.Audiencia.SOLICITANTE,
-                     formato=C.Formato.TEXTO,
-                     texto_corto="30 puntos: una plántula de la huerta. 60 puntos: un paquete de bolsas para "
-                                 "orgánicos. Pregunta en la huerta. (Valores de ejemplo: los fija la fundación.)"),
 ]
+# Valores de ejemplo hasta que la fundación los fije (ADR-0008).
+PREMIOS = (("Plántula de la huerta", 30), ("Abono orgánico, 1 kg", 45), ("Paquete de bolsas para orgánicos", 60))

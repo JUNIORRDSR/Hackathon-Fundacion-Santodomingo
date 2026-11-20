@@ -80,14 +80,18 @@ class Herramientas:
         return _resumir(cancelada)
 
     def mis_puntos(self) -> int:
-        return puntos.saldo(self._id).saldo
+        """Lo disponible: el saldo menos lo apartado en canjes por entregar."""
+        return puntos.disponible(self._id)
 
     def aprender(self, flujo: Flujo | None = None) -> list[contenidos.ContenidoVista]:
         return contenidos.capacitacion_publica(flujo)
 
-    def que_puedo_canjear(self) -> list[contenidos.ContenidoVista]:
-        """Lo que se ofrece por los puntos; el canje se hace en la huerta."""
-        return contenidos.listar(contenidos.Audiencia.SOLICITANTE, proposito=contenidos.Proposito.CANJE)
+    def premios(self) -> list[puntos.PremioVista]:
+        return puntos.premios(solo_activos=True)
+
+    def pedir_canje(self, premio_id: UUID) -> puntos.CanjeVista:
+        """Aparta los puntos y da el código que se muestra en la huerta. ErrorDeNegocio si no le alcanza."""
+        return puntos.pedir(self._id, premio_id)
 
 
 class Conversador(Protocol):

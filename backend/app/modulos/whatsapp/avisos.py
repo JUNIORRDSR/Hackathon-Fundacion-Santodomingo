@@ -17,6 +17,7 @@ def escuchar() -> None:
     suscribir_despues(solicitudes.SolicitudRecibida, _al_recibir)
     suscribir_despues(solicitudes.SolicitudProgramada, _al_programar)
     suscribir_despues(puntos.PuntosAcreditados, _al_acreditar)
+    suscribir_despues(puntos.CanjeEntregado, _al_entregar_canje)
     suscribir_despues(solicitudes.SolicitudRechazada, _al_rechazar)
     suscribir_despues(solicitudes.SolicitudCancelada, _al_cancelar)
     suscribir_despues(directorio.SolicitanteHabilitado, _al_habilitar)
@@ -43,6 +44,12 @@ def _al_acreditar(e: puntos.PuntosAcreditados) -> None:
     peso = f": {kilos(e.kg)} kg" if e.kg else ""
     _avisar(e.solicitante_id, f"Recibimos tus {NOMBRE_FLUJO[e.flujo]}{peso}. Ganaste {e.puntos} puntos "
                               f"({e.explicacion}). Llevas {e.saldo}. Escribe 4 para ver qué puedes canjear.")
+
+
+
+def _al_entregar_canje(e: puntos.CanjeEntregado) -> None:
+    _avisar(e.solicitante_id, f"Entregamos tu canje {e.codigo}: {e.premio}. Te quedan {e.saldo} puntos. ¡Gracias por "
+                              "separar!")
 
 
 def _al_rechazar(e: solicitudes.SolicitudRechazada) -> None:

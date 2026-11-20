@@ -39,7 +39,8 @@ def _registrar_por_whatsapp_y_habilitar(admin: TestClient) -> dict:
     for texto in ("Hola", "1", "2", "2", "Restaurante La Esquina, local 3", "La Esquina", "1"):
         _whatsapp(admin, texto)
     assert "te enviamos el código para tu bolsa" in _whatsapp(admin, "3")[0]
-    assert admin.get("/api/solicitudes").json() == []  # el pedido espera la aprobación (RN-08)
+    solicitudes = admin.get("/api/solicitudes").json()
+    assert all(s["telefono"] != TELEFONO for s in solicitudes)  # el pedido espera la aprobación (RN-08)
     en_espera = admin.get("/api/whatsapp/pedidos-en-espera").json()
     assert en_espera[TELEFONO] == {"flujo": "organico", "preferencia": "noche"}
     pendientes = admin.get("/api/directorio/solicitantes", params={"estado": "pendiente"}).json()

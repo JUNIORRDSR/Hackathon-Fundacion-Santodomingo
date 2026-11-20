@@ -1,4 +1,4 @@
-# ADR-0007 · Revisión orientativa de fotos de residuos
+# ADR-0011 · Revisión orientativa de fotos de residuos
 
 - **Estado:** aceptada · 2026-11-20
 

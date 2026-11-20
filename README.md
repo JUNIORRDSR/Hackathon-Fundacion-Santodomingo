@@ -120,4 +120,4 @@ Los nombres están en [.env.example](.env.example); los valores nunca van al rep
 | `OPENAI_BASE_URL` | API v1 de Azure OpenAI: `https://<recurso>.openai.azure.com/openai/v1/`; sin ella, la de OpenAI |
 | `OPENAI_API_KEY` | Clave del recurso de Azure OpenAI (o de OpenAI) |
 | `CLASIFICACION_MODELO` | Nombre del despliegue con visión, por ejemplo `gpt-5-mini` |
-| `CLASIFICACION_ACTIVA` | `true` revisa las fotos que llegan por WhatsApp ([ADR-0007](docs/adr/0007-revision-de-fotos.md)) |
+| `CLASIFICACION_ACTIVA` | `true` revisa las fotos que llegan por WhatsApp ([ADR-0011](docs/adr/0011-revision-de-fotos.md)) |

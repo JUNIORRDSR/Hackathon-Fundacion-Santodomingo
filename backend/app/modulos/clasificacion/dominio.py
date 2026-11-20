@@ -1,4 +1,4 @@
-"""Reglas para revisar si los residuos de una foto están bien separados (ADR-0007): qué se le pide al modelo, cómo
+"""Reglas para revisar si los residuos de una foto están bien separados (ADR-0011): qué se le pide al modelo, cómo
 se lee su respuesta y qué texto fijo recibe la persona. Solo librería estándar y núcleo compartido."""
 import json
 from enum import StrEnum

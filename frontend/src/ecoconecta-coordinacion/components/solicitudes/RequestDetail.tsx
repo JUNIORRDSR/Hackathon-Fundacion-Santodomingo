@@ -105,6 +105,12 @@ export function RequestDetail({
                 <dd>{formatWeight(request.resultado.pesoKg)}</dd>
               </div>
             )}
+            {request.puntos !== undefined && (
+              <div>
+                <dt>Puntos para el vecino</dt>
+                <dd className="data-points">+{request.puntos}</dd>
+              </div>
+            )}
             {request.estado === 'rechazada' && (
               <div className="detail-wide">
                 <dt>Motivo del rechazo</dt>

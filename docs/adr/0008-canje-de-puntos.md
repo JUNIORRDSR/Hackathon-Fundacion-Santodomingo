@@ -10,8 +10,8 @@ puntos.
 
 ## Decisión
 
-- **Catálogo de premios** en el módulo de puntos: nombre, costo en puntos y si está activo. Lo edita la
-  administración. Arranca con premios de ejemplo marcados como tales hasta que la fundación fije los valores.
+- **Catálogo de premios** en el módulo de puntos: nombre, costo en puntos y si está activo. Lo editan
+  la coordinación y la administración (cambio del 20-11: la huerta es quien entrega). Arranca con premios de ejemplo marcados como tales hasta que la fundación fije los valores.
 - **El vecino pide el canje por WhatsApp** (opción 4 del menú): ve su saldo y los premios, elige uno y recibe un código
   (`CAN-0001`). Los puntos quedan **apartados**: el disponible es el saldo menos los canjes por entregar, así que no se
   puede pedir dos veces con los mismos puntos.

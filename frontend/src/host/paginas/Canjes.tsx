@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { PageHeader } from '../../ecoconecta-coordinacion/components/layout/Layout'
+import { DataTable } from '../../ecoconecta-coordinacion/components/ui/DataTable'
 import { EmptyState, ErrorMessage } from '../../ecoconecta-coordinacion/components/ui/Feedback'
 import { Icon } from '../../ecoconecta-coordinacion/components/ui/Icon'
 import type { IconName } from '../../ecoconecta-coordinacion/components/ui/Icon'
+import { Modal } from '../../ecoconecta-coordinacion/components/ui/Modal'
 import { MotionPills } from '../../ecoconecta-coordinacion/components/ui/MotionPills'
+import { useSubmission } from '../../ecoconecta-coordinacion/components/ui/useSubmission'
 import { api } from '../api'
 import { Premios } from './Premios'
 
@@ -24,12 +27,47 @@ const ESTADOS: Record<Estado, { texto: string; uno: string; icono: IconName }> =
   cancelado: { texto: 'Cancelados', uno: 'Cancelado', icono: 'close' },
 }
 const fecha = new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', day: 'numeric', month: 'short' })
+const Insignia = ({ estado }: { estado: Estado }) => (
+  <span className="status-badge">
+    <Icon name={ESTADOS[estado].icono} /> {ESTADOS[estado].uno}
+  </span>
+)
 
 // ADR-0008: el vecino pide el canje por WhatsApp y muestra el código; aquí se entrega y se descuentan los puntos.
-export function Canjes({ administrador }: { administrador: boolean }) {
+export function Canjes() {
+  const [vista, setVista] = useState<'pedidos' | 'premios'>('pedidos')
+  const [nuevoPremio, setNuevoPremio] = useState(0)
+  return (
+    <>
+      <PageHeader
+        title="Canjes"
+        description="El vecino muestra su código CAN en la huerta y aquí se entrega el premio."
+        action={
+          vista === 'premios' && (
+            <button type="button" className="button button-primary" onClick={() => setNuevoPremio((n) => n + 1)}>
+              <Icon name="plus" /> Agregar premio
+            </button>
+          )
+        }
+      />
+      <MotionPills className="segmented-control canje-vista" label="Pedidos o premios" active={vista}>
+        <button type="button" aria-pressed={vista === 'pedidos'} onClick={() => setVista('pedidos')}>
+          Pedidos
+        </button>
+        <button type="button" aria-pressed={vista === 'premios'} onClick={() => setVista('premios')}>
+          Premios
+        </button>
+      </MotionPills>
+      {vista === 'pedidos' ? <Pedidos /> : <Premios nuevo={nuevoPremio} />}
+    </>
+  )
+}
+
+function Pedidos() {
   const [estado, setEstado] = useState<Estado>('pedido')
   const [buscar, setBuscar] = useState('')
   const [todos, setTodos] = useState<Canje[]>()
+  const [elegido, setElegido] = useState<Canje>()
   const [error, setError] = useState('')
   const [aviso, setAviso] = useState('')
   const cargar = useCallback(() => {
@@ -39,46 +77,14 @@ export function Canjes({ administrador }: { administrador: boolean }) {
   }, [])
   useEffect(cargar, [cargar])
 
-  async function cerrar(codigo: string, accion: 'entrega' | 'cancelacion') {
-    setError('')
-    try {
-      const canje = await api<Canje>('/puntos/canjes/' + codigo + '/' + accion, 'POST')
-      setAviso(accion === 'entrega' ? `Entregado: ${canje.premio}. El vecino recibe su saldo por WhatsApp.` : '')
-      cargar()
-    } catch (e) {
-      setError((e as Error).message)
-    }
-  }
-
   const lista = todos ?? []
   const texto = buscar.trim().toLowerCase()
   const visibles = lista.filter(
     (c) =>
       c.estado === estado && [c.codigo, c.solicitante_nombre, c.premio].some((v) => v.toLowerCase().includes(texto)),
   )
-  const entregados = lista.filter((c) => c.estado === 'entregado')
   return (
     <>
-      <PageHeader
-        title="Canjes"
-        description="El vecino muestra su código CAN en la huerta y aquí se entrega el premio."
-      />
-      <section className="stat-grid canje-cifras" aria-label="Resumen de canjes">
-        <Cifra
-          clase="stat-pendiente"
-          icono="gift"
-          titulo="Por entregar"
-          valor={lista.filter((c) => c.estado === 'pedido').length}
-        >
-          Pedidos por WhatsApp
-        </Cifra>
-        <Cifra icono="check" titulo="Entregados" valor={entregados.length}>
-          Premios en manos del vecino
-        </Cifra>
-        <Cifra icono="spark" titulo="Puntos canjeados" valor={entregados.reduce((suma, c) => suma + c.costo, 0)}>
-          Descontados del libro
-        </Cifra>
-      </section>
       <div className="filter-bar">
         <MotionPills className="pills" label="Filtrar por estado" active={estado}>
           {(Object.keys(ESTADOS) as Estado[]).map((valor) => (
@@ -112,13 +118,37 @@ export function Canjes({ administrador }: { administrador: boolean }) {
           </EmptyState>
         </div>
       ) : (
-        <ul className="collection-grid">
-          {visibles.map((c) => (
-            <TarjetaCanje key={c.codigo} canje={c} alCerrar={cerrar} />
-          ))}
-        </ul>
+        <DataTable
+          items={visibles}
+          rowKey={(c) => c.codigo}
+          rowLabel={(c) => 'Abrir el canje ' + c.codigo + ' de ' + c.solicitante_nombre}
+          onSelect={setElegido}
+          columns={[
+            { header: 'Código', width: '7rem', cell: (c) => <span className="data-code">{c.codigo}</span> },
+            {
+              header: 'Vecino',
+              width: 'minmax(0, 1.6fr)',
+              cell: (c) => (
+                <>
+                  <p className="request-name">{c.solicitante_nombre}</p>
+                  <p className="request-location">{c.telefono}</p>
+                </>
+              ),
+            },
+            { header: 'Premio', width: 'minmax(0, 1.6fr)', cell: (c) => <strong>{c.premio}</strong> },
+            { header: 'Puntos', width: '5.5rem', cell: (c) => c.costo },
+            { header: 'Pedido', width: '6rem', cell: (c) => fecha.format(new Date(c.pedido_en)) },
+            { header: 'Estado', width: '8.5rem', cell: (c) => <Insignia estado={c.estado} /> },
+          ]}
+        />
       )}
-      <Premios administrador={administrador} />
+      {elegido && (
+        <DetalleCanje
+          canje={elegido}
+          onClose={() => setElegido(undefined)}
+          alCerrar={(texto) => (setAviso(texto), cargar())}
+        />
+      )}
       {aviso && (
         <div className="confirmation-anchor">
           <p className="confirmation" role="status">
@@ -133,73 +163,72 @@ export function Canjes({ administrador }: { administrador: boolean }) {
   )
 }
 
-function Cifra({
-  clase = '',
-  icono,
-  titulo,
-  valor,
-  children,
-}: {
-  clase?: string
-  icono: IconName
-  titulo: string
-  valor: number
-  children: string
-}) {
-  return (
-    <div className={'card stat-card ' + clase}>
-      <span className="stat-title">
-        <Icon name={icono} /> {titulo}
-      </span>
-      <strong>{valor.toLocaleString('es-CO')}</strong>
-      <span className="stat-caption">{children}</span>
-    </div>
-  )
-}
-
-function TarjetaCanje({
+function DetalleCanje({
   canje: c,
+  onClose,
   alCerrar,
 }: {
   canje: Canje
-  alCerrar: (codigo: string, a: 'entrega' | 'cancelacion') => void
+  onClose: () => void
+  alCerrar: (aviso: string) => void
 }) {
+  const submit = useSubmission()
+  const cerrar = (accion: 'entrega' | 'cancelacion', close: (after?: () => void) => Promise<void>) =>
+    void submit.run(async () => {
+      await api('/puntos/canjes/' + c.codigo + '/' + accion, 'POST')
+      const aviso = accion === 'entrega' ? `Entregado: ${c.premio}. El vecino recibe su saldo por WhatsApp.` : ''
+      await close(() => alCerrar(aviso))
+    })
   return (
-    <li className="card collection-card canje-tarjeta" data-estado={c.estado}>
-      <div className="collection-card-top">
-        <span className="canje-codigo">{c.codigo}</span>
-        <span className="status-badge">
-          <Icon name={ESTADOS[c.estado].icono} /> {ESTADOS[c.estado].uno}
-        </span>
-      </div>
-      <div className="canje-premio">
-        <span className="icon-tile">
-          <Icon name="gift" />
-        </span>
-        <div>
-          <h2>{c.premio}</h2>
-          <span className="canje-costo">{c.costo} puntos</span>
-        </div>
-      </div>
-      <div className="small-details">
-        <span>
-          <Icon name="user" /> {c.solicitante_nombre} · {c.telefono}
-        </span>
-        <span>
-          <Icon name="calendar" /> Pedido el {fecha.format(new Date(c.pedido_en))}
-          {c.cerrado_en && ` · cerrado el ${fecha.format(new Date(c.cerrado_en))}`}
-        </span>
-      </div>
-      {c.estado === 'pedido' && (
-        <div className="canje-acciones">
-          <button type="button" className="button button-primary" onClick={() => alCerrar(c.codigo, 'entrega')}>
-            <Icon name="check" /> Entregar premio
-          </button>
-          <button type="button" className="button button-quiet" onClick={() => alCerrar(c.codigo, 'cancelacion')}>
-            Cancelar
-          </button>
-        </div>
+    <Modal title={'Canje ' + c.codigo} onClose={onClose} busy={submit.busy}>
+      {(close) => (
+        <>
+          <dl className="detail-data">
+            <div className="detail-wide">
+              <dt>Premio</dt>
+              <dd>
+                {c.premio} · {c.costo} puntos
+              </dd>
+            </div>
+            <div>
+              <dt>Vecino</dt>
+              <dd>{c.solicitante_nombre}</dd>
+            </div>
+            <div>
+              <dt>WhatsApp</dt>
+              <dd>{c.telefono}</dd>
+            </div>
+            <div>
+              <dt>Pedido</dt>
+              <dd>{fecha.format(new Date(c.pedido_en))}</dd>
+            </div>
+            <div>
+              <dt>Estado</dt>
+              <dd>
+                <Insignia estado={c.estado} />
+              </dd>
+            </div>
+          </dl>
+          {submit.error && <ErrorMessage message={submit.error} />}
+          {c.estado === 'pedido' ? (
+            <div className="form-actions">
+              <button type="button" className="button button-secondary" onClick={() => cerrar('cancelacion', close)}>
+                Cancelar canje
+              </button>
+              <button
+                type="button"
+                className="button button-primary"
+                disabled={submit.busy}
+                onClick={() => cerrar('entrega', close)}
+              >
+                <Icon name="check" /> Entregar premio
+              </button>
+            </div>
+          ) : (
+            <p className="muted">Este canje ya está {ESTADOS[c.estado].uno.toLowerCase()}.</p>
+          )}
+        </>
       )}
-    </li>
+    </Modal>
   )
 }

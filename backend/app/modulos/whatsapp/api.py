@@ -33,6 +33,11 @@ async def webhook_twilio(request: Request) -> Response:
     return Response("<Response/>", media_type="application/xml")
 
 
+@router.get("/pedidos-en-espera")
+def pedidos_en_espera(_: acceso.Usuario = Depends(acceso.usuario_actual)) -> dict[str, dict]:
+    return monitor.pedidos_en_espera()
+
+
 @router.get("/conversaciones")
 def conversaciones(_: acceso.Usuario = Sesion) -> list[monitor.ConversacionVista]:
     return monitor.conversaciones()

@@ -3,6 +3,8 @@ La pieza de Jorge entra con TRANSPORTE=twilio y la de Leonardo con CONVERSADOR=l
 import importlib
 import logging
 import os
+from contextvars import ContextVar
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 from sqlalchemy import Connection, func, insert, select
@@ -17,6 +19,15 @@ from app.modulos.whatsapp.menu import ConversadorMenu
 from app.modulos.whatsapp.respuestas import texto
 
 log = logging.getLogger("whatsapp")
+
+
+@dataclass
+class _RespuestaWebhook:
+    telefono: str
+    mensajes: list[MensajeSaliente] = field(default_factory=list)
+
+
+_respuesta_webhook: ContextVar[_RespuestaWebhook | None] = ContextVar("respuesta_webhook", default=None)
 
 
 class TransporteSimulado:
@@ -64,14 +75,37 @@ def recibir(mensaje: MensajeEntrante, sid: str | None = None) -> list[str]:
     return textos
 
 
+def recibir_para_twiml(mensaje: MensajeEntrante, sid: str) -> list[MensajeSaliente]:
+    """Reúne las respuestas y los avisos que produce este turno para su remitente."""
+    respuesta = _RespuestaWebhook(mensaje.telefono)
+    token = _respuesta_webhook.set(respuesta)
+    try:
+        recibir(mensaje, sid)
+    finally:
+        _respuesta_webhook.reset(token)
+    if respuesta.mensajes:
+        with transaccion():
+            for salida in respuesta.mensajes:
+                _guardar_envio(salida, "emitido")
+    return respuesta.mensajes
+
+
 def enviar(mensaje: MensajeSaliente) -> None:
-    """Envía por el transporte y deja constancia, enviado o fallido, para poder reintentar."""
+    """Entrega al transporte o añade el mensaje a la respuesta del webhook activo."""
+    respuesta = _respuesta_webhook.get()
+    if respuesta is not None and respuesta.telefono == mensaje.telefono:
+        respuesta.mensajes.append(mensaje)
+        return
     try:
         _transporte.enviar(mensaje)
         estado = "enviado"
     except Exception as error:
         log.warning("No se pudo enviar un mensaje de WhatsApp (%s)", type(error).__name__)
         estado = "fallido"
+    _guardar_envio(mensaje, estado)
+
+
+def _guardar_envio(mensaje: MensajeSaliente, estado: str) -> None:
     with transaccion() as c:
         c.execute(insert(t.mensajes).values(**mensaje.model_dump(), estado=estado,
                                             enviado_en=datetime.now(timezone.utc)))

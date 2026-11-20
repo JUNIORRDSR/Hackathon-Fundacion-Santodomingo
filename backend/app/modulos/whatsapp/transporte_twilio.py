@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 
 from starlette.datastructures import FormData
 from twilio.request_validator import RequestValidator
+from twilio.twiml.messaging_response import MessagingResponse
 
 from app.modulos.whatsapp.contrato import MensajeEntrante, MensajeSaliente
 
@@ -30,6 +31,7 @@ class TransporteTwilio:
     url_webhook: str
     alias: dict[str, str] = field(default_factory=dict)
     telefonos_piloto: frozenset[str] = frozenset()
+    respuesta_twiml: bool = False
 
     @classmethod
     def desde_entorno(cls) -> "TransporteTwilio":
@@ -38,7 +40,8 @@ class TransporteTwilio:
             raise RuntimeError("TWILIO_ACCOUNT_SID debe contener el SID de la cuenta de Twilio.")
         if not remitente.startswith(PREFIJO) or not TELEFONO.fullmatch(remitente.removeprefix(PREFIJO)):
             raise RuntimeError("TWILIO_WHATSAPP_FROM debe contener whatsapp: seguido del teléfono en formato E.164.")
-        return cls(cuenta, token, remitente, _url_publica(url), _alias_configurados(), _telefonos_piloto())
+        return cls(cuenta, token, remitente, _url_publica(url), _alias_configurados(), _telefonos_piloto(),
+                   respuesta_twiml=os.getenv("TWILIO_RESPUESTA_TWIML", "").strip() == "1")
 
     def firma_valida(self, parametros: FormData, firma: str) -> bool:
         if not FIRMA.fullmatch(firma):
@@ -71,6 +74,19 @@ class TransporteTwilio:
                                         {"Authorization": f"Basic {credencial}"})
         with urllib.request.urlopen(pedido, timeout=10) as respuesta:
             respuesta.read()
+
+    @staticmethod
+    def serializar_twiml(mensajes: list[MensajeSaliente]) -> str:
+        respuesta = MessagingResponse()
+        for mensaje in mensajes:
+            if mensaje.media_url:
+                salida = respuesta.message()
+                if mensaje.texto:
+                    salida.body(mensaje.texto)
+                salida.media(mensaje.media_url)
+            else:
+                respuesta.message(mensaje.texto)
+        return str(respuesta)
 
 
 def _variable(nombre: str) -> str:

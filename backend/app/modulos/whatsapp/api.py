@@ -31,8 +31,16 @@ async def webhook_twilio(request: Request) -> Response:
         raise HTTPException(403, "El remitente no está habilitado para esta prueba.") from None
     except ValueError:
         raise HTTPException(400, "Mensaje de WhatsApp inválido o remitente sin teléfono asociado.") from None
-    await run_in_threadpool(bot.recibir, mensaje, sid)
-    return Response("<Response/>", media_type="application/xml")
+    return await run_in_threadpool(_respuesta_twilio, transporte, mensaje, sid)
+
+
+def _respuesta_twilio(transporte: TransporteTwilio, mensaje: MensajeEntrante, sid: str) -> Response:
+    if transporte.respuesta_twiml:
+        cuerpo = transporte.serializar_twiml(bot.recibir_para_twiml(mensaje, sid))
+    else:
+        bot.recibir(mensaje, sid)
+        cuerpo = "<Response/>"
+    return Response(cuerpo, media_type="application/xml")
 
 
 async def _formulario_twilio(request: Request) -> FormData:

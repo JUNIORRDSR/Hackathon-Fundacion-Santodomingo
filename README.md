@@ -54,6 +54,10 @@ El webhook comprueba la firma de Twilio y procesa cada identificador de mensaje 
 **Sandbox Participants**, configura `WHATSAPP_CONTACT_ALIASES=CO.identificador=+573000000001` con el teléfono
 verificado del participante. Para el envío, la primera asociación de cada teléfono tiene prioridad.
 
+En el Sandbox clásico, `TWILIO_RESPUESTA_TWIML=1` devuelve las respuestas inmediatas en el propio webhook,
+incluidos los avisos generados por ese turno para el remitente. Los avisos posteriores del coordinador usan
+la API de Twilio.
+
 El [prototipo TypeScript](modules/whatsapp-recoleccion/README.md) conserva su propia demo. El webhook integrado
 en el monolito usa el registro, las solicitudes y los avisos del backend común.
 

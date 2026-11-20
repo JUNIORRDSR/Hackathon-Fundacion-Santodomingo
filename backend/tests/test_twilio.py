@@ -5,11 +5,13 @@ import hmac
 from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 from urllib.parse import parse_qsl, urlencode
+from xml.etree import ElementTree
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.modulos.directorio import contrato as directorio
 from app.modulos.whatsapp import bot, transporte_twilio
 from app.modulos.whatsapp.transporte_twilio import TransporteTwilio
 
@@ -21,19 +23,23 @@ REMITENTE = "whatsapp:+10000000000"
 TELEFONO = "+573000000002"
 TELEFONO_ALIAS = "+573000000004"
 TELEFONO_CONCURRENCIA = "+573000000005"
+TELEFONO_TWIML = "+573000000007"
+TELEFONO_AVISOS = "+573000000008"
 ALIAS = "CO.PruebaEcoConecta"
 ALIAS_PORTAFOLIO = "CO.ENT.PruebaEcoConecta"
 
 
 @pytest.fixture
-def cliente_twilio(monkeypatch):
+def cliente_twilio(monkeypatch, request):
+    telefonos = (TELEFONO, TELEFONO_ALIAS, TELEFONO_CONCURRENCIA, TELEFONO_TWIML, TELEFONO_AVISOS)
     valores = {
         "TWILIO_ACCOUNT_SID": CUENTA,
         "TWILIO_AUTH_TOKEN": TOKEN,
         "TWILIO_WHATSAPP_FROM": REMITENTE,
         "TWILIO_WEBHOOK_URL": URL,
         "WHATSAPP_CONTACT_ALIASES": f"{ALIAS}={TELEFONO_ALIAS}, {ALIAS_PORTAFOLIO}={TELEFONO_ALIAS}",
-        "WHATSAPP_PILOT_NUMBERS": f"{TELEFONO},{TELEFONO_ALIAS},{TELEFONO_CONCURRENCIA}",
+        "WHATSAPP_PILOT_NUMBERS": ",".join(telefonos),
+        "TWILIO_RESPUESTA_TWIML": "1" if getattr(request, "param", False) else "0",
     }
     for nombre, valor in valores.items():
         monkeypatch.setenv(nombre, valor)
@@ -116,3 +122,43 @@ def test_entregas_concurrentes_del_mismo_sid_solo_avanzan_el_bot_una_vez(cliente
     assert [respuesta.status_code for respuesta in respuestas] == [200, 200]
     assert len(salidas) == 1
     assert len(bot.enviados(TELEFONO_CONCURRENCIA)) == 1
+
+
+@pytest.mark.parametrize("cliente_twilio", [True], indirect=True)
+def test_responde_con_twiml_al_remitente_y_el_sid_repetido_no_responde(cliente_twilio):
+    cliente, salidas = cliente_twilio
+    parametros = _parametros(TELEFONO_TWIML, 7)
+    respuesta = _entregar(cliente, parametros)
+    assert respuesta.status_code == 200
+    assert respuesta.headers["content-type"].startswith("application/xml")
+    xml = ElementTree.fromstring(respuesta.content)
+    assert xml.tag == "Response"
+    mensaje, = xml.findall("Message")
+    assert "to" not in mensaje.attrib
+    assert "Soy EcoConecta" in "".join(mensaje.itertext())
+
+    repetida = _entregar(cliente, parametros)
+    assert repetida.status_code == 200
+    assert list(ElementTree.fromstring(repetida.content)) == []
+    assert len(bot.enviados(TELEFONO_TWIML)) == 1
+    assert salidas == []
+
+
+@pytest.mark.parametrize("cliente_twilio", [True], indirect=True)
+def test_aviso_de_solicitud_sale_en_twiml_y_habilitacion_fuera_del_webhook_sale_por_rest(cliente_twilio):
+    cliente, salidas = cliente_twilio
+    solicitante = directorio.registrar_solicitante(directorio.NuevoSolicitante(
+        telefono=TELEFONO_AVISOS, nombre="Prueba TwiML", tipo="hogar", zona_id=directorio.zonas()[0].id,
+        direccion="Dirección ficticia", autoriza_datos=True,
+    ), habilitado=False)
+    directorio.habilitar(solicitante.id)
+    aviso_habilitacion, = salidas
+    assert aviso_habilitacion["To"] == f"whatsapp:{TELEFONO_AVISOS}"
+    assert "Ya puedes pedir recolecciones" in aviso_habilitacion["Body"]
+
+    assert _entregar(cliente, _parametros(TELEFONO_AVISOS, 8, "1")).status_code == 200
+    respuesta = _entregar(cliente, _parametros(TELEFONO_AVISOS, 9, "3"))
+    assert respuesta.status_code == 200
+    mensaje, = ElementTree.fromstring(respuesta.content).findall("Message")
+    assert "Recibimos tu solicitud ORG-" in "".join(mensaje.itertext())
+    assert salidas == [aviso_habilitacion]

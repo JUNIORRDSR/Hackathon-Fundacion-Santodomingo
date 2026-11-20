@@ -179,7 +179,7 @@ export function Layout({
                     }}
                   >
                     <summary>
-                      <Icon name={currentInMore?.icon ?? 'dashboard'} />
+                      <Icon name={currentInMore?.icon ?? 'more'} />
                       <span>{currentInMore?.label ?? 'Más'}</span>
                       <Icon name="chevron" className="nav-more-chevron" />
                     </summary>

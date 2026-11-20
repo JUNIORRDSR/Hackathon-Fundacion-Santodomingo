@@ -45,6 +45,7 @@ def azure(monkeypatch):
     monkeypatch.setenv("OPENAI_BASE_URL", "https://az-test.openai.azure.com/openai/v1/")
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
     monkeypatch.setenv("CONVERSADOR_MODELO", "eco-test")
+    monkeypatch.delenv("CONVERSADOR_RAZONAMIENTO", raising=False)
     return modulo.ConversadorLLM, servidor
 
 
@@ -71,6 +72,18 @@ def test_intencion_de_recoleccion_solo_inicia_el_flujo_y_minimiza_el_texto(azure
     assert cuerpo["store"] is False
     assert cuerpo["input"] == [{"role": "user", "content": "necesito recoleccion organicos"}]
     assert cuerpo["text"]["format"]["strict"] is True
+    assert "reasoning" not in cuerpo
+
+
+def test_despliegue_gpt5_puede_usar_razonamiento_minimo(azure, monkeypatch):
+    conversador, servidor = azure
+    monkeypatch.setenv("CONVERSADOR_RAZONAMIENTO", "minimal")
+    respuesta = _responder(conversador, "Necesito recolección de orgánicos")
+    assert respuesta.memoria == {"pidiendo": "organico"}
+    assert servidor.timeout == 3
+    cuerpo = servidor.peticiones[0][2]
+    assert cuerpo["reasoning"] == {"effort": "minimal"}
+    assert cuerpo["max_output_tokens"] == 128
 
 
 @pytest.mark.parametrize("texto,memoria,media_url", [

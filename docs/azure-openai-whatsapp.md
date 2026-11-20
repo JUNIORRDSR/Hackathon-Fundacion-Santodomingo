@@ -26,6 +26,9 @@ OPENAI_API_KEY=
 CONVERSADOR_MODELO=
 ```
 
+Para un despliegue de GPT-5 o GPT-5 mini, añade `CONVERSADOR_RAZONAMIENTO=minimal`. El bot usa hasta 128 tokens
+de salida y espera hasta 3 segundos en la conexión con Azure. Para GPT-4.1 mini deja esa variable vacía.
+
 Ejecuta `docker compose up --build` y usa el [simulador](../README.md#probar-el-bot-sin-whatsapp). Completa el
 registro y habilita al solicitante desde la coordinación antes de probar una frase como «quiero que recojan
 mis orgánicos». El bot debe preguntar en qué franja prefieres la recolección. Para desactivar Azure,

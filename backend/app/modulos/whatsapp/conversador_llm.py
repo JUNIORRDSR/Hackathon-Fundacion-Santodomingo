@@ -57,16 +57,18 @@ _LIMITE_RESPUESTA = 64 * 1024
 class ConversadorLLM:
     """El modelo elige una opción y el menú controla las acciones y respuestas."""
 
-    def __init__(self, base_url: str, api_key: str, modelo: str):
+    def __init__(self, base_url: str, api_key: str, modelo: str, razonamiento_minimo: bool = False):
         self._host = _host_recurso(base_url)
         self._api_key = api_key
         self._modelo = modelo
+        self._razonamiento_minimo = razonamiento_minimo
         self._menu = ConversadorMenu()
 
     @classmethod
     def desde_entorno(cls) -> "ConversadorLLM":
         return cls(os.getenv("OPENAI_BASE_URL", "").strip(), os.getenv("OPENAI_API_KEY", "").strip(),
-                   os.getenv("CONVERSADOR_MODELO", "").strip())
+                   os.getenv("CONVERSADOR_MODELO", "").strip(),
+                   razonamiento_minimo=os.getenv("CONVERSADOR_RAZONAMIENTO", "").strip() == "minimal")
 
     def responder(self, turno: Turno, memoria: dict, herramientas: Herramientas) -> Respuesta:
         texto = _texto_para_clasificar(turno, memoria) if self._host and self._api_key and self._modelo else ""
@@ -74,19 +76,25 @@ class ConversadorLLM:
         turno_menu = turno.model_copy(update={"texto": opcion}) if opcion else turno
         return self._menu.responder(turno_menu, memoria, herramientas)
 
-    def _clasificar(self, texto: str) -> str | None:
-        cuerpo = json.dumps({
+    def _cuerpo(self, texto: str) -> bytes:
+        datos = {
             "model": self._modelo,
             "instructions": _INSTRUCCIONES,
             "input": [{"role": "user", "content": texto}],
             "store": False,
-            "max_output_tokens": 64,
+            "max_output_tokens": 128 if self._razonamiento_minimo else 64,
             "text": {"format": _FORMATO},
-        }).encode("utf-8")
+        }
+        if self._razonamiento_minimo:
+            datos["reasoning"] = {"effort": "minimal"}
+        return json.dumps(datos).encode("utf-8")
+
+    def _clasificar(self, texto: str) -> str | None:
         cabeceras = {"api-key": self._api_key, "Content-Type": "application/json"}
+        tiempo = 3 if self._razonamiento_minimo else 2
         try:
-            with closing(HTTPSConnection(self._host, timeout=2)) as conexion:
-                conexion.request("POST", _RUTA, body=cuerpo, headers=cabeceras)
+            with closing(HTTPSConnection(self._host, timeout=tiempo)) as conexion:
+                conexion.request("POST", _RUTA, body=self._cuerpo(texto), headers=cabeceras)
                 with conexion.getresponse() as respuesta:
                     if respuesta.status != 200:
                         return None

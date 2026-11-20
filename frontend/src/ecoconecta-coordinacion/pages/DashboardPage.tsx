@@ -161,10 +161,10 @@ export function DashboardPage({
   }, [])
   const today = localDate()
   const planned = getPlannedRequests(requests)
-  const counts = { pendiente: 0, asignada: 0, recolectada: 0, rechazada: 0 }
+  const counts = { pendiente: 0, asignada: 0, recolectada: 0, rechazada: 0, cancelada: 0 }
   for (const request of requests) counts[request.estado]++
   const recent = [...requests]
-    .sort((a, b) => b.fecha.localeCompare(a.fecha) || b.id.localeCompare(a.id, undefined, { numeric: true }))
+    .sort((a, b) => b.fecha.localeCompare(a.fecha) || b.codigo.localeCompare(a.codigo, undefined, { numeric: true }))
     .slice(0, 3)
   const pendingShare = requests.length ? Math.round((counts.pendiente / requests.length) * 100) : 0
 

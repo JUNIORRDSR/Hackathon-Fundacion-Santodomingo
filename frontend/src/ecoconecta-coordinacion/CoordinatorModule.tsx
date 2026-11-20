@@ -11,7 +11,7 @@ import { RecolectoresPage } from './pages/RecolectoresPage'
 import { CapacitacionPage } from './pages/CapacitacionPage'
 import { sampleTraining } from './mocks/training'
 import { useCoordinatorData } from './services/useCoordinatorData'
-import type { EcoLink, EcoLocation } from './routes'
+import type { EcoLink, EcoLocation, EcoPage } from './routes'
 import type {
   CollectionResult,
   CollectorInput,
@@ -32,6 +32,9 @@ interface CoordinatorModuleProps {
   onDemoChoice?: (id: string) => void
   trainingResources?: TrainingResource[]
   publicTrainingHref?: string
+  // Páginas que pone el host (registro asistido, por habilitar, panel, WhatsApp) y salida de la sesión.
+  extraPages?: Partial<Record<EcoPage, ReactNode>>
+  onSignOut?: () => void
 }
 
 export function CoordinatorModule({
@@ -44,18 +47,25 @@ export function CoordinatorModule({
   onDemoChoice,
   trainingResources,
   publicTrainingHref,
+  extraPages = {},
+  onSignOut,
 }: CoordinatorModuleProps) {
   const { page } = location
+  const pages = Object.keys(extraPages) as EcoPage[]
   return (
     <Layout
       page={page}
       coordinator={coordinator}
-      choices={demo ? demoChoices : undefined}
+      choices={demoChoices}
       onChange={onDemoChoice}
       href={href}
       demo={demo}
+      extraPages={pages}
+      onSignOut={onSignOut}
     >
-      {page === 'capacitacion' ? (
+      {extraPages[page] ? (
+        extraPages[page]
+      ) : page === 'capacitacion' ? (
         <CapacitacionPage
           resources={trainingResources ?? sampleTraining}
           sample={!trainingResources}
@@ -129,7 +139,7 @@ function CoordinatorContent({
     )
   }
 
-  const { requests, collectors } = data.state.data
+  const { requests, collectors, zones } = data.state.data
   const selected = detail?.page === page ? requests.find((item) => item.id === detail.id) : undefined
   const open = (item: Request) => setDetail({ id: item.id, page })
   const close = () => setDetail(undefined)
@@ -144,7 +154,7 @@ function CoordinatorContent({
   async function assign(input: Assignment) {
     const saved = await repository.assign(coordinator, input)
     confirmRequest(saved, input.solicitudId, 'asignada')
-    setNotice('Asignación confirmada para la solicitud ' + saved.id + '.')
+    setNotice('Asignación confirmada para la solicitud ' + saved.codigo + '.')
     close()
   }
 
@@ -153,9 +163,16 @@ function CoordinatorContent({
     confirmRequest(saved, input.solicitudId, input.estado)
     setNotice(
       saved.estado === 'recolectada'
-        ? 'Peso registrado para ' + saved.id + '.'
-        : 'Rechazo registrado para ' + saved.id + '.',
+        ? 'Peso registrado para ' + saved.codigo + '.'
+        : 'Rechazo registrado para ' + saved.codigo + '.',
     )
+  }
+
+  async function cancel(id: string, motivo: string) {
+    const saved = await repository.cancel(coordinator, id, motivo)
+    confirmRequest(saved, id, 'cancelada')
+    setNotice('Solicitud ' + saved.codigo + ' cancelada.')
+    close()
   }
 
   async function saveCollector(input: CollectorInput, id?: string) {
@@ -196,7 +213,9 @@ function CoordinatorContent({
       )
       break
     case 'recolectores':
-      content = <RecolectoresPage collectors={collectors} group={coordinator.grupo} onSave={saveCollector} />
+      content = (
+        <RecolectoresPage collectors={collectors} zones={zones} group={coordinator.grupo} onSave={saveCollector} />
+      )
   }
 
   return (
@@ -211,6 +230,7 @@ function CoordinatorContent({
           href={href}
           onClose={close}
           onAssign={assign}
+          onCancel={cancel}
         />
       )}
       <div className="confirmation-anchor" role="status" aria-atomic="true">

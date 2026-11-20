@@ -7,18 +7,21 @@ import { ErrorMessage } from '../ui/Feedback'
 import { Icon } from '../ui/Icon'
 import { Modal } from '../ui/Modal'
 import { useSubmission } from '../ui/useSubmission'
+import { CancelRequest } from './CancelRequest'
 import { StatusBadge, WasteIcon } from './RequestList'
 
 export function RequestDetail({
   request,
   collectors,
   onAssign,
+  onCancel,
   onClose,
   href,
 }: {
   request: Request
   collectors: Collector[]
   onAssign: (assignment: Assignment) => Promise<void>
+  onCancel: (id: string, motivo: string) => Promise<void>
   onClose: () => void
   href: EcoLink
 }) {
@@ -56,7 +59,7 @@ export function RequestDetail({
   }
 
   return (
-    <Modal title={'Solicitud ' + request.id} onClose={onClose} busy={submit.busy}>
+    <Modal title={'Solicitud ' + request.codigo} onClose={onClose} busy={submit.busy}>
       <div className="detail-identity">
         <WasteIcon type={request.tipo} />
         <div>
@@ -100,6 +103,12 @@ export function RequestDetail({
             <dd>{request.resultado.motivoRechazo}</dd>
           </div>
         )}
+        {request.estado === 'cancelada' && request.motivo && (
+          <div className="detail-wide">
+            <dt>Motivo de la cancelación</dt>
+            <dd>{request.motivo}</dd>
+          </div>
+        )}
         {request.detalle && (
           <div className="detail-wide">
             <dt>Observaciones</dt>
@@ -113,7 +122,7 @@ export function RequestDetail({
         ) : (
           <img
             className="request-photo"
-            alt={'Foto de los residuos de la solicitud ' + request.id}
+            alt={'Foto de los residuos de la solicitud ' + request.codigo}
             src={request.fotoUrl}
             onError={() => setPhotoFailed(true)}
           />
@@ -224,6 +233,9 @@ export function RequestDetail({
             Registrar resultado
           </a>
         </div>
+      )}
+      {(request.estado === 'pendiente' || request.estado === 'asignada') && (
+        <CancelRequest onCancel={(motivo) => onCancel(request.id, motivo)} />
       )}
     </Modal>
   )

@@ -5,7 +5,7 @@ import type { IconName } from '../ui/Icon'
 
 const categoryIcons: Record<TrainingResource['categoria'], IconName> = {
   organico: 'leaf',
-  aprovechable: 'recycle',
+  reciclable: 'recycle',
   mezclas: 'alert',
   practicas: 'checkCircle',
 }

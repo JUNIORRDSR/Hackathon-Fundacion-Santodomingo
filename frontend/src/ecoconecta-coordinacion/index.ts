@@ -2,8 +2,6 @@ import './styles/eco.css'
 import './styles/dashboard.css'
 
 export { CoordinatorModule, PublicTrainingModule } from './CoordinatorModule'
-export { createApiRepository } from './services/apiRepository'
-export type { ApiRepositoryOptions } from './services/apiRepository'
 export { createMockRepository } from './services/mockRepository'
 export type { EcoLink, EcoLocation, EcoPage } from './routes'
 export type {
@@ -18,4 +16,5 @@ export type {
   RequestStatus,
   TrainingResource,
   WasteType,
+  Zone,
 } from './types'

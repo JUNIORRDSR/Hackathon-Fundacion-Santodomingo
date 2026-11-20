@@ -1,4 +1,14 @@
-export const routes = ['inicio', 'solicitudes', 'recolecciones', 'recolectores', 'capacitacion'] as const
+export const routes = [
+  'inicio',
+  'solicitudes',
+  'recolecciones',
+  'recolectores',
+  'capacitacion',
+  'registro',
+  'habilitar',
+  'panel',
+  'whatsapp',
+] as const
 export type EcoPage = (typeof routes)[number]
 
 export interface EcoLocation {

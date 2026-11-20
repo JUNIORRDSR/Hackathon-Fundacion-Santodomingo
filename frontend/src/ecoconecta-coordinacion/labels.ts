@@ -2,12 +2,12 @@ import type { Assignment, LocalDate, RequestStatus, WasteType } from './types'
 
 export const wasteLabels: Record<WasteType, string> = {
   organico: 'Orgánicos',
-  aprovechable: 'Aprovechables',
+  reciclable: 'Reciclables',
 }
 
 export const groupLabels: Record<WasteType, string> = {
   organico: 'Huerteros',
-  aprovechable: 'Recicladores',
+  reciclable: 'Recicladores',
 }
 
 export const statusLabels: Record<RequestStatus, string> = {
@@ -15,6 +15,7 @@ export const statusLabels: Record<RequestStatus, string> = {
   asignada: 'Asignada',
   recolectada: 'Recolectada',
   rechazada: 'Rechazada',
+  cancelada: 'Cancelada',
 }
 
 export const timeZone = 'America/Bogota'

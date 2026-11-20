@@ -35,7 +35,7 @@ export function SolicitudesPage({
     .filter((request) => {
       const matchesState = current === 'todas' || current === request.estado
       const searchable = [
-        request.id,
+        request.codigo,
         request.solicitante,
         request.ubicacion,
         wasteLabels[request.tipo],
@@ -43,7 +43,7 @@ export function SolicitudesPage({
       ].join(' ')
       return matchesState && normalizeSearch(searchable).includes(query)
     })
-    .sort((a, b) => b.fecha.localeCompare(a.fecha) || b.id.localeCompare(a.id, undefined, { numeric: true }))
+    .sort((a, b) => b.fecha.localeCompare(a.fecha) || b.codigo.localeCompare(a.codigo, undefined, { numeric: true }))
 
   return (
     <>

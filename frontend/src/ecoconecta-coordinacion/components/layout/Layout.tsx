@@ -15,7 +15,12 @@ const navigation: { page: EcoPage; label: string; icon: IconName }[] = [
   { page: 'recolecciones', label: 'Recolecciones', icon: 'truck' },
   { page: 'recolectores', label: 'Recolectores', icon: 'users' },
   { page: 'capacitacion', label: 'Capacitación', icon: 'book' },
+  { page: 'registro', label: 'Registro asistido', icon: 'plus' },
+  { page: 'habilitar', label: 'Por habilitar', icon: 'user' },
+  { page: 'panel', label: 'Panel', icon: 'scale' },
+  { page: 'whatsapp', label: 'WhatsApp', icon: 'inbox' },
 ]
+const modulePages: EcoPage[] = ['inicio', 'solicitudes', 'recolecciones', 'recolectores', 'capacitacion']
 
 export function PageHeader({ title, description, action }: { title: string; description: string; action?: ReactNode }) {
   return (
@@ -33,10 +38,12 @@ function CoordinatorIdentity({
   coordinator,
   choices,
   onChange,
+  demo,
 }: {
   coordinator: Coordinator
   choices?: Coordinator[]
   onChange?: (id: string) => void
+  demo: boolean
 }) {
   const initials = coordinator.nombre
     .split(/\s+/)
@@ -56,13 +63,14 @@ function CoordinatorIdentity({
         <>
           <Icon name="chevron" className="profile-chevron" />
           <select
-            aria-label="Cambiar equipo de demostración"
+            aria-label={demo ? 'Cambiar equipo de demostración' : 'Cambiar de equipo'}
             value={coordinator.id}
             onChange={(event) => onChange(event.target.value)}
           >
             {choices.map((item) => (
               <option key={item.id} value={item.id}>
-                {groupLabels[item.grupo]} (demo)
+                {groupLabels[item.grupo]}
+                {demo ? ' (demo)' : ''}
               </option>
             ))}
           </select>
@@ -79,6 +87,8 @@ export function Layout({
   choices,
   onChange,
   demo,
+  extraPages = [],
+  onSignOut,
   children,
 }: {
   page: EcoPage
@@ -87,8 +97,11 @@ export function Layout({
   choices?: Coordinator[]
   onChange?: (id: string) => void
   demo: boolean
+  extraPages?: EcoPage[]
+  onSignOut?: () => void
   children: ReactNode
 }) {
+  const visible = navigation.filter((item) => modulePages.includes(item.page) || extraPages.includes(item.page))
   const main = useRef<HTMLElement>(null)
   const lastPage = useRef(page)
   useEffect(() => {
@@ -128,14 +141,19 @@ export function Layout({
           {coordinator && (
             <>
               <nav className="main-nav" aria-label="Navegación principal">
-                {navigation.map(({ page: target, label, icon }) => (
+                {visible.map(({ page: target, label, icon }) => (
                   <a key={target} href={href({ page: target })} aria-current={page === target ? 'page' : undefined}>
                     <Icon name={icon} />
                     <span>{label}</span>
                   </a>
                 ))}
               </nav>
-              <CoordinatorIdentity coordinator={coordinator} choices={choices} onChange={onChange} />
+              <CoordinatorIdentity coordinator={coordinator} choices={choices} onChange={onChange} demo={demo} />
+              {onSignOut && (
+                <button type="button" className="button button-secondary" onClick={onSignOut}>
+                  Salir
+                </button>
+              )}
             </>
           )}
         </div>

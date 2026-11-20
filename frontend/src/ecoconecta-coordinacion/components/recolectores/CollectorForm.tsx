@@ -1,22 +1,25 @@
 import { useId, useState } from 'react'
 import type { FormEvent } from 'react'
-import type { Collector, CollectorInput } from '../../types'
+import type { Collector, CollectorInput, Zone } from '../../types'
 import { ErrorMessage } from '../ui/Feedback'
 import { Modal } from '../ui/Modal'
 import { useSubmission } from '../ui/useSubmission'
 
+// Las zonas salen del catálogo: el sistema sugiere a quien cubre la zona de cada solicitud.
 export function CollectorForm({
   collector,
+  zones,
   onClose,
   onSave,
 }: {
   collector?: Collector
+  zones: Zone[]
   onClose: () => void
   onSave: (input: CollectorInput, id?: string) => Promise<void>
 }) {
   const id = useId()
   const [name, setName] = useState(collector?.nombre ?? '')
-  const [zone, setZone] = useState(collector?.zona ?? '')
+  const [selected, setSelected] = useState<string[]>(collector?.zonas ?? [])
   const [active, setActive] = useState(collector?.activo ?? true)
   const [validation, setValidation] = useState({ name: '', zone: '' })
   const submit = useSubmission()
@@ -24,14 +27,21 @@ export function CollectorForm({
   function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const nombre = name.trim()
-    const zona = zone.trim()
-    const errors = { name: nombre ? '' : 'Escribe el nombre.', zone: zona ? '' : 'Escribe la zona.' }
+    const errors = {
+      name: nombre ? '' : 'Escribe el nombre.',
+      zone: selected.length ? '' : 'Elige al menos una zona.',
+    }
     setValidation(errors)
     if (errors.name || errors.zone) {
       document.getElementById(id + (errors.name ? '-name' : '-zone'))?.focus()
       return
     }
-    void submit.run(() => onSave({ nombre, zona, activo: active }, collector?.id))
+    void submit.run(() => onSave({ nombre, zonas: selected, activo: active }, collector?.id))
+  }
+
+  function toggle(zone: string, checked: boolean) {
+    setSelected((previous) => (checked ? [...previous, zone] : previous.filter((item) => item !== zone)))
+    setValidation((previous) => ({ ...previous, zone: '' }))
   }
 
   return (
@@ -57,26 +67,21 @@ export function CollectorForm({
             </span>
           )}
         </div>
-        <div className="field">
-          <label htmlFor={id + '-zone'}>Zona</label>
-          <input
-            id={id + '-zone'}
-            value={zone}
-            required
-            disabled={submit.busy}
-            aria-invalid={!!validation.zone}
-            aria-describedby={validation.zone ? id + '-zone-error' : undefined}
-            onChange={(event) => {
-              setZone(event.target.value)
-              setValidation((prev) => ({ ...prev, zone: '' }))
-            }}
-          />
-          {validation.zone && (
-            <span className="field-error" id={id + '-zone-error'}>
-              {validation.zone}
-            </span>
-          )}
-        </div>
+        <fieldset className="field" id={id + '-zone'} tabIndex={-1}>
+          <legend>Zonas que cubre</legend>
+          {zones.map((zone) => (
+            <label key={zone.id} className="checkbox-field">
+              <input
+                type="checkbox"
+                checked={selected.includes(zone.id)}
+                disabled={submit.busy}
+                onChange={(event) => toggle(zone.id, event.target.checked)}
+              />{' '}
+              {zone.nombre}
+            </label>
+          ))}
+          {validation.zone && <span className="field-error">{validation.zone}</span>}
+        </fieldset>
         <label className="checkbox-field">
           <input
             type="checkbox"

@@ -14,9 +14,9 @@ export const sampleTraining: TrainingResource[] = [
     ],
   },
   {
-    id: 'aprovechables',
-    titulo: 'Residuos aprovechables',
-    categoria: 'aprovechable',
+    id: 'reciclables',
+    titulo: 'Residuos reciclables (aprovechables)',
+    categoria: 'reciclable',
     tipo: 'guia',
     descripcion: 'Prepara los materiales que pueden recuperarse para que conserven su valor.',
     pasos: [

@@ -49,7 +49,7 @@ export function CollectionResultForm({
   return (
     <Modal title="Registrar resultado" onClose={onClose} busy={submit.busy}>
       <p className="muted">
-        {request.id} · {request.solicitante}
+        {request.codigo} · {request.solicitante}
       </p>
       <form className="dialog-form" noValidate onSubmit={save}>
         <fieldset disabled={submit.busy}>

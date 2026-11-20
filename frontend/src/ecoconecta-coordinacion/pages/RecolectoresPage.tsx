@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { groupLabels } from '../labels'
-import type { Collector, CollectorInput, WasteType } from '../types'
+import type { Collector, CollectorInput, WasteType, Zone } from '../types'
 import { PageHeader } from '../components/layout/Layout'
 import { CollectorForm } from '../components/recolectores/CollectorForm'
 import { EmptyState } from '../components/ui/Feedback'
@@ -8,10 +8,12 @@ import { Icon } from '../components/ui/Icon'
 
 export function RecolectoresPage({
   collectors,
+  zones,
   group,
   onSave,
 }: {
   collectors: Collector[]
+  zones: Zone[]
   group: WasteType
   onSave: (input: CollectorInput, id?: string) => Promise<void>
 }) {
@@ -70,6 +72,7 @@ export function RecolectoresPage({
       {editing && (
         <CollectorForm
           collector={editing === 'new' ? undefined : editing}
+          zones={zones}
           onClose={() => setEditing(null)}
           onSave={async (input, id) => {
             await onSave(input, id)

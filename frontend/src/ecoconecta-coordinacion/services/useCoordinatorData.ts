@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { errorText } from '../components/ui/Feedback'
-import type { Collector, Coordinator, CoordinatorRepository, Request } from '../types'
+import type { Collector, Coordinator, CoordinatorRepository, Request, Zone } from '../types'
 
-type Data = { requests: Request[]; collectors: Collector[] }
+type Data = { requests: Request[]; collectors: Collector[]; zones: Zone[] }
 type LoadingState = { status: 'loading' } | { status: 'error'; error: string } | { status: 'ready'; data: Data }
 
 export function useCoordinatorData(coordinator: Coordinator, repository: CoordinatorRepository, loadRequests: boolean) {
@@ -15,14 +15,15 @@ export function useCoordinatorData(coordinator: Coordinator, repository: Coordin
     const scope = { id, nombre, grupo }
     const signal = controller.signal
     const requests = loadRequests ? repository.listRequests(scope, signal) : Promise.resolve([])
-    Promise.all([requests, repository.listCollectors(scope, signal)])
-      .then(([requests, collectors]) => {
+    Promise.all([requests, repository.listCollectors(scope, signal), repository.listZones(signal)])
+      .then(([requests, collectors, zones]) => {
         if (signal.aborted) return
         setState({
           status: 'ready',
           data: {
             requests: requests.filter((item) => item.tipo === grupo),
             collectors: collectors.filter((item) => item.grupo === grupo),
+            zones,
           },
         })
       })

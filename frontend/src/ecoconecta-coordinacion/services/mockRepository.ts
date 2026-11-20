@@ -1,5 +1,5 @@
 import { isLocalDate, timeMinutes } from '../labels'
-import { createDemoData } from '../mocks/demoData'
+import { createDemoData, demoZones } from '../mocks/demoData'
 import type { Collector, Coordinator, CoordinatorRepository, Request } from '../types'
 
 type DemoData = ReturnType<typeof createDemoData>
@@ -62,6 +62,18 @@ export function createMockRepository(storage?: Storage): CoordinatorRepository {
   return {
     listRequests: (coordinator, signal) =>
       load(({ requests }) => requests.filter(({ tipo }) => tipo === coordinator.grupo), signal),
+    listZones: (signal) => load(() => demoZones, signal),
+    cancel(coordinator, solicitudId, motivo) {
+      return transact((data) => {
+        const { index, request } = findRequest(data, coordinator, solicitudId)
+        if (request.estado !== 'pendiente' && request.estado !== 'asignada') {
+          throw new Error('La solicitud ya cambió de estado. Actualiza el panel.')
+        }
+        const updated: Request = { ...request, estado: 'cancelada', motivo: motivo.trim(), resultado: undefined }
+        data.requests[index] = updated
+        return updated
+      })
+    },
     listCollectors: (coordinator, signal) =>
       load(({ collectors }) => collectors.filter(({ grupo }) => grupo === coordinator.grupo), signal),
     assign(coordinator, assignment) {
@@ -116,8 +128,12 @@ export function createMockRepository(storage?: Storage): CoordinatorRepository {
     saveCollector(coordinator, input, id) {
       return transact((data) => {
         const nombre = input.nombre.trim()
-        const zona = input.zona.trim()
-        if (!nombre || !zona) throw new Error('Escribe el nombre y la zona.')
+        const zonas = input.zonas.filter((zona) => demoZones.some((item) => item.id === zona))
+        if (!nombre || !zonas.length) throw new Error('Escribe el nombre y elige al menos una zona.')
+        const zona = demoZones
+          .filter((item) => zonas.includes(item.id))
+          .map((item) => item.nombre)
+          .join(', ')
         const index = data.collectors.findIndex((entry) => entry.id === id && entry.grupo === coordinator.grupo)
         if (id && index < 0) throw new Error('El recolector ya no está disponible en tu equipo.')
         const saved: Collector = {
@@ -129,6 +145,7 @@ export function createMockRepository(storage?: Storage): CoordinatorRepository {
               crypto.getRandomValues(new Uint32Array(1))[0].toString(36),
           grupo: coordinator.grupo,
           nombre,
+          zonas,
           zona,
           activo: input.activo,
         }

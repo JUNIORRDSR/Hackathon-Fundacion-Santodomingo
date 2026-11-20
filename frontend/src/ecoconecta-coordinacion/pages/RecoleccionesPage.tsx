@@ -75,7 +75,7 @@ export function RecoleccionesPage({
                     <StatusBadge status={item.estado} />
                   </div>
                   <div>
-                    <p className="request-id">{item.id}</p>
+                    <p className="request-id">{item.codigo}</p>
                     <h2>{item.solicitante}</h2>
                   </div>
                   <div className="small-details">
@@ -120,7 +120,7 @@ export function RecoleccionesPage({
               <li key={item.id}>
                 <div>
                   <span className="request-id">
-                    {item.id} · {formatDate(item.asignacion.fecha)}
+                    {item.codigo} · {formatDate(item.asignacion.fecha)}
                     {item.asignacion.hora && ' · ' + item.asignacion.hora}
                   </span>
                   <h2>{item.solicitante}</h2>

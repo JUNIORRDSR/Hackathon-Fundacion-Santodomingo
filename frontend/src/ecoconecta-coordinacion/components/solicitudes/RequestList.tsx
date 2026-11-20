@@ -8,6 +8,7 @@ const statusIcons: Record<RequestStatus, IconName> = {
   asignada: 'calendar',
   recolectada: 'checkCircle',
   rechazada: 'xCircle',
+  cancelada: 'close',
 }
 
 export function StatusBadge({ status }: { status: RequestStatus }) {
@@ -54,7 +55,7 @@ export function RequestList({
                 <p className="request-name">{item.solicitante}</p>
                 <p className="request-location">{item.ubicacion}</p>
                 {compact && <p className="request-tablet-type">{wasteLabels[item.tipo]}</p>}
-                {!compact && <span className="request-id">{item.id}</span>}
+                {!compact && <span className="request-id">{item.codigo}</span>}
               </div>
             </div>
             <span className="request-type">{wasteLabels[item.tipo]}</span>
@@ -67,7 +68,7 @@ export function RequestList({
             <button
               type="button"
               className="button button-quiet request-action"
-              aria-label={'Ver solicitud ' + item.id + ' de ' + item.solicitante}
+              aria-label={'Ver solicitud ' + item.codigo + ' de ' + item.solicitante}
               onClick={() => onSelect(item)}
             >
               Ver<span className="sr-only"> solicitud</span>

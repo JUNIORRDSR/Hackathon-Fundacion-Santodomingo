@@ -125,10 +125,10 @@ export function RecoleccionesPage({
                   <button
                     type="button"
                     className="button button-primary"
-                    aria-label={'Registrar resultado de ' + item.solicitante}
+                    aria-label={'Validar la recolección de ' + item.solicitante}
                     onClick={() => setSelectedId(item.id)}
                   >
-                    Registrar resultado
+                    Validar y registrar kilos
                   </button>
                 </li>
               ))}

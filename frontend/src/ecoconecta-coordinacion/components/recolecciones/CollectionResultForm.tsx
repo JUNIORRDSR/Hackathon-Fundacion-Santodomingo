@@ -51,7 +51,7 @@ export function CollectionResultForm({
   }
 
   return (
-    <Modal title="Registrar resultado" onClose={onClose} busy={submit.busy}>
+    <Modal title="Validar la recolección" onClose={onClose} busy={submit.busy}>
       {(close) => (
         <>
           <p className="muted">
@@ -138,7 +138,7 @@ export function CollectionResultForm({
                 Cancelar
               </button>
               <button className="button button-primary" type="submit" disabled={submit.busy}>
-                {submit.busy ? 'Guardando…' : submit.error ? 'Reintentar registro' : 'Guardar resultado'}
+                {submit.busy ? 'Guardando…' : submit.error ? 'Reintentar registro' : 'Validar y dar puntos'}
               </button>
             </div>
           </form>

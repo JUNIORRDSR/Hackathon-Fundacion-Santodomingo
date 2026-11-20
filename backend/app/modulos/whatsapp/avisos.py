@@ -42,8 +42,22 @@ def _al_programar(e: solicitudes.SolicitudProgramada) -> None:
 
 def _al_acreditar(e: puntos.PuntosAcreditados) -> None:
     peso = f": {kilos(e.kg)} kg" if e.kg else ""
-    _avisar(e.solicitante_id, f"Recibimos tus {NOMBRE_FLUJO[e.flujo]}{peso}. Ganaste {e.puntos} puntos "
-                              f"({e.explicacion}). Llevas {e.saldo}. Escribe 4 para ver qué puedes canjear.")
+    disponible = puntos.disponible(e.solicitante_id)
+    _avisar(e.solicitante_id, f"¡Gracias por separar! Recibimos tus {NOMBRE_FLUJO[e.flujo]} de {e.codigo}{peso}. "
+                              f"Ganaste {e.puntos} puntos ({e.explicacion}). Ahora tienes {disponible} puntos.\n\n"
+                              + _lo_que_alcanza(disponible))
+
+
+def _lo_que_alcanza(disponible: int) -> str:
+    """Dice qué premio ya puede pedir o cuánto le falta para el más barato (ADR-0008)."""
+    premios = puntos.premios(solo_activos=True)
+    alcanza = [p for p in premios if p.costo <= disponible]
+    if alcanza:
+        return f"Ya te alcanza para {alcanza[-1].nombre}. Escribe 4 para pedir tu premio."
+    if premios:
+        faltan = premios[0].costo - disponible
+        return f"Te faltan {faltan} puntos para {premios[0].nombre}. Escribe 4 para ver los premios."
+    return "Escribe 4 para ver tus puntos."
 
 
 

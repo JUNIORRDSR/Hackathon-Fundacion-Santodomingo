@@ -1,5 +1,10 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useId, useState } from 'react'
+import type { FormEvent } from 'react'
 import { ErrorMessage } from '../../ecoconecta-coordinacion/components/ui/Feedback'
+import { Icon } from '../../ecoconecta-coordinacion/components/ui/Icon'
+import { Modal } from '../../ecoconecta-coordinacion/components/ui/Modal'
+import type { CloseModal } from '../../ecoconecta-coordinacion/components/ui/Modal'
+import { useSubmission } from '../../ecoconecta-coordinacion/components/ui/useSubmission'
 import { api } from '../api'
 
 interface Premio {
@@ -11,9 +16,10 @@ interface Premio {
 }
 const NUEVO: Premio = { nombre: '', costo: 30, activo: true }
 
-// El catálogo lo edita la administración; la coordinación solo lo consulta (ADR-0008).
+// El catálogo lo edita la administración; la coordinación lo consulta para orientar al vecino (ADR-0008).
 export function Premios({ administrador }: { administrador: boolean }) {
   const [premios, setPremios] = useState<Premio[]>([])
+  const [editando, setEditando] = useState<Premio>()
   const [error, setError] = useState('')
   const cargar = useCallback(() => {
     api<Premio[]>('/puntos/premios')
@@ -22,78 +28,129 @@ export function Premios({ administrador }: { administrador: boolean }) {
   }, [])
   useEffect(cargar, [cargar])
 
-  async function guardar(premio: Premio) {
-    setError('')
-    const cuerpo = { nombre: premio.nombre, costo: premio.costo, activo: premio.activo }
-    try {
-      await (premio.id ? api('/puntos/premios/' + premio.id, 'PUT', cuerpo) : api('/puntos/premios', 'POST', cuerpo))
-      cargar()
-    } catch (e) {
-      setError((e as Error).message)
-    }
-  }
-
   return (
     <section className="premios" aria-labelledby="premios-titulo">
-      <h2 id="premios-titulo">Premios del canje</h2>
-      <div className="card">
-        {premios.map((p) =>
-          administrador ? (
-            <FilaEditable key={p.id} premio={p} onGuardar={guardar} />
-          ) : (
-            <div className="premio-fila" key={p.id}>
-              <strong>{p.nombre}</strong>
-              <span>{p.costo} puntos</span>
-              <span className="muted">{p.activo ? 'Disponible' : 'No disponible'}</span>
-            </div>
-          ),
+      <div className="panel-heading">
+        <div>
+          <h2 id="premios-titulo">Premios del canje</h2>
+          <p>
+            {premios.some((p) => p.ejemplo)
+              ? 'Los de ejemplo quedan así hasta que la fundación fije sus valores.'
+              : 'Lo que el vecino puede pedir con sus puntos.'}
+          </p>
+        </div>
+        {administrador ? (
+          <button type="button" className="button button-primary" onClick={() => setEditando(NUEVO)}>
+            <Icon name="plus" /> Agregar premio
+          </button>
+        ) : (
+          <span className="muted">Los edita la administración</span>
         )}
-        {administrador && <FilaEditable key={premios.length} premio={NUEVO} onGuardar={guardar} />}
-        {premios.some((p) => p.ejemplo) && (
-          <p className="premio-nota">Los premios de ejemplo quedan así hasta que la fundación fije sus valores.</p>
-        )}
-        {error && <ErrorMessage message={error} />}
       </div>
+      {error && <ErrorMessage message={error} retry={cargar} />}
+      <ul className="premios-grid">
+        {premios.map((p) => (
+          <li key={p.id} className="card premio" data-activo={p.activo}>
+            <span className="icon-tile">
+              <Icon name="gift" />
+            </span>
+            <h3>{p.nombre}</h3>
+            <strong className="premio-costo">
+              {p.costo} <span>puntos</span>
+            </strong>
+            <span className="premio-etiquetas">
+              <span className="status-badge">{p.activo ? 'Disponible' : 'No disponible'}</span>
+              {p.ejemplo && <span className="status-badge premio-ejemplo">Ejemplo</span>}
+            </span>
+            {administrador && (
+              <button type="button" className="button button-secondary" onClick={() => setEditando(p)}>
+                <Icon name="edit" /> Editar
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
+      {editando && (
+        <FormularioPremio
+          key={editando.id ?? 'nuevo'}
+          premio={editando}
+          onClose={() => setEditando(undefined)}
+          alGuardar={cargar}
+        />
+      )}
     </section>
   )
 }
 
-function FilaEditable({ premio, onGuardar }: { premio: Premio; onGuardar: (p: Premio) => Promise<void> }) {
+function FormularioPremio({
+  premio,
+  onClose,
+  alGuardar,
+}: {
+  premio: Premio
+  onClose: () => void
+  alGuardar: () => void
+}) {
+  const id = useId()
+  const submit = useSubmission()
   const [datos, setDatos] = useState(premio)
-  const nuevo = !premio.id
+
+  function guardar(event: FormEvent<HTMLFormElement>, close: CloseModal) {
+    event.preventDefault()
+    const cuerpo = { nombre: datos.nombre.trim(), costo: datos.costo, activo: datos.activo }
+    void submit.run(async () => {
+      await (premio.id ? api('/puntos/premios/' + premio.id, 'PUT', cuerpo) : api('/puntos/premios', 'POST', cuerpo))
+      await close(alGuardar)
+    })
+  }
+
   return (
-    <form
-      className="premio-fila"
-      onSubmit={(event) => {
-        event.preventDefault()
-        void onGuardar(datos)
-      }}
-    >
-      <input
-        aria-label="Premio"
-        placeholder={nuevo ? 'Nuevo premio' : undefined}
-        value={datos.nombre}
-        onChange={(e) => setDatos({ ...datos, nombre: e.target.value })}
-      />
-      <input
-        aria-label="Puntos"
-        type="number"
-        min={1}
-        inputMode="numeric"
-        value={datos.costo}
-        onChange={(e) => setDatos({ ...datos, costo: Number(e.target.value) })}
-      />
-      <label className="checkbox-field">
-        <input
-          type="checkbox"
-          checked={datos.activo}
-          onChange={(e) => setDatos({ ...datos, activo: e.target.checked })}
-        />
-        Disponible
-      </label>
-      <button type="submit" className="button button-secondary" disabled={datos.nombre.trim().length < 2}>
-        {nuevo ? 'Agregar' : 'Guardar'}
-      </button>
-    </form>
+    <Modal title={premio.id ? 'Editar premio' : 'Agregar premio'} onClose={onClose} busy={submit.busy}>
+      {(close) => (
+        <form className="dialog-form" onSubmit={(event) => guardar(event, close)}>
+          <div className="field">
+            <label htmlFor={id + '-nombre'}>Premio</label>
+            <input
+              id={id + '-nombre'}
+              value={datos.nombre}
+              placeholder="Plántula de la huerta"
+              onChange={(e) => setDatos({ ...datos, nombre: e.target.value })}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor={id + '-costo'}>Puntos que cuesta</label>
+            <input
+              id={id + '-costo'}
+              type="number"
+              min={1}
+              inputMode="numeric"
+              value={datos.costo}
+              onChange={(e) => setDatos({ ...datos, costo: Number(e.target.value) })}
+            />
+          </div>
+          <label className="checkbox-field">
+            <input
+              type="checkbox"
+              checked={datos.activo}
+              onChange={(e) => setDatos({ ...datos, activo: e.target.checked })}
+            />
+            Disponible para canjear
+          </label>
+          {submit.error && <ErrorMessage message={submit.error} />}
+          <div className="form-actions">
+            <button type="button" className="button button-secondary" onClick={() => void close()}>
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="button button-primary"
+              disabled={submit.busy || datos.nombre.trim().length < 2 || datos.costo < 1}
+            >
+              {submit.busy ? 'Guardando…' : 'Guardar premio'}
+            </button>
+          </div>
+        </form>
+      )}
+    </Modal>
   )
 }

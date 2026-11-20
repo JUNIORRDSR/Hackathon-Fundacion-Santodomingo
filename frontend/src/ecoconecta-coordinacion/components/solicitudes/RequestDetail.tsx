@@ -243,7 +243,7 @@ export function RequestDetail({
                 href={href({ page: 'recolecciones', requestId: request.id })}
                 onClick={onClose}
               >
-                Registrar resultado
+                Validar y registrar kilos
               </a>
             </div>
           )}

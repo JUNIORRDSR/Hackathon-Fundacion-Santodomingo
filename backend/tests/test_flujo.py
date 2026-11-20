@@ -82,8 +82,8 @@ def _comprobar_avisos(admin: TestClient) -> None:
     assert "Recibimos tu solicitud ORG-" in textos and "en tu bolsa con marcador" in textos
     assert "Huertero Uno pasa por tu recolección ORG-" in textos
     assert "el sábado 21 de noviembre a las 7:00 p. m. |" in textos
-    assert "Ganaste 12 puntos" in textos and "Llevas 12" in textos
-    assert "Escribe 4 para ver qué puedes canjear" in textos
+    assert "Ganaste 12 puntos" in textos and "Ahora tienes 12 puntos" in textos
+    assert "Te faltan 18 puntos para Plántula de la huerta. Escribe 4" in textos
 
 
 def _consultar_puntos_y_canje(admin: TestClient) -> None:

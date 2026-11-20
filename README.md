@@ -34,6 +34,12 @@ pytest
 `pytest` también corre las reglas de arquitectura y de tamaño: si una falla, se corrige el código, no la regla
 ([ADR-0006](docs/adr/0006-reglas-de-arquitectura-en-pruebas.md)).
 
+## Un día completo de demo
+
+`python scripts/dia_de_demo.py` (o `python scripts/dia_de_demo.py https://<url-publicada>`) carga por la API 16 vecinos
+ficticios con sus solicitudes del día: pendientes, programadas a distintas horas, recolectadas con kilos (y sus puntos),
+una rechazada y dos canjes pedidos por WhatsApp. Se puede correr varias veces sin duplicar.
+
 ## Probar el bot sin WhatsApp
 
 Entra a la app (usuario `admin`, clave `ecoconecta-demo`) y abre **WhatsApp**: a la izquierda las conversaciones, a la

@@ -170,7 +170,7 @@ function CoordinatorContent({
       data.updateRequest(saved)
       setNotice(
         saved.estado === 'recolectada'
-          ? 'Peso registrado para ' + saved.codigo + '.'
+          ? 'Validada ' + saved.codigo + ': el vecino recibe sus puntos por WhatsApp.'
           : 'Rechazo registrado para ' + saved.codigo + '.',
       )
     }

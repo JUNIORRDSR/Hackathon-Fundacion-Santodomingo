@@ -3,6 +3,8 @@
 # Requisitos: az login y Docker encendido (la imagen se construye en local).
 # Uso, desde la raíz del repo: CLAVE_SESION=... CLAVE_DEMO=... CODIGO_REGISTRO=... CLAVE_BD=... bash deploy/azure.sh
 # Con Twilio y el bot con LLM, además: TRANSPORTE=twilio CONVERSADOR=llm y sus variables (ver .env.example).
+# REINICIAR_BASE=1 borra los datos de la app y la siembra de nuevo (una sola vez por publicación); CARGAR_DEMO=1
+# carga después el día de demo ficticio con scripts/dia_de_demo.py.
 set -euo pipefail
 
 GRUPO="${GRUPO:-rg-ecoconecta}"
@@ -106,7 +108,21 @@ if [[ -n "${OPENAI_API_KEY:-}" ]]; then
   fi
 fi
 
+# La base se reinicia una sola vez por sello: la app lo guarda y no vuelve a borrar si se reinicia (ADR-0012).
+if [[ "${REINICIAR_BASE:-}" == 1 ]]; then
+  VARIABLES+=("REINICIAR_BASE=$(date -u +%Y%m%dT%H%M%SZ)")
+fi
+
 az containerapp secret set --name "$APP" --resource-group "$GRUPO" --secrets "${SECRETOS[@]}" --output none
 az containerapp update --name "$APP" --resource-group "$GRUPO" --min-replicas 1 --max-replicas 1 \
   --set-env-vars "${VARIABLES[@]}" --output none
 echo "URL: https://$FQDN"
+
+# Espera a que la versión nueva responda y, si se pidió, carga el día de demo ficticio.
+for _ in $(seq 1 36); do
+  curl --silent --fail --output /dev/null "https://$FQDN/api/contenidos/publicos" && break
+  sleep 5
+done
+if [[ "${CARGAR_DEMO:-}" == 1 ]]; then
+  CLAVE_DEMO="$CLAVE_DEMO" python scripts/dia_de_demo.py "https://$FQDN"
+fi

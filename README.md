@@ -101,7 +101,7 @@ Los contratos de esas piezas están en `backend/app/modulos/whatsapp/contrato.py
 | Almacenamiento | Ninguno propio: los contenidos son URLs públicas |
 | Redes | Ingreso HTTPS público de Container Apps, que es también la URL del webhook de WhatsApp |
 
-URL publicada: pendiente.
+URL publicada: https://ecoconecta.happytree-01383e4e.northcentralus.azurecontainerapps.io (contratos en `/docs`).
 
 ## Variables de entorno
 

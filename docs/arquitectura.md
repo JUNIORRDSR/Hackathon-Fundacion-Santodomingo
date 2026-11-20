@@ -112,8 +112,34 @@ están la Ayuda del coordinador y el Material para encargados (video o imagen, s
 Recibida (con el código) · programada (día, hora y encargado) · resultado (kilos, puntos y saldo) · rechazo (motivo y
 pieza educativa) · cancelación · habilitación. Son plantillas fijas: no las escribe el LLM.
 
+## Despliegue
+
+```mermaid
+flowchart LR
+  Vecino([Hogar o negocio<br/>con WhatsApp]) -->|mensajes| Twilio[Twilio<br/>WhatsApp Business Platform]
+  Twilio -->|webhook HTTPS firmado| App
+  App -->|API de mensajes| Twilio
+  Tablet([Tablet de la coordinación<br/>PWA]) -->|HTTPS y cookie de sesión| App
+  subgraph Azure
+    App[Azure Container Apps<br/>una imagen: FastAPI + SPA]
+    BD[(Azure Database for PostgreSQL<br/>Flexible Server<br/>un esquema por módulo)]
+  end
+  App -->|SQL con SSL| BD
+  App -. opcional .-> LLM[LLM del bot<br/>OpenAI, Azure OpenAI o Claude]
+```
+
+| Recurso | Servicio | Para qué |
+|---|---|---|
+| Cómputo | Azure Container Apps | La imagen única con la API y la SPA; su HTTPS es también el del webhook |
+| Base de datos | Azure Database for PostgreSQL Flexible Server | Un esquema por módulo; modelo en [modelo-de-datos.md](modelo-de-datos.md) |
+| Almacenamiento | Ninguno propio | Los contenidos son URLs públicas |
+| Redes | Ingreso HTTPS de Container Apps; firewall de PostgreSQL abierto solo a Azure | La tablet, Twilio y el jurado entran por la misma URL |
+| Mensajería | Twilio (sandbox de WhatsApp) | Entrada y salida de WhatsApp detrás del puerto `Transporte` |
+
 ## Estado del esqueleto
 
-- **Hoy:** los contratos funcionan sobre PostgreSQL, un esquema por módulo, y el escenario de demostración del reto corre
-  completo en el simulador (`backend/tests/test_flujo.py`).
-- **Sigue:** adaptador básico de Twilio, host del frontend y despliegue en Azure.
+- **Hoy:** los contratos funcionan sobre PostgreSQL con un esquema por módulo, y el escenario de demostración del reto
+  corre completo (`backend/tests/test_flujo.py`). Hay un transporte básico de Twilio con webhook firmado y un host React
+  con las pantallas de la coordinación.
+- **Sigue:** el despliegue en Azure y el LLM del bot (Leonardo), la identidad visual y las pantallas de administración
+  (Daniela) y la API de WhatsApp definitiva (Jorge).

@@ -7,6 +7,7 @@ una tablet, y cada recolección suma puntos.
 - Arquitectura: [docs/arquitectura.md](docs/arquitectura.md)
 - Decisiones: [docs/adr/](docs/adr/)
 - Lenguaje del dominio: [docs/GLOSARIO.md](docs/GLOSARIO.md)
+- Modelo de datos: [docs/modelo-de-datos.md](docs/modelo-de-datos.md)
 - El reto y la visita: [docs/reto/](docs/reto/)
 
 ## Ejecutar en local con Docker

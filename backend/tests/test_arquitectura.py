@@ -147,6 +147,40 @@ def test_sin_print():
                       if isinstance(n, ast.Call) and getattr(n.func, "id", None) == "print"])
 
 
+FRONTEND = RAIZ.parent / "frontend" / "src"
+
+
+def test_frontend_tamanos_y_modulos_que_no_se_importan_entre_si():
+    """En el host React rigen los mismos tamaños, y un módulo no importa a otro: comparten solo host/ y api/."""
+    violaciones = []
+    for archivo in _archivos_ts():
+        lineas = archivo.read_text(encoding="utf-8").splitlines()
+        violaciones += [f"{archivo.name}: {len(lineas)} líneas"] if len(lineas) > 300 else []
+        violaciones += [f"{archivo.name}:{i}: {len(linea)} caracteres"
+                        for i, linea in enumerate(lineas, start=1) if len(linea) > 120]
+        violaciones += _imports_entre_modulos(archivo)
+    _sin_violaciones(violaciones)
+
+
+def _archivos_ts() -> list[Path]:
+    """El esquema generado del OpenAPI no cuenta: lo escribe la herramienta, no una persona."""
+    if not FRONTEND.exists():
+        return []
+    return sorted(p for p in FRONTEND.rglob("*.ts*") if p.name != "esquema.d.ts")
+
+
+def _imports_entre_modulos(archivo: Path) -> list[str]:
+    partes = archivo.relative_to(FRONTEND).parts
+    if partes[0] != "modulos":
+        return []
+    violaciones = []
+    for ruta in re.findall(r'from "(\.[^"]+)"', archivo.read_text(encoding="utf-8")):
+        destino = (archivo.parent / ruta).resolve().relative_to(FRONTEND.resolve()).parts
+        if destino[0] == "modulos" and destino[1] != partes[1]:
+            violaciones.append(f"{archivo.name} importa {ruta}")
+    return violaciones
+
+
 def test_solo_telefonos_ficticios():
     """Ley 1581: ningún teléfono real en el código ni en las pruebas."""
     _sin_violaciones([f"{_nombre(a)}: {t}" for a in _archivos(APP) + _archivos(PRUEBAS)

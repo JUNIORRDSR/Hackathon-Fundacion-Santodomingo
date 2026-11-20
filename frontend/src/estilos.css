@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tablet: todo lo que se toca mide al menos 48 px y nada depende del hover (ADR-0002). */
+@layer components {
+  .boton { @apply min-h-12 rounded-lg px-5 text-lg font-semibold; }
+  .boton-principal { @apply boton bg-marca text-white active:bg-marca-oscuro disabled:opacity-50; }
+  .boton-secundario { @apply boton border-2 border-marca text-marca active:bg-marca-claro disabled:opacity-50; }
+  .campo { @apply min-h-12 w-full rounded-lg border-2 border-gray-300 bg-white px-3 text-lg; }
+  .etiqueta { @apply mb-1 block text-base font-medium text-gray-700; }
+  .tarjeta { @apply rounded-lg bg-white p-4 shadow; }
+  .titulo { @apply mb-4 text-2xl font-bold; }
+}

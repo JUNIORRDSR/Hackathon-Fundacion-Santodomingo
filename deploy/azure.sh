@@ -32,5 +32,13 @@ az containerapp update --name "$APP" --resource-group "$GRUPO" --min-replicas 1 
   --set-env-vars ENTORNO=produccion SEMBRAR_DEMO=1 CLAVE_SESION=secretref:clave-sesion \
   CLAVE_DEMO=secretref:clave-demo DATABASE_URL=secretref:url-bd
 
+# WhatsApp real (opcional): con TWILIO_AUTH_TOKEN definido, la app usa Twilio en lugar del simulador.
+if [[ -n "${TWILIO_AUTH_TOKEN:-}" ]]; then
+  az containerapp secret set --name "$APP" --resource-group "$GRUPO" --secrets "twilio-token=$TWILIO_AUTH_TOKEN"
+  az containerapp update --name "$APP" --resource-group "$GRUPO" --set-env-vars TRANSPORTE=twilio \
+    TWILIO_ACCOUNT_SID="$TWILIO_ACCOUNT_SID" TWILIO_WHATSAPP_FROM="$TWILIO_WHATSAPP_FROM" \
+    TWILIO_AUTH_TOKEN=secretref:twilio-token
+fi
+
 echo "URL: https://$(az containerapp show --name "$APP" --resource-group "$GRUPO" \
   --query properties.configuration.ingress.fqdn --output tsv)"

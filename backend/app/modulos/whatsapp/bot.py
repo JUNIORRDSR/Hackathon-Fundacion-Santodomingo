@@ -36,6 +36,10 @@ def configurar(transporte: Transporte | None = None, conversador: Conversador | 
     _conversador = conversador or _conversador
 
 
+def transporte() -> Transporte:
+    return _transporte
+
+
 def configurar_desde_entorno() -> None:
     """TRANSPORTE=twilio carga transporte_twilio.TransporteTwilio (Jorge); CONVERSADOR=llm carga
     conversador_llm.ConversadorLLM (Leonardo). Cada clase expone desde_entorno()."""

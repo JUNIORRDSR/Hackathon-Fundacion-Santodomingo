@@ -39,6 +39,16 @@ pytest
 2. `POST /api/whatsapp/simulador` con `{"telefono": "+573000000001", "texto": "Hola"}`, y sigue la conversación.
 3. `GET /api/whatsapp/simulador/mensajes` muestra todo lo que el sistema envió, avisos incluidos.
 
+## WhatsApp real con el sandbox de Twilio
+
+1. En la consola de Twilio, abre el sandbox de WhatsApp y anota el número y la palabra para unirse.
+2. Arranca la app con `TRANSPORTE=twilio`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` y
+   `TWILIO_WHATSAPP_FROM=whatsapp:+14155238886` (o el número del sandbox).
+3. En el sandbox, en «When a message comes in», pon `https://<url-publicada>/api/whatsapp/twilio` con `POST`.
+4. Cada celular de la demo manda primero `join <palabra>` al número del sandbox.
+
+El webhook rechaza con 403 todo lo que no venga firmado por Twilio.
+
 ## Cómo entra cada pieza del equipo
 
 | Pieza | Dónde | Cómo se activa |

@@ -1,0 +1,11 @@
+{
+  "name": "EcoConecta · Coordinación",
+  "short_name": "EcoConecta",
+  "lang": "es-CO",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#f9fafb",
+  "theme_color": "#2e7d32",
+  "icons": [{ "src": "/icono.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

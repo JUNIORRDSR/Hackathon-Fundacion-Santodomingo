@@ -1,12 +1,15 @@
 .eco-app {
-  --motion-control: 170ms;
-  --motion-route: 240ms;
-  --motion-card: 290ms;
-  --motion-slide: 310ms;
-  --motion-dialog: 220ms;
+  --motion-control: 155ms;
+  --motion-route: 310ms;
+  --motion-route-exit: 105ms;
+  --motion-card: 320ms;
+  --motion-slide: 440ms;
+  --motion-layout: 480ms;
+  --motion-dialog: 350ms;
   --motion-ease: cubic-bezier(.22, .78, .24, 1);
-  --motion-spring: cubic-bezier(.24, .87, .24, 1.025);
+  --motion-spring: cubic-bezier(.18, .86, .24, 1.015);
 
+  & .motion-route-stage { position: relative; }
   & .motion-pills { position: relative; isolation: isolate; }
   & .motion-pills > :is(a, button) { position: relative; z-index: 1; }
   & .motion-pill-indicator {
@@ -15,14 +18,21 @@
     width: var(--pill-width);
     height: var(--pill-height);
     border-radius: 9999px;
-    background: var(--highlight);
     transform: translate3d(var(--pill-x, 0px), var(--pill-y, 0px), 0);
-    box-shadow: 0 2px 6px #063b2e16;
     visibility: hidden;
     pointer-events: none;
   }
-  & .segmented-control .motion-pill-indicator { background: var(--surface); }
+  & .motion-pill-indicator > span {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--control-emphasis);
+    box-shadow: 0 2px 6px #063b2e16;
+  }
+  & .segmented-control .motion-pill-indicator > span { background: var(--surface); }
   & .motion-pills[data-pill-positioned] > .motion-pill-indicator { visibility: visible; }
+  & .motion-pills[data-pill-positioned] > .pill { background-color: transparent; }
   & .motion-pills[data-pill-positioned] > :is([aria-current="page"], [aria-current="true"], [aria-pressed="true"]) {
     background-color: transparent;
     border-color: transparent;
@@ -41,7 +51,7 @@
     }
 
     & :is(button, .button, .motion-pills > a, .stat-card, .guide-details summary) {
-      transition: transform var(--motion-control) var(--motion-ease),
+      transition: transform var(--motion-control) var(--motion-spring),
         background-color var(--motion-control), border-color var(--motion-control),
         color var(--motion-control), box-shadow var(--motion-control), filter var(--motion-control);
     }
@@ -57,13 +67,13 @@
     & .eco-dialog[open] {
       opacity: 1;
       transform: translateY(0) scale(1);
-      transition: opacity var(--motion-dialog) var(--motion-ease), transform var(--motion-dialog) var(--motion-ease);
-      @starting-style { opacity: .45; transform: translateY(6px) scale(.98); }
+      transition: opacity var(--motion-dialog) var(--motion-ease), transform var(--motion-dialog) var(--motion-spring);
+      @starting-style { opacity: 0; transform: translateY(8px) scale(.98); }
     }
-    & .eco-dialog[open][data-closing] { opacity: 0; transform: translateY(5px) scale(.98); }
+    & .eco-dialog[open][data-closing] { opacity: 0; transform: translateY(8px) scale(.98); }
     & .eco-dialog[open]::backdrop {
       opacity: 1;
-      transition: opacity var(--motion-dialog) ease;
+      transition: opacity var(--motion-dialog) var(--motion-ease);
       @starting-style { opacity: 0; }
     }
     & .eco-dialog[open][data-closing]::backdrop { opacity: 0; }
@@ -79,9 +89,37 @@
 
   @media (prefers-reduced-motion: no-preference) {
     & :is(button, .button, .motion-pills > a, .stat-card, .guide-details summary):not(:disabled):not([aria-disabled="true"]):active {
-      transform: scale(.98);
+      transform: scale(.97);
     }
   }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root:has(.motion-route-stage[data-route-transition]) { view-transition-name: none; }
+  .motion-route-stage[data-route-transition] { view-transition-name: eco-route; }
+  :root:has(.motion-route-stage[data-route-transition])::view-transition { pointer-events: none; }
+  ::view-transition-group(eco-route) {
+    animation-duration: 420ms;
+    animation-timing-function: cubic-bezier(.22, .78, .24, 1);
+  }
+  ::view-transition-old(eco-route), ::view-transition-new(eco-route) {
+    height: 100%;
+    object-fit: none;
+    object-position: top left;
+    mix-blend-mode: normal;
+    transform-origin: top center;
+  }
+  ::view-transition-old(eco-route) { animation: eco-route-out 420ms cubic-bezier(.22, .78, .24, 1) both; }
+  ::view-transition-new(eco-route) { animation: eco-route-in 420ms cubic-bezier(.22, .78, .24, 1) both; }
+}
+
+@keyframes eco-route-out {
+  to { opacity: 0; transform: translateY(-6px) scale(.994); }
+}
+
+@keyframes eco-route-in {
+  from { opacity: 0; transform: translateY(7px) scale(.994); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes eco-view-reveal {

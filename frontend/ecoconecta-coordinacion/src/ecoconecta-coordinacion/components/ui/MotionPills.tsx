@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
+import { animateMotion } from './motion'
 
 const activePill = ':scope > :is([aria-current="page"], [aria-current="true"], [aria-pressed="true"])'
 
@@ -7,6 +8,8 @@ export function MotionPills({ as: Container = 'div', label, active, className, c
   as?: 'div' | 'nav'; label: string; active: string; className: string; children: ReactNode
 }) {
   const group = useRef<HTMLElement>(null)
+  const skin = useRef<HTMLSpanElement>(null)
+  const previous = useRef<HTMLElement | null>(null)
 
   useLayoutEffect(() => {
     const element = group.current
@@ -16,11 +19,13 @@ export function MotionPills({ as: Container = 'div', label, active, className, c
       if (!element) return
       const selected = element.querySelector<HTMLElement>(activePill)
       if (!selected) {
+        previous.current = null
         delete element.dataset.pillPositioned
         return
       }
       const { offsetLeft, offsetTop, offsetWidth, offsetHeight } = selected
       if (!offsetWidth || !offsetHeight) {
+        previous.current = null
         delete element.dataset.pillPositioned
         return
       }
@@ -30,6 +35,18 @@ export function MotionPills({ as: Container = 'div', label, active, className, c
       element.style.setProperty('--pill-width', offsetWidth + 'px')
       element.style.setProperty('--pill-height', offsetHeight + 'px')
       element.dataset.pillPositioned = 'true'
+
+      const surface = skin.current
+      if (surface && previous.current && previous.current !== selected) {
+        const scale = getComputedStyle(surface).scale
+        surface.getAnimations?.().forEach((animation) => animation.cancel())
+        animateMotion(surface, [
+          { scale: scale === 'none' ? '1' : scale, offset: 0, easing: 'ease-out' },
+          { scale: '1.07 .96', offset: .34, easing: 'ease-in-out' },
+          { scale: '1', offset: 1 },
+        ], '--motion-slide', { easing: 'linear' })
+      }
+      previous.current = selected
     }
 
     measure()
@@ -46,7 +63,7 @@ export function MotionPills({ as: Container = 'div', label, active, className, c
   return (
     <Container ref={(node) => { group.current = node }} className={className + ' motion-pills'}
       role={Container === 'div' ? 'group' : undefined} aria-label={label}>
-      <span className="motion-pill-indicator" aria-hidden="true" />
+      <span className="motion-pill-indicator" aria-hidden="true"><span ref={skin} /></span>
       {children}
     </Container>
   )

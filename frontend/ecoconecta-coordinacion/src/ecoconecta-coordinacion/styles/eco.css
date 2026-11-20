@@ -24,6 +24,8 @@ body:has(> #root > .eco-app) {
   --control-line: #7b8b7f;
   --highlight: #063b2e;
   --highlight-hover: #145344;
+  --control-emphasis: #101814;
+  --control-emphasis-hover: #202c26;
   --highlight-line: color-mix(in srgb, var(--on-highlight) 26%, var(--highlight));
   --on-highlight: #f6f8f4;
   --on-highlight-muted: #d1ddd4;
@@ -79,7 +81,7 @@ body:has(> #root > .eco-app) {
   & .main-nav a { display: inline-flex; gap: .42rem; align-items: center; justify-content: center; padding: .5rem .92rem; min-height: 44px; color: var(--ink); text-decoration: none; border-radius: 9999px; white-space: nowrap; font-weight: 550; font-size: .85rem; }
   & .main-nav svg { width: 1rem; height: 1rem; }
   & .main-nav a:hover { background: var(--surface-muted); }
-  & .main-nav a[aria-current="page"] { color: var(--on-highlight); background: var(--highlight); }
+  & .main-nav a[aria-current="page"] { color: var(--on-highlight); background: var(--control-emphasis); }
   & .coordinator-profile { position: relative; display: flex; align-items: center; gap: .55rem; max-width: 14rem; min-height: 44px; padding: .25rem .5rem .25rem .25rem; border-radius: 9999px; }
   & .coordinator-profile:has(select) { cursor: pointer; }
   & .coordinator-profile:has(select:hover) { background: var(--surface); }
@@ -98,8 +100,8 @@ body:has(> #root > .eco-app) {
 
   & .button { display: inline-flex; gap: .45rem; align-items: center; justify-content: center; min-height: 44px; padding: .57rem .9rem; border: 1px solid transparent; border-radius: 9999px; text-align: center; text-decoration: none; font-size: .875rem; font-weight: 600; line-height: 1.25; }
   & .button svg { width: 1rem; height: 1rem; }
-  & .button-primary { background: var(--highlight); color: var(--on-highlight); box-shadow: 0 5px 10px #2d4b3f22; }
-  & .button-primary:hover:not(:disabled) { background: var(--highlight-hover); box-shadow: 0 7px 14px #2d4b3f31; }
+  & .button-primary { background: var(--control-emphasis); color: var(--on-highlight); box-shadow: 0 5px 10px #2d4b3f22; }
+  & .button-primary:hover:not(:disabled) { background: var(--control-emphasis-hover); box-shadow: 0 7px 14px #2d4b3f31; }
 
   & .button-secondary { background: var(--surface); color: var(--ink); border-color: var(--line); }
   & .button-secondary:hover:not(:disabled), & .button-quiet:hover:not(:disabled) { background: var(--surface-muted); }
@@ -143,7 +145,7 @@ body:has(> #root > .eco-app) {
   & .pills { display: flex; flex-wrap: wrap; gap: .4rem; }
   & .pill { min-height: 44px; display: inline-flex; align-items: center; padding: .55rem .8rem; text-decoration: none; font-weight: 650; font-size: .875rem; border: 1px solid var(--line); background: var(--surface); border-radius: 2rem; color: var(--ink); }
   & .pill:hover { background: var(--surface-muted); }
-  & .pill:is([aria-current="true"], [aria-pressed="true"]) { background: var(--highlight); border-color: var(--highlight); color: var(--on-highlight); }
+  & .pill:is([aria-current="true"], [aria-pressed="true"]) { background: var(--control-emphasis); border-color: var(--control-emphasis); color: var(--on-highlight); }
   & .pill::before { content: ""; flex: 0 0 .25rem; height: .25rem; margin-inline-end: .4rem; background: var(--accent-on-highlight); border-radius: 50%; visibility: hidden; }
   & .pill:is([aria-current="true"], [aria-pressed="true"])::before { visibility: visible; }
   & .search-field { position: relative; display: flex; align-items: center; flex: 0 1 18rem; }

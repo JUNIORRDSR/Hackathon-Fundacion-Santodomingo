@@ -23,7 +23,7 @@ export function useTimelineMotion(canvas: RefObject<HTMLDivElement | null>, layo
     })
     previous.current = { width: area.width, positions }
     const animations = moves.map(({ task, x, y }) => Math.abs(x) + Math.abs(y) > 1
-      ? animateMotion(task, [{ translate: x + 'px ' + y + 'px' }, { translate: '0 0' }], '--motion-slide')
+      ? animateMotion(task, [{ translate: x + 'px ' + y + 'px' }, { translate: '0 0' }], '--motion-layout')
       : undefined)
     return () => animations.forEach((animation) => animation?.cancel())
   }, [canvas, layout])

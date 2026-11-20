@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import villasLogo from '../../../../identidad-visual/Logo villas de san pablo.png'
 import foundationLogo from '../../../../identidad-visual/Logo Santo Domingo V1.png'
@@ -10,6 +10,8 @@ import type { IconName } from '../ui/Icon'
 import { BrandLogo } from './BrandLogo'
 import { MotionPills } from '../ui/MotionPills'
 import { animateMotion } from '../ui/motion'
+import { useRouteScene } from './useRouteScene'
+import { useBentoMotion } from './useBentoMotion'
 
 const navigation: { page: EcoPage; label: string; icon: IconName }[] = [
   { page: 'inicio', label: 'Inicio', icon: 'dashboard' },
@@ -62,20 +64,30 @@ export function Layout({ page, href, coordinator, choices, onChange, demo, child
   onChange?: (id: string) => void; demo: boolean; children: ReactNode
 }) {
   const main = useRef<HTMLElement>(null)
+  const stage = useRef<HTMLDivElement>(null)
+  const { visiblePage, content } = useRouteScene(page, <>
+    {demo && page !== 'inicio' && page !== 'capacitacion' && (
+      <span className="demo-note"><Icon name="info" /> Modo demo · Los registros son ficticios</span>
+    )}
+    {children}
+  </>, stage)
+  useBentoMotion(stage, visiblePage)
   const lastPage = useRef(page)
-  useEffect(() => {
-    const content = main.current
-    document.title = 'EcoConecta | ' + (navigation.find((item) => item.page === page)?.label ?? 'Coordinación')
-    if (lastPage.current !== page) {
+  useLayoutEffect(() => {
+    document.title = 'EcoConecta | ' + (navigation.find((item) => item.page === visiblePage)?.label ?? 'Coordinación')
+    if (lastPage.current !== visiblePage) {
       window.scrollTo(0, 0)
-      content?.querySelector<HTMLElement>('h1')?.focus({ preventScroll: true })
-      lastPage.current = page
+      main.current?.querySelector<HTMLElement>('h1')?.focus({ preventScroll: true })
+      lastPage.current = visiblePage
     }
-    const animation = content && animateMotion(content, [
-      { opacity: 0.94, translate: '0 4px' }, { opacity: 1, translate: '0 0' },
+    const element = stage.current
+    if (!element || element.hasAttribute('data-route-transition')) return
+    const animation = animateMotion(element, [
+      { opacity: .88, translate: '0 7px', scale: .994 },
+      { opacity: 1, translate: '0 0', scale: 1 },
     ], '--motion-route')
     return () => animation?.cancel()
-  }, [page])
+  }, [visiblePage])
 
   return (
     <div className="eco-app">
@@ -101,10 +113,7 @@ export function Layout({ page, href, coordinator, choices, onChange, demo, child
         </div>
       </header>
       <main id="eco-main" className="site-width main-content" tabIndex={-1} ref={main}>
-        {demo && page !== 'inicio' && page !== 'capacitacion' && (
-          <span className="demo-note"><Icon name="info" /> Modo demo · Los registros son ficticios</span>
-        )}
-        {children}
+        <div className="motion-route-stage" ref={stage}>{content}</div>
       </main>
       <footer className="site-width site-footer">
         <p>EcoConecta <span>·</span> Villas de San Pablo, Barranquilla</p>

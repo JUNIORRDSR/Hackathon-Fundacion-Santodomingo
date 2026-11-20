@@ -40,8 +40,8 @@
   & .next-card p svg { align-self: center; width: .9rem; height: .9rem; }
   & .next-meta { display: flex; flex-wrap: wrap; gap: .25rem .85rem; }
   & .next-actions { display: flex; flex-wrap: wrap; gap: .4rem; justify-content: end; margin-top: .7rem; }
-  & .feature-button { background: var(--highlight); border-color: var(--highlight-line); color: var(--on-highlight); }
-  & .feature-button:hover { background: var(--highlight-hover); }
+  & .feature-button { background: var(--control-emphasis); border-color: var(--highlight-line); color: var(--on-highlight); }
+  & .feature-button:hover { background: var(--control-emphasis-hover); }
   & .collection-feature :focus-visible { outline-color: var(--on-highlight); }
   & .following { margin-top: .9rem; }
   & .following h3 { color: var(--on-highlight-muted); font: 500 .8125rem/1.35 var(--font-body); letter-spacing: 0; margin-bottom: .1rem; }

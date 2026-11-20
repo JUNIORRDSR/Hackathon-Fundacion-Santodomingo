@@ -16,8 +16,9 @@ una tablet, y cada recolección suma puntos.
 docker compose up --build
 ```
 
-Abre http://localhost:8000/docs: cada etiqueta es un módulo y su contrato. Los usuarios de demostración son ficticios:
-`huerteros`, `recicladores` y `admin`, con la clave `ecoconecta-demo`.
+Abre [EcoConecta](http://localhost:8000) para usar el frontend integrado. Los contratos están en
+[/docs](http://localhost:8000/docs). Los usuarios de demostración `huerteros`, `recicladores` y `admin`
+usan la clave `ecoconecta-demo`.
 
 ## Backend sin Docker
 
@@ -41,6 +42,9 @@ ficticios con sus solicitudes del día: pendientes, programadas a distintas hora
 una rechazada y dos canjes pedidos por WhatsApp. Se puede correr varias veces sin duplicar.
 
 ## Probar el bot sin WhatsApp
+
+Para repetir pruebas sin enviar mensajes a Twilio, arranca la app con `TRANSPORTE=simulado` en el `.env` de la raíz.
+Con `CONVERSADOR=menu` también puedes probar el flujo numerado sin consumir cuota de Azure.
 
 Entra a la app (usuario `admin`, clave `ecoconecta-demo`) y abre **WhatsApp**: a la izquierda las conversaciones, a la
 derecha el hilo. En **Simular un vecino** escribes como si fueras un celular (`+573000000009`, «Hola»). Con **Tomar el
@@ -67,8 +71,8 @@ En el Sandbox clásico, `TWILIO_RESPUESTA_TWIML=1` devuelve las respuestas inmed
 incluidos los avisos generados por ese turno para el remitente. Los avisos posteriores del coordinador usan
 la API de Twilio.
 
-El [prototipo TypeScript](modules/whatsapp-recoleccion/README.md) conserva su propia demo. El webhook integrado
-en el monolito usa el registro, las solicitudes y los avisos del backend común.
+El [prototipo TypeScript](modules/whatsapp-recoleccion/README.md) queda como referencia histórica. Las pruebas y el
+desarrollo del canal se hacen en `backend/app/modulos/whatsapp/` y en el monitor del frontend.
 
 ## Azure OpenAI para WhatsApp
 

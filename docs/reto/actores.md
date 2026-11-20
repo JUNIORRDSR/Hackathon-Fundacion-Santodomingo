@@ -44,10 +44,13 @@
 
 Hay **uno por grupo**. Cada grupo tiene entre 15 y 20 personas. Cada coordinador **recibe una tablet de la fundación**, que será el único dispositivo garantizado de su lado. La conectividad está por revisar. `[9.44 · 05:08]`, `[9.44 · 16:35]`
 
+Los coordinadores son el **único punto de contacto**: reciben la solicitud, la bajan a su grupo, reciben el reporte del servicio y le responden al solicitante. Los recicladores y huerteros nunca manejan la información directamente. `[20/11 · 04:14]` Nombres que se oyeron: "Vivi" (recicladores) y "Kedi y el señor Luis" (huerteros) [verificar]. `[20/11 · 12:47]`
+
 ### 2a. Coordinadora de recicladores
 - Es **una recicladora líder** del grupo. Maneja o acompaña el **punto de acopio** y la fundación se comunica con los recicladores a través de ella.
 - **Recibe las solicitudes de aprovechables y las asigna** a un reciclador de su grupo, por ejemplo: "va la recicladora Rosa mañana".
 - Ella decide cómo contactar a los demás recicladores (llamada, en persona, etc.). **El sistema no puede asumir que cada reciclador tiene un smartphone.**
+- Hoy registra en un **cuaderno**: se sienta con los recicladores y anota cuánto recoge cada uno (se oyó "Lilian" [verificar]). Los ve casi a diario. La fundación acepta propuestas para mejorar ese registro, pero no quiere romper lo que ya funciona. `[20/11 · 05:18]`, `[20/11 · 06:37]`, `[20/11 · 13:51]`
 
 ### 2b. Coordinadora de huerteros
 - Es una **persona de Villas contratada por la Alcaldía** que ya coordina a los 37 voluntarios de la huerta.
@@ -59,6 +62,8 @@ Hay **uno por grupo**. Cada grupo tiene entre 15 y 20 personas. Cada coordinador
 ### 3a. Recicladores
 - Son **unos 15**, **en su mayoría adultos mayores** y con trabajo informal. Pertenecen a una asociación de recicladores (se mencionó "Rescatar" [verificar]) y recibieron formación en autocuidado y separación.
 - **Ya trabajan por zonas y rutas.** Se mencionaron Dolores (una zona de la etapa 1), Álvaro (otra zona) y **Víctor en Brisas de San Pablo**. Víctor también lleva a mano el conteo de reciclaje por torre. `[9.44 · 08:40]`
+- Tienen **zonas, días y horarios fijos**; si uno falta, un compañero lo suple. **Algunos no saben leer ni escribir.** No usan WhatsApp ni registran nada: todo pasa por la coordinadora. `[20/11 · 05:30]`, `[20/11 · 07:21]`
+- La fundación pidió llamarlos **recicladores**, no "recolectores". `[20/11 · 12:33]`
 - Llevan el material al **punto de acopio**.
 - Al recoger deberían **revisar el material** y poder **rechazarlo con un motivo** si no cumple. `[9.44 · 16:02]`
 
@@ -74,7 +79,7 @@ Hay **uno por grupo**. Cada grupo tiene entre 15 y 20 personas. Cada coordinador
 ### Fundación Santo Domingo
 - Financia y **garantiza el funcionamiento inicial**. **No opera el aplicativo en el día a día.**
 - Necesita **informes y métricas** (cuánto se recolectó, cuánto se aprovechó, por usuario, por zona) para el monitoreo de 2027 y para soportar la **tarifa multiusuario**.
-- **Define la equivalencia de los puntos y los premios.** Los equipos pueden proponerla.
+- **La equivalencia de los puntos la propone el equipo.** Uno de sus indicadores de resultado es **toneladas de reciclable recolectadas en el territorio**. `[20/11 · 01:37]`
 - Su área de sistemas (David) tiene las herramientas tecnológicas definidas y las entregará en el reto.
 
 ### Alcaldía de Barranquilla

@@ -1,0 +1,276 @@
+# WhatsApp Ptt 2026-11-20 at 9.40.31 AM.ogg (1030s)
+
+[00:00] El reciclable, por ejemplo, si el servicio que tú solicitaron, solicitaron desde esta casa, va a tener un registro que le diga, esta persona recopiló, no sé, 20 kilos al mes y puede recibir algo.
+[00:12] ¿Sí me entienden?
+[00:13] Ahí entraría la dinámica de los canjes.
+[00:15] ¿Se acuerdan que les comentamos que le ibas a acumular puntos en algún punto, o sea, en algún punto del proceso de acumular esos puntos para que ellos puedan hacer canjes, sea a través de la huerta, sea a través de beneficios en el territorio, etcétera?
+[00:28] ¿Alguna otra pregunta?
+[00:31] también otros modelos que son de machine learning
+[00:56] Podemos agregar a ese stack que está ahí
+[00:58] Sin ningún problema MLflow
+[01:00] Para que sepan cómo gestionar
+[01:01] Esos modelos
+[01:03] Si el usuario no tiene acceso
+[01:08] Por lo que no tenemos la definición
+[01:10] Perdón, no te escuché
+[01:12] El sistema
+[01:13] De frenear los puntos
+[01:15] Se maneja de abajo
+[01:17] Es decir
+[01:18] Por cierto, a pesar de que hay tantos puntos
+[01:21] O
+[01:21] La frecuencia
+[01:23] La frecuencia solicita servicio
+[01:27] manejemos la verdad para hacer una propuesta en las dos vías para nosotros es importante
+[01:32] saber cuánto solicita la persona cuánto se recolecta en el barrio general es una forma
+[01:37] de hecho un indicador de resultado que nosotros tenemos en el marco del proyecto toneladas de
+[01:42] reciclable que son recolectadas en el territorio entonces ahí puede ser eso o la frecuencia o la
+[01:48] cantidad de recolección pero si quieren la propuesta no le diga que incluso te hago
+[01:52] la propuesta que puedes tomarlo
+[01:54] hay un machinico que pueda hacer
+[01:57] un A-B test de que
+[01:58] haces las dos propuestas y intentes ver
+[02:00] como es la mejor
+[02:01] con respecto a eso
+[02:05] lo decía más que todo porque
+[02:07] bueno, o sea es un pesaje
+[02:09] digamos 5 kilos de
+[02:10] reciclaje total
+[02:12] eso se multiplica por cierto porcentaje
+[02:15] y eso te da un punto
+[02:16] a lo que voy es a eso
+[02:19] que es que interesa lo que es cuanto
+[02:20] por ejemplo un kilo
+[02:21] dentro del marco de la propuesta puede ser asignado por ustedes
+[02:29] si el usuario no tiene acceso a la aplicación como vería yo por ejemplo cuántos puntos tengo
+[02:45] para hacer el cambio o hacer una solicitud de cambio sería algo más hablado
+[02:49] es el usuario no porque es que en la ruta del servicio se supone que tú solicitas el servicio
+[02:53] en el recurso como sea que se llama no sé si es una aplicación lo que sea pero tú lo solicita
+[02:58] verdad a ti te va lo recibe el coordinador de los guarderos por ejemplo te contestan listo
+[03:05] va a ir tal persona tal cuartero a recolectar el servicio en su casa a tal hora tal día y la
+[03:10] persona lo recibe en nuestra mente hay muchos pasivos hay tecnológicos claramente en nuestra
+[03:15] cuando ya lo recogen y lo pesan desde la huerta le notifican a la persona hemos recibido su no
+[03:21] sé su recurso orgánico o lo demás o lo que sea peso tanto recibió tantos puntos tiene total
+[03:27] acumulado tanto igual recuerden que la propuesta lo más importante es como ese flujo de cómo se
+[03:35] contacta la persona que solicita el reciclaje con los diferentes coordinadores y recicladores
+[03:43] Esa es la parte más importante, se concentra en tanto ese sistema apuntoso.
+[03:48] ¿Alguna otra duda?
+[03:54] Acá parece que hay un señor Barrazo.
+[03:56] Bueno, volviendo un poco a lo que mencionaba de los coordinadores y los recicladores,
+[04:00] entonces nosotros podemos proponer soluciones asumiendo que los recolectores tienen acceso a teléfonos e internet,
+[04:08] porque ustedes se los van a proporcionar.
+[04:10] Sí, nosotros vamos a proponer...
+[04:12] ¿A por fácil la ley?
+[04:14] Ah, bueno.
+[04:14] para nosotros la persona de comunicación va a ser el coordinador de ambos actores esa persona
+[04:21] la que va a recepcionar esa persona deriva a quienes correspondan estos toman el servicio
+[04:26] hacen devolución el coordinador notifica a la persona y se da la respuesta a quien
+[04:30] en ese flujo quien va a tener una tablet va a ser coordinador de porteros y coordinador de
+[04:36] los recicladores entonces toda la notificación que se genere para los actores que hacen el
+[04:41] proceso lo bajan ellos es decir paga y sube al coordinador en ningún momento se queda el
+[04:46] reciclador con info ni el whatsapp ni nada por el estilo porque todo lo que haga se lo tiene
+[04:51] que notificar al coordinador eso nos permite minimizar muchos riesgos de que se le puede
+[04:55] perder no sabe cómo registrarlo se confunde entonces mejor que el coordinador se capacite
+[05:00] con esa capacidad instalada el baje de información y sea más fácil regresarlo minimiza muchos riesgos
+[05:06] porque son sólo dos responsables el coordinador de la puerta de los recicladores ya de ahí hacia
+[05:11] abajo él, alguien considerará
+[05:14] si se sienta con ellos, si lo anotan
+[05:16] si tienen un cuaderno, de hecho si se dieron
+[05:18] cuenta, la persona de reciclaje que es
+[05:19] Lilian, ella tiene un cuaderno
+[05:22] ella se sienta con ellos y es como mira
+[05:23] va tanto, anoten tanto, entonces esa parte
+[05:26] implicaría mucha más
+[05:27] formación para los recicladores que también se dieron
+[05:30] cuenta, son adultos mayores
+[05:31] algunos no saben leer ni escribir, entonces eso complica
+[05:34] la ejercicio
+[05:34] ¿Eso es registro que comenta
+[05:37] cómo los manejan? ¿Sería
+[05:39] importante para la aplicación o ya es
+[05:41] los registros de que hablan de la comunicación de que le llega la solicitud coordinada y se
+[05:52] pasa luego al recital que va a pasar a recoger y luego pasa a esa comunicación interna y cómo
+[06:00] se manejan como la que ya tienen unas rutas establecidas es decir los recicladores sabemos
+[06:05] que son 15 cada una está por zonas tenemos zonas días y horarios entendemos que si la
+[06:10] persona hizo la solicitud y ella te tapa uno le llega el coordinador y el coordinador no sé cómo
+[06:15] lo hará me imagino que lo llama o le escribe o lo cita le dice al reciclador para ese servicio como
+[06:21] el coordinador va a tener que subir información o dar la respuesta nosotros asumimos que él va a
+[06:26] tener registro como te digo puede ser a mano porque eso complicaría mucho eso me refiero
+[06:32] hay algunas plantillas formato que ya tengan preestablecidos o ellos hacen ellos lo hacen
+[06:37] hasta ahora les ha funcionado es que cuando son temas comunitarios ocurren dos cosas si ya
+[06:44] funciona como lo están haciendo hacerles un cambio implica que haya muchos más riesgos y se generen
+[06:48] problemáticas nosotros intentamos siempre entender cómo lo hacen y si está funcionando de farmacia y
+[06:54] el tema de la comunicación entre el coordinador de enlace realmente es permanente y casi todos
+[07:00] los días están viendo lo vamos a hacer con recicladores no sé cómo lo hace pero el día
+[07:06] y a la hora están los 15 recicladores entonces por tema de comunicación no hay tanto problema
+[07:10] para que el coordinador pueda bajar la información a todos para confirmar que no siempre son como
+[07:21] ellos tienen una ruta o sea nosotros dentro del proyecto focalizados a 15 esos 15 ya han
+[07:36] sido acompañados tienen orientación han recibido información y tienen dotación los riesgos de que
+[07:40] pudieran salirse del proceso nos vemos como controlado en este orden de ideas tenemos
+[07:44] claro que de esos 15 dos están en la manzana y uno está en la manzana 3 y él hace la recolección
+[07:50] en este horario ya con esta promesa de valor nosotros lo que hemos hecho es si necesitan
+[07:56] un reciclador en esta zona en esta persona y hacemos la derivación hemos llevado adaptando
+[08:02] a ellos para que se mantengan en ese horario y en la ruta que ellos establecieron puede ocurrir
+[08:07] que el reciclador no esté porque algo le pasó entonces lo que ellos hacen es que le dicen a
+[08:12] otro compañero que le haga el favor y hacen la suple de servicio pero generalmente ya ellos
+[08:17] tienen como organizado su día entonces hay unos que van muy en la mañana o muy en la noche
+[08:22] ¿Alguno de ustedes funciona como coordinador o no asiste a la reunión para saber ese proceso a profundidad?
+[08:34] O sea, la coordinadora del equipo soy yo y ellos dos son los que lideran el proyecto.
+[08:39] Es decir, a lo que ya el recurso esté andando, nosotros pasamos la información a los dos coordinadores.
+[08:44] O sea, los dos coordinadores del recicladores y del nuevo puertero. No sé si te entendí bien.
+[08:50] aquí no hay coordinadores de recolección
+[08:54] presentes
+[08:55] no, porque ellos
+[08:58] lo que queremos es no complicar
+[09:00] la vida
+[09:01] ¿Alguna duda más?
+[09:15] Cualquiera
+[09:15] ustedes nos acotaron a un sistema específico que cumple ciertas funcionalidades
+[09:29] en los criterios o las funcionalidades que nosotros queramos añadir en función siempre de lo que consideramos
+[09:39] claro que podría ser útil y eso es totalmente libre o solamente nos agotamos a que básicamente
+[09:47] es que hay cosas con tal de que se puede salir de la casa pero el tema tiene una posición sobre
+[09:57] ¿Cuál es la coordinación de los recicladores con los actores del megabarco?
+[10:06] ¿Cuál es la coordinación de los recicladores con los actores del megabarco?
+[10:28] una pregunta con la experiencia que tenemos usando whatsapp aquí para eso hay que crear
+[10:43] una organización o una página y hay que tener ciertas configuraciones ya creado con una cuenta
+[10:48] de meta todo eso como lo creamos inventado nosotros porque hay que crear no estoy muy
+[10:59] una cuenta de facebook business de una cuenta de facebook de verlo pero luego de eso es el
+[11:06] registro de un número que tiene que estar validado por metas y eso tarda como una semana igual
+[11:16] un número verificado de forma de pruebas antes de verificar los otros números para que puedas
+[11:23] hacer eso sin necesidad de hacer todo ese puesto también está por el otro lado
+[11:28] tú y yo porque tú y yo es básicamente un proveedor de app y de whatsapp y tú y yo también te permite lo mismo
+[11:34] tú le validas te da un código y el te dice listo te verifico como desarrollador y te permite tomar el mensaje para un solo celular
+[11:40] eso se puede hacer para las cárceles y tampoco gasten dinero
+[11:44] eso es lo que quería preguntarte a mí
+[11:47] porque la app de whatsapp
+[11:49] puede ser que no quede bastante
+[11:51] configurarla bien
+[11:52] entonces podemos utilizar por ejemplo
+[11:54] en Twine o algo del estilo
+[11:56] que es WhatsApp
+[11:57] hay como recomendaciones
+[12:00] de usar las que son proveedores
+[12:02] oficiales de WhatsApp, porque sabes que también
+[12:04] hay unas que funcionan tipo automotriz
+[12:06] de navegador, eso no
+[12:08] que se va mediante un API de WhatsApp directamente
+[12:11] bueno, entonces solo como para concretar
+[12:15] algunas cositas importantes, recuerden
+[12:17] uno, igual eso es normal en la conclusión
+[12:19] de términos, pero recuerden dos cosas
+[12:21] los actores importantes
+[12:23] para nosotros en el centro a la comunidad que va a solicitar el servicio y en esa doble y en ese
+[12:28] sentido vamos a tener de un lado a los puerteros que va a tener su coordinador y del otro lado
+[12:33] tenemos a los recicladores sé que ustedes lo mencionan como recolectoras pero intentemos
+[12:37] en el ejercicio porque de pronto lo configuren así y tengan que hacer algún cambio y no sé cuántos
+[12:41] se mueren coloquen por favor que son recicladores y los recicladores tienen un coordinador
+[12:47] recortándolos el día de esta Navidad es de San Pablo, Vivi es la coordinadora de los recicladores
+[12:52] y Kedi y el señor Luis
+[12:54] es el coordinador de los huerteros
+[12:56] ellos son los que van a recepcionar
+[12:58] lo que ustedes concluyan, son los que van a registrar
+[13:00] la información, son los que van a hacer
+[13:03] la bajada de todo lo que
+[13:04] implica el servicio a los
+[13:06] recicladores y a los huerteros
+[13:08] y en ese sentido lo que ocurra
+[13:10] lo regresan para que le llegue a la persona que solicitó
+[13:12] el servicio
+[13:13] ¿sí?
+[13:24] ¿Pili?
+[13:24] ¿Ellos lo hacen con un
+[13:25] criollo?
+[13:27] o sea, literal ella tiene un cuaderno
+[13:29] y ella tiene nombre y texto
+[13:31] no lo recuerdo
+[13:46] realmente no lo confirmo
+[13:47] porque creo que no está
+[13:48] de hecho, por lo que me mencionó
+[13:51] André, algunos de ustedes sugerían eso
+[13:53] como podemos optimizar el ejercicio
+[13:55] de sistematización que hace Liliara
+[13:57] para monitorear cuánto
+[13:59] ha recolectado el señor Pedro
+[14:01] si ustedes lo van a incluir dentro
+[14:03] de esas recomendaciones y les parece
+[14:05] es importante para que se haga el ejercicio
+[14:07] de forma adecuada, háganlo
+[14:09] reitero lo que le dijo Andrea
+[14:11] nosotros poco y nada sabemos
+[14:13] bueno, nosotros tres, él sí
+[14:14] nosotros poco y nada sabemos de lo que implica
+[14:17] recursos tecnológicos
+[14:18] el trasfondo para que eso funcione
+[14:21] en la realidad es algo que ustedes saben
+[14:23] y es algo que nosotros apelamos y pedimos
+[14:25] ayuda para que ustedes lo hagan
+[14:27] en ese sentido, todo lo que ustedes se imaginen
+[14:30] que puede ser optimizado
+[14:32] o se puede agregar para que funcione
+[14:34] de forma adecuada, háganlo
+[14:35] que nosotros nos vamos a encargar de que eso que ustedes sueñan
+[14:38] que pase, ocurra en la realidad
+[14:40] si eso implica que nosotros
+[14:42] debemos sentarnos con los coordinadores
+[14:43] y hacer una capacitación, lo vamos a hacer
+[14:45] si eso implica que ellos deban tener un registro
+[14:47] con no sé, un cuaderno donde esté todo
+[14:49] organizado o un excel, nosotros lo vamos a hacer
+[14:52] entonces sueñen
+[14:53] y háganlo realidad en ese ejercicio
+[14:55] que nosotros nos vamos a encargar de cúpula
+[14:57] chicos vean
+[14:59] los dos minutos
+[15:02] recuerden que nosotros estamos
+[15:04] hay una situación en particular
+[15:10] y una de las
+[15:12] fases del signo
+[15:14] de vida de esos padres
+[15:14] de su alimentación, evaluación y demás
+[15:17] entonces ustedes van a hacer una propuesta
+[15:19] ya Andrea lo ha dicho dos o tres veces
+[15:22] creo que Ana
+[15:24] también ya lo ha comentado
+[15:25] es una propuesta
+[15:26] ellos no van a responder
+[15:29] todas las preguntas
+[15:30] ya ustedes tienen el contexto
+[15:32] De hecho, a mi parecer tienen mucho contexto, pero ya ustedes tienen el contexto de la necesidad y de hecho nos han debilitado mucho la situación porque cuando usted va a la vida real, el gerente simplemente te dice yo quiero un sistema que me haga facturación, listo, usted vea cómo me lo hace.
+[15:49] entonces ya necesitamos que ustedes
+[15:52] empiecen a presentar
+[15:54] sus propuestas
+[15:55] ¿qué va a pasar?
+[15:57] puede haber un proceso de retroalimentación
+[15:59] miren que yo hace un rato les dije
+[16:00] en diciembre se va a hacer un piloto
+[16:03] en ese piloto pues muy seguramente
+[16:05] van a haber cambios que se van a generar
+[16:07] con el equipo que gane
+[16:09] y el equipo desde ahí de la fundación
+[16:11] y muy seguramente con el apoyo de nosotros
+[16:13] desde la facultad
+[16:14] entonces para que esto quede listo en el 2027
+[16:18] que está el piloto que se va a desarrollar
+[16:20] en diciembre, donde
+[16:21] ya se va a poner en funcionamiento
+[16:24] y obviamente antes del funcionamiento pues vamos a
+[16:26] verificar de que cumpla
+[16:27] con los requisitos que se están solicitando
+[16:30] entonces siento que estamos
+[16:32] perdiendo, bueno ustedes
+[16:33] están perdiendo tiempo en preguntas que ya
+[16:36] han tenido respuesta
+[16:37] necesito que los ingenieros que están aquí
+[16:39] empiecen a desarrollar
+[16:41] ¿fui claro? ¿alguna pregunta?
+[16:45] tuvieron cuatro días
+[16:48] para preguntar
+[16:49] y para solicitar, o sea, si ahora es momento
+[16:52] de ir porque hay cosas que ustedes no conocían
+[16:54] por lo menos el componente, ustedes no lo conocían
+[16:56] entonces
+[16:57] cuéntenme
+[17:00] de una, la sala siguiente
+[17:04] y la siguiente están disponibles
+[17:06] yo les comento
+[17:09] por el grupo

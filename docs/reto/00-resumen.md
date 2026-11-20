@@ -33,11 +33,12 @@ El detalle está en [requerimientos.md](requerimientos.md).
 | [actores.md](actores.md) | Stakeholders: quiénes son, qué hacen hoy y qué necesitan del aplicativo |
 | [requerimientos.md](requerimientos.md) | Requerimientos funcionales y no funcionales, priorizados, con su fuente |
 | [preguntas-abiertas.md](preguntas-abiertas.md) | Lo que no está claro o no está definido y conviene confirmar con los organizadores |
+| [respuestas-organizadores.md](respuestas-organizadores.md) | Preguntas respondidas por los organizadores el 20 de noviembre, primer día de la hackathon |
 
 ## Sobre la fuente y su fiabilidad
 
 - **Origen:** notas de voz de WhatsApp grabadas durante la presentación de la fundación y el recorrido por el barrio. Hay ruido, cortes y varias personas hablando. Se transcribieron con Whisper `large-v3`. Las transcripciones crudas están en [../transcripciones/](../transcripciones/).
-- **Citas:** las referencias como `[9.24 · 02:47]` indican el audio (hora de grabación) y el minuto dentro de él. Sirven para buscar la frase original en `../transcripciones/2026-11-17_at_9.24.08_AM.txt`.
+- **Citas:** las referencias como `[9.24 · 02:47]` indican el audio (hora de grabación) y el minuto dentro de él. Sirven para buscar la frase original en `../transcripciones/2026-11-17_at_9.24.08_AM.txt`. Las que empiezan por `[20/11 · ...]` son de la sesión de preguntas del 20 de noviembre (`2026-11-20_at_9.40.31_AM.txt`).
 - **[verificar]** marca un dato que el audio no deja claro (una cifra, un nombre propio). No se debe usar como cierto sin confirmarlo.
 - **Correcciones aplicadas por contexto** (Whisper confundió estas palabras):
 

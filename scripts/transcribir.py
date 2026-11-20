@@ -1,7 +1,7 @@
 """Transcribe las notas de voz (.ogg) de la visita con faster-whisper.
 
 Uso: python scripts/transcribir.py <carpeta_ogg> docs/transcripciones [archivo.ogg ...]
-Modelo: variable WM (por defecto large-v3-turbo).
+Modelo: variable WM (por defecto large-v3, el más preciso).
 """
 import os, sys, time, pathlib
 from faster_whisper import WhisperModel
@@ -14,7 +14,7 @@ PROMPT = ("Reunión de la Hackathon de la Fundación Santo Domingo sobre el barr
           "Barranquilla. Residuos orgánicos, reciclaje, recicladores, compostaje, aprovechamiento, "
           "clasificación en la fuente, coordinador, stakeholders, aplicativo.")
 
-T=time.time(); model = WhisperModel(os.environ.get("WM","large-v3-turbo"), device="auto", compute_type="auto", cpu_threads=4); print(f"carga {time.time()-T:.0f}s", flush=True)
+T=time.time(); model = WhisperModel(os.environ.get("WM","large-v3"), device="auto", compute_type="auto", cpu_threads=4); print(f"carga {time.time()-T:.0f}s", flush=True)
 
 for f in sorted(src.glob("*.ogg"), key=lambda p: p.stat().st_size):
     if only and f.name not in only:

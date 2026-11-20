@@ -32,7 +32,7 @@ La fundación fue explícita en esto: **"Lo importante aquí es que hay una soli
 | RF-03 | Adjuntar una **foto** de los residuos a la solicitud                                                                                                                                          | MVP (se mencionó como parte del flujo) | `[9.24 · 02:47]`                      |
 | RF-04 | Ver el **estado** de la solicitud: pendiente → asignada (quién y cuándo) → recolectada / rechazada (motivo)                                                                               | MVP                                     | `[9.24 · 03:16]`, `[9.44 · 16:12]` |
 | RF-05 | **Entrega directa:** el usuario que vive cerca de la huerta lleva él mismo sus orgánicos y queda registrado (sin recolección)                                                              | Deseable                                | `[10.34 · 00:00]`                     |
-| RF-06 | Consultar el **saldo de puntos** e historial                                                                                                                                                  | MVP                                     | `[9.24 · 03:21]`                      |
+| RF-06 | Consultar el **saldo de puntos** e historial. Quien no tenga la app debe **recibir un aviso tras el pesaje**: cuánto pesó, cuántos puntos ganó y cuántos lleva | MVP                                     | `[9.24 · 03:21]`, `[20/11 · 03:10]` |
 
 ### Coordinación (coordinadores, en tablet)
 
@@ -43,13 +43,13 @@ La fundación fue explícita en esto: **"Lo importante aquí es que hay una soli
 | RF-09 | Gestionar su grupo de recolectores (alta y baja) y **asignarlos por zonas** (etapa, sector, torre). Los recicladores ya trabajan por zona      | MVP       | `[9.44 · 06:45]`, `[9.44 · 08:40]`  |
 | RF-10 | Registrar el resultado de cada recolección: **recolectada con peso en kg** o **rechazada con motivo** (por ejemplo, mal separada)       | MVP       | `[9.44 · 16:02]`, `[10.40 · 00:41]` |
 | RF-11 | Registrar los **pesajes de orgánicos** que entran a la huerta (hoy en papel), incluidas las entregas directas                                 | MVP       | `[10.40 · 00:41]`                      |
-| RF-12 | Funcionar aunque **los recolectores no tengan smartphone**: el coordinador hace todo desde la tablet y contacta a su gente por su propio medio | MVP       | `[9.44 · 17:04]`                       |
+| RF-12 | Funcionar aunque **los recolectores no tengan smartphone**: el coordinador hace todo desde la tablet y contacta a su gente por su propio medio. **Confirmado:** los recicladores no usan tecnología y algunos no saben leer | MVP       | `[9.44 · 17:04]`, `[20/11 · 04:14]` |
 
 ### Puntos e incentivos
 
 | ID    | Requerimiento                                                                                                                                                                                  | Prioridad                      | Fuente                                   |
 | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ---------------------------------------- |
-| RF-13 | **Acumular puntos** por residuos entregados. La regla de equivalencia (kg, frecuencia mensual u otra) **está por definir**: la fija la fundación y los equipos pueden proponerla | MVP (con regla configurable)   | `[9.24 · 07:07]`, `[9.44 · 00:00]` |
+| RF-13 | **Acumular puntos** por residuos entregados. **La regla la propone el equipo** (por kg, por frecuencia o las dos, comparadas con una prueba A/B) | MVP (con regla configurable)   | `[9.24 · 07:07]`, `[20/11 · 01:27]` |
 | RF-14 | **Canje de puntos** en la huerta (plantas, plántulas), mercados, etc.                                                                                                                   | Deseable / Fase 2              | `[9.24 · 03:39]`                      |
 | RF-15 | Beneficios concretos: reposición de **bolsas para orgánicos**, entrega de **plántulas** por cantidad de orgánicos                                                              | Deseable                       | `[10.35 · 00:00]`                     |
 | RF-16 | **Sanciones o penalizaciones** (por ejemplo, por residuos mal separados), además de premios, al estilo de Puntos Colombia                                                               | Deseable (abierto a propuesta) | `[9.44 · 15:02]`                      |
@@ -85,14 +85,14 @@ La fundación fue explícita en esto: **"Lo importante aquí es que hay una soli
 | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
 | RNF-01 | **Usabilidad extrema:** pocos pasos, lenguaje sencillo, íconos grandes. Debe servir a **adultos mayores** y a personas con **baja destreza digital**. Es el criterio que más repitió la fundación                                           | `[9.44 · 03:09]`, `[9.44 · 04:16]`  |
 | RNF-02 | **Conectividad deficiente:** el aplicativo debe tolerar internet inestable (modo sin conexión o reintentos, poco consumo de datos). En el barrio fracasó un call center por esto                                                                          | `[9.07 · 04:37]`                       |
-| RNF-03 | **Dispositivos:** los coordinadores usan **tablet**; los usuarios, su propio celular. **Considerar WhatsApp** como canal, porque la comunidad ya lo usa                                                                                         | `[9.44 · 05:08]`, `[10.38 · 01:41]` |
+| RNF-03 | **Dispositivos:** los coordinadores usan **tablet**; los usuarios, su propio celular. **Considerar WhatsApp** como canal, porque la comunidad ya lo usa, **a través de un proveedor oficial de la API (Twilio)**, no con automatización del navegador | `[9.44 · 05:08]`, `[10.38 · 01:41]`, `[20/11 · 12:00]` |
 | RNF-04 | **Datos personales:** hay usuarios desconfiados. Hay que pedir los mínimos datos, con consentimiento y finalidad explícitos (en Colombia rige la Ley 1581 de 2012 de habeas data; nota del redactor). El equipo debe proponer cómo crear usuarios        | `[9.46 · 00:52]`                       |
-| RNF-05 | **Stack tecnológico:** debe encajar en la infraestructura de la fundación. **Las herramientas ya están definidas y se entregan en el reto.** Se mencionaron **Python** y **PHP** [verificar]. No habrá que aprender un lenguaje nuevo | `[9.44 · 11:00]`                       |
+| RNF-05 | **Stack tecnológico:** debe encajar en la infraestructura de la fundación. **Las herramientas ya están definidas y se entregan en el reto.** Se mencionaron **Python** y **PHP** [verificar]. No habrá que aprender un lenguaje nuevo. Se puede añadir **MLflow** si se usan modelos de machine learning | `[9.44 · 11:00]`, `[20/11 · 00:56]` |
 | RNF-06 | **Hosting:** alojarlo en la infraestructura de la fundación tiene restricciones de seguridad (no se puede dar acceso a terceros). **Está por definir dónde vivirá**                                                                               | `[9.44 · 14:32]`                       |
 | RNF-07 | **Replicable y configurable:** zonas, conjuntos, grupos, reglas de puntos y premios no deben quedar fijos en el código                                                                                                                                     | `[9.07 · 13:37]`                       |
 | RNF-08 | **Lo operará la comunidad**, no la fundación: la administración debe ser sencilla para los coordinadores                                                                                                                                                 | `[9.07 · 14:21]`                       |
 
 ## Fuera de alcance (según lo dicho)
 
-- Cómo se comunican internamente los coordinadores con sus recolectores: cada grupo tiene su propia dinámica. `[9.44 · 17:15]`
+- Cómo se comunican internamente los coordinadores con sus recolectores: cada grupo tiene su propia dinámica y ya funciona. Mejorar el registro del coordinador sí se puede proponer. `[9.44 · 17:15]`, `[20/11 · 06:37]`, `[20/11 · 13:51]`
 - La logística de la huerta (compostaje) y del punto de acopio, salvo el registro de pesajes.

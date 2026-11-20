@@ -58,7 +58,10 @@
   & .monitor-resumen { display: grid; gap: .15rem; min-width: 0; flex: 1; }
   & .monitor-nombre { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; }
   & .monitor-nombre time { color: var(--muted); font-size: .75rem; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  & .monitor-lista button[data-sin-leer="true"] time { color: var(--highlight); font-weight: 700; }
+  & .monitor-previa { display: flex; align-items: center; justify-content: space-between; gap: .5rem; min-width: 0; }
   & .monitor-ultimo { color: var(--muted); font-size: .8125rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  & .monitor-sin-leer { display: inline-grid; place-items: center; flex-shrink: 0; min-width: 1.3rem; height: 1.3rem; padding-inline: .3rem; border-radius: 9999px; background: var(--highlight); color: var(--on-highlight); font-size: .72rem; font-weight: 750; font-variant-numeric: tabular-nums; }
   & .monitor-insignia { justify-self: start; margin-top: .2rem; padding: .1rem .5rem; border-radius: 9999px; background: #fbf0c4; color: var(--accent-ink); font-size: .72rem; font-weight: 650; }
   & .monitor-hilo { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
   & .monitor-cabecera { display: flex; align-items: center; gap: .75rem; padding: .85rem 1rem; border-bottom: 1px solid var(--line); }

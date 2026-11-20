@@ -8,6 +8,8 @@ import type { Coordinator } from '../../types'
 import { Icon } from '../ui/Icon'
 import type { IconName } from '../ui/Icon'
 import { BrandLogo } from './BrandLogo'
+import { MotionPills } from '../ui/MotionPills'
+import { animateMotion } from '../ui/motion'
 
 const navigation: { page: EcoPage; label: string; icon: IconName }[] = [
   { page: 'inicio', label: 'Inicio', icon: 'dashboard' },
@@ -69,11 +71,9 @@ export function Layout({ page, href, coordinator, choices, onChange, demo, child
       content?.querySelector<HTMLElement>('h1')?.focus({ preventScroll: true })
       lastPage.current = page
     }
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const animation = content?.animate?.(
-      [{ opacity: 0.86 }, { opacity: 1 }],
-      { duration: 220, easing: 'ease-out' },
-    )
+    const animation = content && animateMotion(content, [
+      { opacity: 0.94, translate: '0 4px' }, { opacity: 1, translate: '0 0' },
+    ], '--motion-route')
     return () => animation?.cancel()
   }, [page])
 
@@ -88,13 +88,13 @@ export function Layout({ page, href, coordinator, choices, onChange, demo, child
           <BrandLogo href={href({ page: coordinator ? 'inicio' : 'capacitacion' })} />
           {coordinator && (
             <>
-              <nav className="main-nav" aria-label="Navegación principal">
+              <MotionPills as="nav" className="main-nav" label="Navegación principal" active={page}>
                 {navigation.map(({ page: target, label, icon }) => (
                   <a key={target} href={href({ page: target })} aria-current={page === target ? 'page' : undefined}>
                     <Icon name={icon} /><span>{label}</span>
                   </a>
                 ))}
-              </nav>
+              </MotionPills>
               <CoordinatorIdentity coordinator={coordinator} choices={choices} onChange={onChange} />
             </>
           )}

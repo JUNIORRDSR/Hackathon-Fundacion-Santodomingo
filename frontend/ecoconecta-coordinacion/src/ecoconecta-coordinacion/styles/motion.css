@@ -1,0 +1,95 @@
+.eco-app {
+  --motion-control: 170ms;
+  --motion-route: 240ms;
+  --motion-card: 290ms;
+  --motion-slide: 310ms;
+  --motion-dialog: 220ms;
+  --motion-ease: cubic-bezier(.22, .78, .24, 1);
+  --motion-spring: cubic-bezier(.24, .87, .24, 1.025);
+
+  & .motion-pills { position: relative; isolation: isolate; }
+  & .motion-pills > :is(a, button) { position: relative; z-index: 1; }
+  & .motion-pill-indicator {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: var(--pill-width);
+    height: var(--pill-height);
+    border-radius: 9999px;
+    background: var(--highlight);
+    transform: translate3d(var(--pill-x, 0px), var(--pill-y, 0px), 0);
+    box-shadow: 0 2px 6px #063b2e16;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  & .segmented-control .motion-pill-indicator { background: var(--surface); }
+  & .motion-pills[data-pill-positioned] > .motion-pill-indicator { visibility: visible; }
+  & .motion-pills[data-pill-positioned] > :is([aria-current="page"], [aria-current="true"], [aria-pressed="true"]) {
+    background-color: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+  & .timeline-task[data-selected="true"] {
+    z-index: 3;
+    box-shadow: 0 0 0 1px var(--surface), 0 0 0 3px var(--highlight);
+  }
+  & .agenda-task[data-selected="true"] { background: var(--surface-muted); box-shadow: inset 2px 0 var(--highlight); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    & .motion-pill-indicator {
+      transition: transform var(--motion-slide) var(--motion-spring),
+        width var(--motion-slide) var(--motion-spring), height var(--motion-slide) var(--motion-spring);
+    }
+
+    & :is(button, .button, .motion-pills > a, .stat-card, .guide-details summary) {
+      transition: transform var(--motion-control) var(--motion-ease),
+        background-color var(--motion-control), border-color var(--motion-control),
+        color var(--motion-control), box-shadow var(--motion-control), filter var(--motion-control);
+    }
+    & :is(button, .button):is(:disabled, [aria-disabled="true"]) { transition: none; }
+    & .guide-details summary svg { transition: transform var(--motion-control) var(--motion-ease); }
+
+    & .view-content { animation: eco-view-reveal 200ms var(--motion-ease); }
+    & :is(.stat-grid, .dashboard-bento, .collection-grid, .training-grid) > .card,
+    & .video-card { animation: eco-card-reveal var(--motion-card) var(--motion-ease) backwards; }
+    & :is(.stat-grid, .dashboard-bento, .collection-grid, .training-grid) > .card:nth-child(2) { animation-delay: 24ms; }
+    & :is(.stat-grid, .collection-grid, .training-grid) > .card:nth-child(3) { animation-delay: 42ms; }
+
+    & .eco-dialog[open] {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      transition: opacity var(--motion-dialog) var(--motion-ease), transform var(--motion-dialog) var(--motion-ease);
+      @starting-style { opacity: .45; transform: translateY(6px) scale(.98); }
+    }
+    & .eco-dialog[open][data-closing] { opacity: 0; transform: translateY(5px) scale(.98); }
+    & .eco-dialog[open]::backdrop {
+      opacity: 1;
+      transition: opacity var(--motion-dialog) ease;
+      @starting-style { opacity: 0; }
+    }
+    & .eco-dialog[open][data-closing]::backdrop { opacity: 0; }
+    & .timeline-now { transition: left var(--motion-slide) var(--motion-ease); }
+  }
+
+  @media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+    & :is(button, .button, .motion-pills > a, .stat-card, .guide-details summary):not(:disabled):not([aria-disabled="true"]):hover {
+      transform: translateY(-1px);
+      filter: brightness(1.035);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    & :is(button, .button, .motion-pills > a, .stat-card, .guide-details summary):not(:disabled):not([aria-disabled="true"]):active {
+      transform: scale(.98);
+    }
+  }
+}
+
+@keyframes eco-view-reveal {
+  from { opacity: .91; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes eco-card-reveal {
+  from { opacity: .82; translate: 0 8px; }
+  to { opacity: 1; translate: 0 0; }
+}

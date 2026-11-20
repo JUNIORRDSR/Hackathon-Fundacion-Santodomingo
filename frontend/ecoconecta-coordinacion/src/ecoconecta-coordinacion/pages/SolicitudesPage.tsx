@@ -6,6 +6,7 @@ import { PageHeader } from '../components/layout/Layout'
 import { RequestList } from '../components/solicitudes/RequestList'
 import { EmptyState } from '../components/ui/Feedback'
 import { Icon } from '../components/ui/Icon'
+import { MotionPills } from '../components/ui/MotionPills'
 
 const filters: { label: string; value: 'todas' | RequestStatus }[] = [
   { label: 'Todas', value: 'todas' },
@@ -31,12 +32,12 @@ export function SolicitudesPage({ requests, group, filter, href, onSelect }: {
     <>
       <PageHeader title="Solicitudes" description={'Consulta y asigna las solicitudes de ' + wasteLabels[group].toLowerCase() + '.'} />
       <div className="filter-bar">
-        <nav className="pills" aria-label="Filtrar por estado">
+        <MotionPills as="nav" className="pills" label="Filtrar por estado" active={current}>
           {filters.map(({ label, value }) => (
             <a key={value} className="pill" aria-current={current === value ? 'true' : undefined}
               href={href({ page: 'solicitudes', filter: value === 'todas' ? undefined : value })}>{label}</a>
           ))}
-        </nav>
+        </MotionPills>
         <div className="search-field">
           <Icon name="search" />
           <label htmlFor="eco-request-search" className="sr-only">Buscar por nombre, ubicación o código</label>

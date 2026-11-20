@@ -34,13 +34,12 @@ export function CoordinatorModule({
   return (
     <Layout page={page} coordinator={coordinator} choices={demo ? demoChoices : undefined}
       onChange={onDemoChoice} href={href} demo={demo}>
-      {page === 'capacitacion' ? (
-        <CapacitacionPage resources={trainingResources ?? sampleTraining} sample={!trainingResources}
-          publicHref={publicTrainingHref} />
-      ) : (
-        <CoordinatorContent key={coordinator.id + '-' + coordinator.grupo + '-' + (page === 'recolectores')}
-          coordinator={coordinator} repository={repository} location={location} href={href} demo={demo} />
-      )}
+      <CoordinatorContent key={coordinator.id + '-' + coordinator.grupo}
+        coordinator={coordinator} repository={repository} location={location} href={href} demo={demo}
+        training={
+          <CapacitacionPage resources={trainingResources ?? sampleTraining} sample={!trainingResources}
+            publicHref={publicTrainingHref} />
+        } />
     </Layout>
   )
 }
@@ -60,17 +59,21 @@ const loadingHeaders = {
 }
 type OperationalPage = keyof typeof loadingHeaders | 'inicio'
 
-function CoordinatorContent({ coordinator, repository, location, href, demo }: {
-  coordinator: Coordinator; repository: CoordinatorRepository; location: EcoLocation; href: EcoLink; demo: boolean
+function CoordinatorContent({ coordinator, repository, location, href, demo, training }: {
+  coordinator: Coordinator; repository: CoordinatorRepository; location: EcoLocation; href: EcoLink;
+  demo: boolean; training: ReactNode
 }) {
-  const page = location.page as OperationalPage
-  const data = useCoordinatorData(coordinator, repository, page !== 'recolectores')
+  const page = location.page
+  const mode = page === 'capacitacion' ? 'none' : page === 'recolectores' ? 'collectors' : 'requests'
+  const data = useCoordinatorData(coordinator, repository, mode)
   const [detail, setDetail] = useState<{ id: string; page: OperationalPage }>()
   const [notice, setNotice] = useState('')
   useEffect(() => {
     setNotice('')
     setDetail(undefined)
   }, [page])
+  if (page === 'capacitacion') return training
+
   const isDashboard = page === 'inicio'
   const dashboardHeader = isDashboard && <DashboardHeader coordinator={coordinator} demo={demo} href={href} />
 
@@ -95,20 +98,24 @@ function CoordinatorContent({ coordinator, repository, location, href, demo }: {
     if (saved.id !== id || saved.tipo !== coordinator.grupo || saved.estado !== state) {
       throw new Error('No se pudo confirmar el cambio. Actualiza el panel para revisar el estado.')
     }
-    data.updateRequest(saved)
   }
 
   async function assign(input: Assignment) {
     const saved = await repository.assign(coordinator, input)
     confirmRequest(saved, input.solicitudId, 'asignada')
-    setNotice('Asignación confirmada para la solicitud ' + saved.id + '.')
-    close()
+    return () => {
+      data.updateRequest(saved)
+      setNotice('Asignación confirmada para la solicitud ' + saved.id + '.')
+    }
   }
 
   async function saveResult(input: CollectionResult) {
     const saved = await repository.saveResult(coordinator, input)
     confirmRequest(saved, input.solicitudId, input.estado)
-    setNotice(saved.estado === 'recolectada' ? 'Peso registrado para ' + saved.id + '.' : 'Rechazo registrado para ' + saved.id + '.')
+    return () => {
+      data.updateRequest(saved)
+      setNotice(saved.estado === 'recolectada' ? 'Peso registrado para ' + saved.id + '.' : 'Rechazo registrado para ' + saved.id + '.')
+    }
   }
 
   async function saveCollector(input: CollectorInput, id?: string) {
@@ -116,14 +123,16 @@ function CoordinatorContent({ coordinator, repository, location, href, demo }: {
     if (saved.grupo !== coordinator.grupo || !saved.id || (id && saved.id !== id)) {
       throw new Error('No se pudo confirmar el recolector. Actualiza el panel para revisar el estado.')
     }
-    data.updateCollector(saved)
-    setNotice(id ? 'Datos del recolector actualizados.' : 'Recolector agregado al equipo.')
+    return () => {
+      data.updateCollector(saved)
+      setNotice(id ? 'Datos del recolector actualizados.' : 'Recolector agregado al equipo.')
+    }
   }
 
   let content: ReactNode
   switch (page) {
     case 'inicio':
-      content = <DashboardPage requests={requests} collectors={collectors} href={href} onSelect={open} />
+      content = <DashboardPage requests={requests} collectors={collectors} href={href} selectedId={selected?.id} onSelect={open} />
       break
     case 'solicitudes':
       content = <SolicitudesPage requests={requests} group={coordinator.grupo} filter={location.filter} href={href} onSelect={open} />

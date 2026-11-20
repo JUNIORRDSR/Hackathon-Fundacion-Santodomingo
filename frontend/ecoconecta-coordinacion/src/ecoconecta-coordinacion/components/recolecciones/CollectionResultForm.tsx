@@ -4,10 +4,11 @@ import type { CollectionResult, Request } from '../../types'
 import { ErrorMessage } from '../ui/Feedback'
 import { Icon } from '../ui/Icon'
 import { Modal } from '../ui/Modal'
+import type { CloseModal } from '../ui/Modal'
 import { useSubmission } from '../ui/useSubmission'
 
 export function CollectionResultForm({ request, onSave, onClose }: {
-  request: Request & { estado: 'asignada' }; onSave: (result: CollectionResult) => Promise<void>; onClose: () => void
+  request: Request & { estado: 'asignada' }; onSave: (result: CollectionResult) => Promise<() => void>; onClose: () => void
 }) {
   const id = useId()
   const [status, setStatus] = useState<CollectionResult['estado']>('recolectada')
@@ -16,7 +17,7 @@ export function CollectionResultForm({ request, onSave, onClose }: {
   const [validation, setValidation] = useState('')
   const submit = useSubmission()
 
-  function save(event: FormEvent<HTMLFormElement>) {
+  function save(event: FormEvent<HTMLFormElement>, close: CloseModal) {
     event.preventDefault()
     const pesoKg = Number(weight.trim().replace(',', '.'))
     const motivoRechazo = reason.trim()
@@ -33,49 +34,56 @@ export function CollectionResultForm({ request, onSave, onClose }: {
     const result: CollectionResult = collected
       ? { solicitudId: request.id, estado: status, pesoKg }
       : { solicitudId: request.id, estado: status, motivoRechazo }
-    void submit.run(() => onSave(result))
+    void submit.run(async () => {
+      const apply = await onSave(result)
+      await close(apply)
+    })
   }
 
   return (
     <Modal title="Registrar resultado" onClose={onClose} busy={submit.busy}>
-      <p className="muted">{request.id} · {request.solicitante}</p>
-      <form className="dialog-form" noValidate onSubmit={save}>
-        <fieldset disabled={submit.busy}>
-          <legend>¿Qué pasó en la recolección?</legend>
-          <div className="outcome-options">
-            <label className="outcome-option">
-              <input type="radio" name={id} checked={status === 'recolectada'}
-                onChange={() => { setStatus('recolectada'); setValidation('') }} />
-              <Icon name="checkCircle" /> Recolectada
-            </label>
-            <label className="outcome-option">
-              <input type="radio" name={id} checked={status === 'rechazada'}
-                onChange={() => { setStatus('rechazada'); setValidation('') }} />
-              <Icon name="xCircle" /> Rechazada
-            </label>
-          </div>
-        </fieldset>
-        <div className="field">
-          <label htmlFor={id + '-value'}>{status === 'recolectada' ? 'Peso real (kg)' : 'Motivo del rechazo'}</label>
-          {status === 'recolectada' ? (
-            <input id={id + '-value'} inputMode="decimal" placeholder="Ej. 3,5" value={weight} required
-              aria-invalid={!!validation} aria-describedby={validation ? id + '-error' : undefined} disabled={submit.busy}
-              onChange={(event) => { setWeight(event.target.value); setValidation('') }} />
-          ) : (
-            <textarea id={id + '-value'} rows={4} value={reason} required
-              aria-invalid={!!validation} aria-describedby={validation ? id + '-error' : undefined} disabled={submit.busy}
-              onChange={(event) => { setReason(event.target.value); setValidation('') }} />
-          )}
-          {validation && <span id={id + '-error'} className="field-error">{validation}</span>}
-        </div>
-        {submit.error && <ErrorMessage message={submit.error} />}
-        <div className="form-actions">
-          <button className="button button-secondary" type="button" onClick={onClose} disabled={submit.busy}>Cancelar</button>
-          <button className="button button-primary" type="submit" disabled={submit.busy}>
-            {submit.busy ? 'Guardando…' : submit.error ? 'Reintentar registro' : 'Guardar resultado'}
-          </button>
-        </div>
-      </form>
+      {close => (
+        <>
+          <p className="muted">{request.id} · {request.solicitante}</p>
+          <form className="dialog-form" noValidate onSubmit={(event) => save(event, close)}>
+            <fieldset disabled={submit.busy}>
+              <legend>¿Qué pasó en la recolección?</legend>
+              <div className="outcome-options">
+                <label className="outcome-option">
+                  <input type="radio" name={id} checked={status === 'recolectada'}
+                    onChange={() => { setStatus('recolectada'); setValidation('') }} />
+                  <Icon name="checkCircle" /> Recolectada
+                </label>
+                <label className="outcome-option">
+                  <input type="radio" name={id} checked={status === 'rechazada'}
+                    onChange={() => { setStatus('rechazada'); setValidation('') }} />
+                  <Icon name="xCircle" /> Rechazada
+                </label>
+              </div>
+            </fieldset>
+            <div className="field">
+              <label htmlFor={id + '-value'}>{status === 'recolectada' ? 'Peso real (kg)' : 'Motivo del rechazo'}</label>
+              {status === 'recolectada' ? (
+                <input id={id + '-value'} inputMode="decimal" placeholder="Ej. 3,5" value={weight} required
+                  aria-invalid={!!validation} aria-describedby={validation ? id + '-error' : undefined} disabled={submit.busy}
+                  onChange={(event) => { setWeight(event.target.value); setValidation('') }} />
+              ) : (
+                <textarea id={id + '-value'} rows={4} value={reason} required
+                  aria-invalid={!!validation} aria-describedby={validation ? id + '-error' : undefined} disabled={submit.busy}
+                  onChange={(event) => { setReason(event.target.value); setValidation('') }} />
+              )}
+              {validation && <span id={id + '-error'} className="field-error">{validation}</span>}
+            </div>
+            {submit.error && <ErrorMessage message={submit.error} />}
+            <div className="form-actions">
+              <button className="button button-secondary" type="button" onClick={() => void close()} disabled={submit.busy}>Cancelar</button>
+              <button className="button button-primary" type="submit" disabled={submit.busy}>
+                {submit.busy ? 'Guardando…' : submit.error ? 'Reintentar registro' : 'Guardar resultado'}
+              </button>
+            </div>
+          </form>
+        </>
+      )}
     </Modal>
   )
 }

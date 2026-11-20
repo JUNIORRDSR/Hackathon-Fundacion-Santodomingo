@@ -1,5 +1,6 @@
 import './styles/eco.css'
 import './styles/dashboard.css'
+import './styles/motion.css'
 
 export { CoordinatorModule, PublicTrainingModule } from './CoordinatorModule'
 export { createApiRepository } from './services/apiRepository'

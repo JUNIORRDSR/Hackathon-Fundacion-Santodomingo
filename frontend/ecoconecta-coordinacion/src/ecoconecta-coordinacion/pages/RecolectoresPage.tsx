@@ -7,7 +7,7 @@ import { EmptyState } from '../components/ui/Feedback'
 import { Icon } from '../components/ui/Icon'
 
 export function RecolectoresPage({ collectors, group, onSave }: {
-  collectors: Collector[]; group: WasteType; onSave: (input: CollectorInput, id?: string) => Promise<void>
+  collectors: Collector[]; group: WasteType; onSave: (input: CollectorInput, id?: string) => Promise<() => void>
 }) {
   const [editing, setEditing] = useState<Collector | 'new' | null>(null)
   return (
@@ -34,10 +34,7 @@ export function RecolectoresPage({ collectors, group, onSave }: {
         </ul>
       ) : <div className="card"><EmptyState title="Aún no hay recolectores" icon="users">Agrega a un integrante para poder asignarle solicitudes.</EmptyState></div>}
       {editing && <CollectorForm collector={editing === 'new' ? undefined : editing} onClose={() => setEditing(null)}
-        onSave={async (input, id) => {
-          await onSave(input, id)
-          setEditing(null)
-        }} />}
+        onSave={onSave} />}
     </>
   )
 }

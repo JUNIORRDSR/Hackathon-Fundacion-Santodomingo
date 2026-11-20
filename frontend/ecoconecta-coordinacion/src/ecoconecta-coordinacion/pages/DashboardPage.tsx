@@ -95,8 +95,9 @@ function NextCollection({ planned, collectors, href, today, now, onSelect }: {
   )
 }
 
-export function DashboardPage({ requests, collectors, href, onSelect }: {
-  requests: Request[]; collectors: Collector[]; href: EcoLink; onSelect: (item: Request) => void
+export function DashboardPage({ requests, collectors, href, selectedId, onSelect }: {
+  requests: Request[]; collectors: Collector[]; href: EcoLink; selectedId?: string;
+  onSelect: (item: Request) => void
 }) {
   const [clock, setClock] = useState(localTime)
   useEffect(() => {
@@ -130,7 +131,8 @@ export function DashboardPage({ requests, collectors, href, onSelect }: {
         ))}
       </section>
       <div className="dashboard-bento">
-        <ScheduleTimeline planned={planned} collectors={collectors} today={today} clock={clock} onSelect={onSelect} />
+        <ScheduleTimeline planned={planned} collectors={collectors} today={today} clock={clock}
+          selectedId={selectedId} onSelect={onSelect} />
         <NextCollection planned={planned} collectors={collectors} href={href} today={today} now={clock} onSelect={onSelect} />
       </div>
       <div className="dashboard-bento dashboard-lower">

@@ -6,13 +6,14 @@ import { CollectionResultForm } from '../components/recolecciones/CollectionResu
 import { StatusBadge } from '../components/solicitudes/RequestList'
 import { EmptyState } from '../components/ui/Feedback'
 import { Icon } from '../components/ui/Icon'
+import { MotionPills } from '../components/ui/MotionPills'
 
 type AssignedRequest = Request & { estado: 'asignada' }
 type ResolvedRequest = Request & { estado: 'recolectada' | 'rechazada' }
 
 export function RecoleccionesPage({ requests, collectors, requestId, group, onSave }: {
   requests: Request[]; collectors: Collector[]; requestId?: string;
-  group: WasteType; onSave: (result: CollectionResult) => Promise<void>
+  group: WasteType; onSave: (result: CollectionResult) => Promise<() => void>
 }) {
   const [view, setView] = useState<'programadas' | 'resultados'>('programadas')
   const [selectedId, setSelectedId] = useState(requestId)
@@ -30,10 +31,10 @@ export function RecoleccionesPage({ requests, collectors, requestId, group, onSa
   return (
     <>
       <PageHeader title="Recolecciones" description={'Consulta tu agenda y registra los resultados de ' + wasteLabels[group].toLowerCase() + '.'} />
-      <div className="pills collection-filters" role="group" aria-label="Filtrar recolecciones">
+      <MotionPills className="pills collection-filters" label="Filtrar recolecciones" active={view}>
         <button className="pill" type="button" aria-pressed={view === 'programadas'} onClick={() => setView('programadas')}>Programadas ({scheduled.length})</button>
         <button className="pill" type="button" aria-pressed={view === 'resultados'} onClick={() => setView('resultados')}>Resultados ({resolved.length})</button>
-      </div>
+      </MotionPills>
       <div className="view-content" key={view}>
         {view === 'programadas' ? (
           scheduled.length ? (
@@ -78,10 +79,7 @@ export function RecoleccionesPage({ requests, collectors, requestId, group, onSa
         )}
       </div>
       {selected && <CollectionResultForm key={selected.id} request={selected} onClose={() => setSelectedId(undefined)}
-        onSave={async (result) => {
-          await onSave(result)
-          setSelectedId(undefined)
-        }} />}
+        onSave={onSave} />}
     </>
   )
 }

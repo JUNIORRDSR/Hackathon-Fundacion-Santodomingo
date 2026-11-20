@@ -36,9 +36,12 @@ pytest
 
 ## Probar el bot sin WhatsApp
 
-1. `POST /api/acceso/entrar` con `{"usuario": "admin", "clave": "ecoconecta-demo"}`.
-2. `POST /api/whatsapp/simulador` con `{"telefono": "+573000000001", "texto": "Hola"}`, y sigue la conversación.
-3. `GET /api/whatsapp/simulador/mensajes` muestra todo lo que el sistema envió, avisos incluidos.
+Entra a la app (usuario `admin`, clave `ecoconecta-demo`) y abre **WhatsApp**: a la izquierda las conversaciones, a la
+derecha el hilo. En **Simular un vecino** escribes como si fueras un celular (`+573000000009`, «Hola»). Con **Tomar el
+control** el bot calla y respondes como coordinación; **Devolver al bot** lo reactiva (ADR-0007).
+
+Por API: `POST /api/whatsapp/simulador` con `{"telefono": "+573000000001", "texto": "Hola"}`, y
+`GET /api/whatsapp/conversaciones/{telefono}/mensajes` para el hilo, avisos incluidos.
 
 ## WhatsApp real con el sandbox de Twilio
 

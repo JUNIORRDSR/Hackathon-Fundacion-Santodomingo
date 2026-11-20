@@ -41,14 +41,14 @@ flowchart LR
 
 | Módulo | Qué hace | Publica | Escucha | Hoy | Se migra a |
 |---|---|---|---|---|---|
-| solicitudes | Núcleo: ciclo de vida, bandeja, asignación, programación y resultado | SolicitudRecibida, SolicitudProgramada, RecoleccionRegistrada, SolicitudRechazada, SolicitudCancelada | — | Jairo | — |
+| solicitudes | Núcleo: ciclo de vida, bandeja, asignación (con o sin hora), cancelación y resultado | SolicitudRecibida, SolicitudProgramada, RecoleccionRegistrada, SolicitudRechazada, SolicitudCancelada | — | Jairo | — |
 | directorio | Solicitantes (alta y habilitación), encargados y zonas | SolicitanteHabilitado | — | Jairo | — |
 | puntos | Regla con versión y libro de movimientos | PuntosAcreditados | RecoleccionRegistrada | Jairo | — |
-| whatsapp | Registro por WhatsApp, bot y avisos | — | los eventos de arriba | Jairo: menú y simulador | Conversador LLM: Leonardo · Transporte: Jorge |
+| whatsapp | Registro por WhatsApp, bot, avisos y monitor con toma de control | — | los eventos de arriba | Jairo: menú, simulador y monitor | Conversador LLM: Leonardo · Transporte: Jorge |
 | contenidos | Educación ambiental y tutoriales por audiencia | — | — | Jairo | — |
 | reportes | Resumen por flujo, estado y periodo; CSV sin datos personales | — | — | Jairo | — |
 | acceso | Login, roles y colectivo del coordinador | — | — | Jairo | — |
-| frontend | Host React (PWA) y pantallas de la tablet | — | — | Jairo: estructura | Daniela: identidad y pantallas |
+| frontend | App de Daniela (módulo `ecoconecta-coordinacion`) más el host: sesión, API y pantallas extra (ADR-0007) | — | — | Daniela: módulo · Jairo: host | — |
 | despliegue | Azure | — | — | `deploy/azure.sh` | Leonardo |
 
 Jairo construye todo de punta a punta sin esperar; cada pieza del equipo entra por el mismo contrato cuando esté lista.
@@ -66,10 +66,13 @@ Jairo construye todo de punta a punta sin esperar; cada pieza del equipo entra p
 ```mermaid
 stateDiagram-v2
   [*] --> RECIBIDA: registrar (WhatsApp, asistido o simulador)
-  RECIBIDA --> ASIGNADA: asignar(encargado)
-  ASIGNADA --> PROGRAMADA: programar(día, hora)
+  RECIBIDA --> ASIGNADA: asignar(encargado, día)
+  RECIBIDA --> PROGRAMADA: asignar(encargado, día, hora)
+  ASIGNADA --> PROGRAMADA: asignar con hora
   PROGRAMADA --> PROGRAMADA: reasignar o reprogramar
+  ASIGNADA --> RECOLECTADA: registrar_recoleccion(kg opcional)
   PROGRAMADA --> RECOLECTADA: registrar_recoleccion(kg opcional)
+  ASIGNADA --> RECHAZADA: rechazar(motivo)
   PROGRAMADA --> RECHAZADA: rechazar(motivo)
   RECIBIDA --> CANCELADA: cancelar(motivo)
   ASIGNADA --> CANCELADA: cancelar(motivo)
@@ -77,7 +80,7 @@ stateDiagram-v2
 ```
 
 - **RN-01:** el flujo decide el colectivo y la bandeja.
-- **RN-02:** no hay PROGRAMADA sin encargado, día y hora.
+- **RN-02:** no hay PROGRAMADA sin encargado, día y hora; sin hora queda ASIGNADA y no se avisa al vecino.
 - **RN-03:** queda quién asignó (el coordinador) y quién recoge (el encargado).
 - **RN-04:** código corto por flujo (ORG-0042, REC-0017) e historial de cada cambio.
 - El aviso de «recibida» pide escribir el código en la bolsa. Al pesar, la coordinación lo busca en la tablet y registra

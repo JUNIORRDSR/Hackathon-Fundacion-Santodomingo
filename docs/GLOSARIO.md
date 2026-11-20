@@ -17,7 +17,9 @@ español; el inglés queda solo para los tipos del framework.
 | Bandeja | Solicitudes de un colectivo, por estado | `bandeja()` |
 | Zona | Sector del barrio, como Brisas de San Pablo o el Corredor comercial. Los encargados cubren zonas | `Zona…` |
 | Franja | Preferencia horaria del solicitante: mañana, tarde o noche | `Franja` |
-| Programación | Día, hora y encargado acordados (RN-02) | `programar()` |
+| Asignación | Encargado y día; con hora queda programada y se avisa al vecino (RN-02, ADR-0007) | `asignar()` |
+| Monitor | Pantalla de WhatsApp donde la coordinación ve lo que conversa el bot | `monitor.py` |
+| Tomar el control | La coordinación responde en una conversación y el bot calla hasta que se la devuelve | `tomar_control()` |
 | Habilitar | Admitir a un solicitante en el piloto (RN-08) | `habilitar()` |
 | Movimiento de puntos | Asiento que suma puntos por una recolección. No se edita ni se borra | `Movimiento` |
 | Regla de puntos | Base por recolección válida más un bono por kilo, con versión (RN-06) | `Regla` |
@@ -31,6 +33,7 @@ español; el inglés queda solo para los tipos del framework.
 
 ## Términos que no se usan
 
-- **Recolector:** la fundación pidió decir «recicladores» (20/11). El genérico es **Encargado**.
-- **Aprovechable:** se dice **reciclable**, como en el reto.
+- **Recolector:** la fundación pidió decir «recicladores» (20/11). El genérico es **Encargado**. Las pantallas de
+  Daniela aún dicen «Recolectores» para la lista de encargados: se cambia allí, no en el código.
+- **Aprovechable:** se dice **reciclable**, como en el reto. La pantalla puede aclarar «Reciclables (aprovechables)».
 - **En revisión:** no es un estado. Una solicitud recibida ya está en la bandeja.

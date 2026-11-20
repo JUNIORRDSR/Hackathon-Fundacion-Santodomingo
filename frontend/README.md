@@ -34,7 +34,7 @@ una PWA: se instala desde el navegador y abre a pantalla completa. Identidad: `d
 | Pantalla | Estado | Quién | Endpoints |
 |---|---|---|---|
 | Entrar | Hecha | Todos | `POST /api/acceso/entrar`, `GET /api/acceso/yo`, `POST /api/acceso/salir` |
-| Bandeja y detalle | Hecha | Coordinador | `GET /api/solicitudes?estado=`, `GET /api/solicitudes/{id}`, `GET …/sugerencias`, `POST …/asignacion`, `POST …/programacion`, `POST …/recoleccion`, `POST …/rechazo`, `POST …/cancelacion` |
+| Bandeja y detalle | Hecha | Coordinador | `GET /api/solicitudes?estado=`, `GET /api/solicitudes/codigo/{codigo}`, `GET /api/solicitudes/{id}`, `GET …/sugerencias`, `POST …/asignacion`, `POST …/programacion`, `POST …/recoleccion`, `POST …/rechazo`, `POST …/cancelacion` |
 | Registro asistido | Hecha | Coordinador | `GET /api/directorio/zonas`, `POST /api/directorio/solicitantes`, `POST /api/solicitudes` |
 | Por habilitar | Hecha | Coordinador y administrador | `GET /api/directorio/solicitantes?estado=pendiente`, `POST /api/directorio/solicitantes/{id}/habilitacion` |
 | Panel | Hecha | Coordinador y administrador | `GET /api/reportes/resumen`, `GET /api/reportes/solicitudes.csv` |

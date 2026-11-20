@@ -74,7 +74,8 @@ def _linea_de_estado(s: SolicitudResumida) -> str:
 
 
 def _puntos(memoria: dict, herramientas: Herramientas) -> list[str]:
-    return [f"Llevas {herramientas.mis_puntos()} puntos."]
+    canje = [texto_de_pieza(c) for c in herramientas.que_puedo_canjear()]
+    return ["\n\n".join([f"Llevas {herramientas.mis_puntos()} puntos.", *canje])]
 
 
 def _aprender(memoria: dict, herramientas: Herramientas) -> list[str]:

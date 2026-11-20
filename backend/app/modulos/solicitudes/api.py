@@ -52,6 +52,14 @@ def registrar_asistida(datos: Asistida, u: acceso.Usuario = Sesion) -> solicitud
     return solicitudes.registrar(nueva, por=str(u.id))
 
 
+@router.get("/codigo/{codigo}")
+def por_codigo(codigo: str, u: acceso.Usuario = Sesion) -> solicitudes.SolicitudVista:
+    """Al pesar en la huerta o el acopio: el código va escrito a mano en la bolsa."""
+    solicitud = solicitudes.por_codigo(codigo)
+    acceso.exigir_colectivo(u, solicitud.colectivo)
+    return solicitud
+
+
 @router.get("/{id}")
 def detalle(id: UUID, u: acceso.Usuario = Sesion) -> solicitudes.SolicitudVista:
     return _visible(id, u)

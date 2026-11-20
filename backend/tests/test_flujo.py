@@ -18,9 +18,11 @@ def test_escenario_de_demostracion():
     solicitante = _registrar_por_whatsapp_y_habilitar(admin)
     solicitud = _pedir_organicos(admin, huerteros)
     _comprobar_que_recicladores_no_la_ve(recicladores, solicitud)
+    _buscar_por_el_codigo_de_la_bolsa(huerteros, recicladores, solicitud)
     _asignar_programar_y_recoger(huerteros, solicitud)
     assert admin.get(f"/api/puntos/solicitantes/{solicitante['id']}").json()["saldo"] == 12  # RN-05, RN-06
     _comprobar_avisos(admin)
+    _consultar_puntos_y_canje(admin)
     assert huerteros.get("/api/reportes/resumen").json()["total_solicitudes"] >= 1
 
 
@@ -54,6 +56,13 @@ def _comprobar_que_recicladores_no_la_ve(recicladores: TestClient, solicitud: di
     assert recicladores.get(f"/api/solicitudes/{solicitud['id']}").status_code == 403
 
 
+def _buscar_por_el_codigo_de_la_bolsa(huerteros: TestClient, recicladores: TestClient, solicitud: dict) -> None:
+    """Al pesar, la coordinación busca el código escrito a mano en la bolsa; la otra coordinación no la ve."""
+    codigo = solicitud["codigo"].lower()
+    assert huerteros.get(f"/api/solicitudes/codigo/{codigo}").json()["id"] == solicitud["id"]
+    assert recicladores.get(f"/api/solicitudes/codigo/{codigo}").status_code == 403
+
+
 def _asignar_programar_y_recoger(huerteros: TestClient, solicitud: dict) -> None:
     """El coordinador asigna al sugerido, programa (RN-02, RN-03) y registra la recolección con kilos."""
     url = f"/api/solicitudes/{solicitud['id']}"
@@ -68,7 +77,14 @@ def _comprobar_avisos(admin: TestClient) -> None:
     """El solicitante recibió cada aviso por WhatsApp."""
     mensajes = admin.get("/api/whatsapp/simulador/mensajes", params={"telefono": TELEFONO}).json()
     textos = " | ".join(m["texto"] for m in mensajes)
-    assert "Recibimos tu solicitud ORG-" in textos
+    assert "Recibimos tu solicitud ORG-" in textos and "en tu bolsa con marcador" in textos
     assert "Huertero Uno pasa por tu recolección ORG-" in textos
     assert "el sábado 21 de noviembre a las 7:00 p. m. |" in textos
     assert "Ganaste 12 puntos" in textos and "Llevas 12" in textos
+    assert "Escribe 4 para ver qué puedes canjear" in textos
+
+
+def _consultar_puntos_y_canje(admin: TestClient) -> None:
+    """La opción 4 del menú da el saldo y lo que se puede canjear."""
+    respuesta = _whatsapp(admin, "4")[0]
+    assert "Llevas 12 puntos." in respuesta and "Qué puedes canjear" in respuesta

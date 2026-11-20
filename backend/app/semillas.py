@@ -57,4 +57,8 @@ PIEZAS = [
                      texto_corto="Toca una solicitud nueva, elige al encargado que sugiere el sistema, pon día y "
                                  "hora y toca Asignar y programar. Cuando te reporten la recolección, registra los "
                                  "kilos."),
+    C.NuevoContenido(titulo="Qué puedes canjear", proposito=C.Proposito.CANJE, audiencia=C.Audiencia.SOLICITANTE,
+                     formato=C.Formato.TEXTO,
+                     texto_corto="30 puntos: una plántula de la huerta. 60 puntos: un paquete de bolsas para "
+                                 "orgánicos. Pregunta en la huerta. (Valores de ejemplo: los fija la fundación.)"),
 ]

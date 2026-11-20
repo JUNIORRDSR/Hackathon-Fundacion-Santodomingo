@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api, type Solicitud } from "../../api/cliente";
+import { BuscarPorCodigo } from "./BuscarPorCodigo";
 import { Detalle } from "./Detalle";
 import { ESTADOS, NOMBRE_ESTADO, NOMBRE_FRANJA } from "./textos";
 
@@ -22,6 +23,7 @@ export function Bandeja() {
   return (
     <div className="grid h-full grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4">
       <section className="flex min-h-0 flex-col gap-3">
+        <BuscarPorCodigo />
         <div className="flex flex-wrap gap-2">
           {ESTADOS.map((e) => (
             <button

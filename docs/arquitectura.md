@@ -80,6 +80,8 @@ stateDiagram-v2
 - **RN-02:** no hay PROGRAMADA sin encargado, día y hora.
 - **RN-03:** queda quién asignó (el coordinador) y quién recoge (el encargado).
 - **RN-04:** código corto por flujo (ORG-0042, REC-0017) e historial de cada cambio.
+- El aviso de «recibida» pide escribir el código en la bolsa. Al pesar, la coordinación lo busca en la tablet y registra
+  los kilos en la solicitud correcta.
 - Una sola solicitud abierta por solicitante y flujo.
 - «No había nadie» no es un rechazo: se reprograma.
 - El sistema sugiere los encargados de la zona; asigna el coordinador (§9).
@@ -90,7 +92,8 @@ stateDiagram-v2
 - **RN-06:** base por recolección válida más un bono por kilo si se pesó. La regla tiene versión y cada movimiento guarda
   su cálculo en texto («10 por separar bien + 2 por 2,5 kg»). Los valores (10 de base y 1 por kilo) son de ejemplo hasta
   que la fundación los valide.
-- El libro de movimientos solo crece y el saldo es la suma. El canje queda fuera del MVP.
+- El libro de movimientos solo crece y el saldo es la suma. Con el saldo, el bot muestra «Qué puedes canjear», un texto
+  que edita el administrador. El canje se hace en la huerta y todavía no descuenta puntos.
 
 ## Alta del solicitante (RN-08)
 

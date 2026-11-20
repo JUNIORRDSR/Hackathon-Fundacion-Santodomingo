@@ -93,6 +93,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/solicitudes/codigo/{codigo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Por Codigo
+         * @description Al pesar en la huerta o el acopio: el código va escrito a mano en la bolsa.
+         */
+        get: operations["por_codigo_api_solicitudes_codigo__codigo__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/solicitudes/{id}": {
         parameters: {
             query?: never;
@@ -742,7 +762,7 @@ export interface components {
          * Proposito
          * @enum {string}
          */
-        Proposito: "educacion" | "tutorial";
+        Proposito: "educacion" | "tutorial" | "canje";
         /** Recoleccion */
         Recoleccion: {
             /** Kg */
@@ -1076,6 +1096,37 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SolicitudVista"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    por_codigo_api_solicitudes_codigo__codigo__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                codigo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

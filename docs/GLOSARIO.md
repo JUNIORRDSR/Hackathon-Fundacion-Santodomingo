@@ -26,6 +26,8 @@ español; el inglés queda solo para los tipos del framework.
 | Transporte | Cómo entra y sale un mensaje de WhatsApp (Twilio o Cloud API) | `Transporte` |
 | Conversador | El cerebro del bot: menú numerado o LLM | `Conversador` |
 | Herramientas | Lo único que el bot puede hacer en nombre de un solicitante | `Herramientas` |
+| Código | Identifica una solicitud (ORG-0042, REC-0017). La persona lo escribe en la bolsa y la coordinación lo busca al pesar | `codigo` |
+| Canje | Cambiar puntos por algo de la huerta o del territorio. Por ahora el bot solo informa qué se puede canjear | `Proposito.CANJE` |
 
 ## Términos que no se usan
 

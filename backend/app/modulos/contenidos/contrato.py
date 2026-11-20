@@ -14,6 +14,7 @@ from app.modulos.contenidos import tablas as t
 class Proposito(StrEnum):
     EDUCACION = "educacion"
     TUTORIAL = "tutorial"
+    CANJE = "canje"  # qué se puede canjear con los puntos; lo edita el administrador
 
 
 class Audiencia(StrEnum):

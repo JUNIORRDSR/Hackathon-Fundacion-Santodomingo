@@ -82,7 +82,12 @@ class Herramientas:
         return puntos.saldo(self._id).saldo
 
     def aprender(self, flujo: Flujo | None = None) -> list[contenidos.ContenidoVista]:
-        return contenidos.listar(contenidos.Audiencia.SOLICITANTE, flujo)
+        piezas = contenidos.listar(contenidos.Audiencia.SOLICITANTE, flujo)
+        return [c for c in piezas if c.proposito != contenidos.Proposito.CANJE]
+
+    def que_puedo_canjear(self) -> list[contenidos.ContenidoVista]:
+        """Lo que se ofrece por los puntos; el canje se hace en la huerta."""
+        return contenidos.listar(contenidos.Audiencia.SOLICITANTE, proposito=contenidos.Proposito.CANJE)
 
 
 class Conversador(Protocol):

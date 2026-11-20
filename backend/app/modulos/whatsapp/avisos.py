@@ -28,8 +28,8 @@ def _avisar(solicitante_id: UUID, texto: str) -> None:
 
 def _al_recibir(e: solicitudes.SolicitudRecibida) -> None:
     colectivo = "huerteros" if e.flujo == Flujo.ORGANICO else "recicladores"
-    _avisar(e.solicitante_id, f"Recibimos tu solicitud {e.codigo} de {NOMBRE_FLUJO[e.flujo]}. La coordinación de "
-                              f"{colectivo} te confirma día, hora y quién pasa.")
+    _avisar(e.solicitante_id, f"Recibimos tu solicitud {e.codigo} de {NOMBRE_FLUJO[e.flujo]}. Escribe {e.codigo} en tu "
+                              f"bolsa con marcador. La coordinación de {colectivo} te confirma día, hora y quién pasa.")
 
 
 def _al_programar(e: solicitudes.SolicitudProgramada) -> None:
@@ -42,7 +42,7 @@ def _al_programar(e: solicitudes.SolicitudProgramada) -> None:
 def _al_acreditar(e: puntos.PuntosAcreditados) -> None:
     peso = f": {kilos(e.kg)} kg" if e.kg else ""
     _avisar(e.solicitante_id, f"Recibimos tus {NOMBRE_FLUJO[e.flujo]}{peso}. Ganaste {e.puntos} puntos "
-                              f"({e.explicacion}). Llevas {e.saldo}.")
+                              f"({e.explicacion}). Llevas {e.saldo}. Escribe 4 para ver qué puedes canjear.")
 
 
 def _al_rechazar(e: solicitudes.SolicitudRechazada) -> None:

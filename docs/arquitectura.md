@@ -46,6 +46,7 @@ flowchart LR
 | puntos | Regla con versión, libro de movimientos, premios y canjes (ADR-0008) | PuntosAcreditados, CanjeEntregado | RecoleccionRegistrada | Jairo | — |
 | whatsapp | Registro por WhatsApp, bot, avisos y monitor con toma de control | — | los eventos de arriba | Jairo: menú, simulador y monitor | Conversador LLM: Leonardo · Transporte: Jorge |
 | contenidos | Educación ambiental y tutoriales por audiencia | — | — | Jairo | — |
+| clasificacion | Revisa si los residuos de una foto están bien separados; orientativo (ADR-0007) | — | — | Leonardo | — |
 | reportes | Resumen por flujo, estado y periodo; CSV sin datos personales | — | — | Jairo | — |
 | acceso | Login, roles y colectivo del coordinador | — | — | Jairo | — |
 | frontend | App de Daniela (módulo `ecoconecta-coordinacion`) más el host: sesión, API y pantallas extra (ADR-0007) | — | — | Daniela: módulo · Jairo: host | — |

@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
-import mainLogo from '../../../../identidad-visual/Logo EcoConecta - Verde bosque.png'
 import villasLogo from '../../../../identidad-visual/Logo villas de san pablo.png'
 import foundationLogo from '../../../../identidad-visual/Logo Santo Domingo V1.png'
 import { groupLabels } from '../../labels'
@@ -8,6 +7,7 @@ import type { EcoLink, EcoPage } from '../../routes'
 import type { Coordinator } from '../../types'
 import { Icon } from '../ui/Icon'
 import type { IconName } from '../ui/Icon'
+import { BrandLogo } from './BrandLogo'
 
 const navigation: { page: EcoPage; label: string; icon: IconName }[] = [
   { page: 'inicio', label: 'Inicio', icon: 'dashboard' },
@@ -85,9 +85,7 @@ export function Layout({ page, href, coordinator, choices, onChange, demo, child
       }}>Saltar al contenido</a>
       <header className="topbar">
         <div className="site-width topbar-inner">
-          <a className="brand-link" href={href({ page: coordinator ? 'inicio' : 'capacitacion' })} aria-label="EcoConecta Villas de San Pablo">
-            <img src={mainLogo} alt="" width="168" height="56" />
-          </a>
+          <BrandLogo href={href({ page: coordinator ? 'inicio' : 'capacitacion' })} />
           {coordinator && (
             <>
               <nav className="main-nav" aria-label="Navegación principal">

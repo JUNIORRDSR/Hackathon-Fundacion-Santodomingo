@@ -1,8 +1,8 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import { defineConfig } from 'vite'
+import tailwindcss from '@tailwindcss/vite'
 
-// En desarrollo, /api va al backend: misma cookie de sesión y sin CORS (ADR-0002).
 export default defineConfig({
-  plugins: [react()],
-  server: { proxy: { "/api": "http://localhost:8000" } },
-});
+  base: './',
+  css: { postcss: { plugins: [] } },
+  plugins: [tailwindcss()],
+})

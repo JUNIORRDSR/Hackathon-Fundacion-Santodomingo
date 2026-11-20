@@ -1,5 +1,5 @@
-"""Entrada y salida de WhatsApp: cada mensaje va al registro o al conversador, y lo que sale queda registrado.
-La pieza de Jorge entra con TRANSPORTE=twilio y la de Leonardo con CONVERSADOR=llm (ADR-0003)."""
+"""Entrada y salida de WhatsApp: todo queda registrado; cada mensaje va al registro, al conversador o a la coordinación.
+La pieza de Jorge entra con TRANSPORTE=twilio y la de Leonardo con CONVERSADOR=llm (ADR-0003, ADR-0007)."""
 import importlib
 import logging
 import os
@@ -53,31 +53,32 @@ def configurar_desde_entorno() -> None:
 
 
 def recibir(mensaje: MensajeEntrante) -> list[str]:
-    """Entrada de todo mensaje, del webhook real o del simulador. Las respuestas salen después del commit."""
+    """Entrada de todo mensaje. Si la coordinación tomó el control, el bot calla.
+    Las respuestas salen después del commit."""
     with transaccion():
-        textos, memoria = _responder(mensaje, _memoria(mensaje.telefono))
+        _registrar(mensaje, "entrante", "vecino")
+        memoria, control = _conversacion(mensaje.telefono)
+        textos, memoria = ([], memoria) if control else _responder(mensaje, memoria)
         _guardar_memoria(mensaje.telefono, memoria)
     for texto in textos:
-        enviar(MensajeSaliente(telefono=mensaje.telefono, texto=texto))
+        enviar(MensajeSaliente(telefono=mensaje.telefono, texto=texto), autor="bot")
     return textos
 
 
-def enviar(mensaje: MensajeSaliente) -> None:
-    """Envía por el transporte y deja constancia, enviado o fallido, para poder reintentar."""
+def enviar(mensaje: MensajeSaliente, autor: str = "aviso") -> None:
+    """Envía por el transporte y deja constancia, enviado o fallido, para el monitor y para reintentar."""
     try:
         _transporte.enviar(mensaje)
         estado = "enviado"
     except Exception:
         log.exception("No se pudo enviar un mensaje de WhatsApp")
         estado = "fallido"
-    with transaccion() as c:
-        c.execute(insert(t.mensajes).values(**mensaje.model_dump(), estado=estado,
-                                            enviado_en=datetime.now(timezone.utc)))
+    _registrar(mensaje, "saliente", autor, estado)
 
 
 def enviados(telefono: str | None = None) -> list[MensajeSaliente]:
-    """Todo lo que salió por WhatsApp, en orden: respuestas y avisos."""
-    consulta = select(t.mensajes).order_by(t.mensajes.c.id)
+    """Lo que salió por WhatsApp, en orden: respuestas, avisos y mensajes de la coordinación."""
+    consulta = select(t.mensajes).where(t.mensajes.c.direccion == "saliente").order_by(t.mensajes.c.id)
     if telefono is not None:
         consulta = consulta.where(t.mensajes.c.telefono == telefono)
     with transaccion() as c:
@@ -102,10 +103,30 @@ def _responder(mensaje: MensajeEntrante, memoria: dict) -> tuple[list[str], dict
     return respuesta.textos, respuesta.memoria
 
 
-def _memoria(telefono: str) -> dict:
+def _registrar(mensaje: MensajeEntrante | MensajeSaliente, direccion: str, autor: str,
+               estado: str | None = None) -> None:
     with transaccion() as c:
-        fila = c.execute(select(t.conversaciones.c.memoria).where(t.conversaciones.c.telefono == telefono)).first()
-    return dict(fila.memoria) if fila else {}
+        c.execute(insert(t.mensajes).values(telefono=mensaje.telefono, texto=mensaje.texto, media_url=mensaje.media_url,
+                                            direccion=direccion, autor=autor, estado=estado,
+                                            enviado_en=datetime.now(timezone.utc)))
+
+
+def _conversacion(telefono: str) -> tuple[dict, str | None]:
+    """La memoria del bot y quién de la coordinación tiene el control (None: el bot)."""
+    columnas = t.conversaciones.c
+    consulta = select(columnas.memoria, columnas.control).where(columnas.telefono == telefono)
+    with transaccion() as c:
+        fila = c.execute(consulta).first()
+    return (dict(fila.memoria), fila.control) if fila else ({}, None)
+
+
+def tomar_pedido_en_espera(telefono: str) -> dict | None:
+    """El primer pedido que dejó el vecino al registrarse; se saca de la memoria para que entre una sola vez."""
+    memoria, _ = _conversacion(telefono)
+    pedido = memoria.pop("pedido_en_espera", None)
+    if pedido is not None:
+        _guardar_memoria(telefono, memoria)
+    return pedido
 
 
 def _guardar_memoria(telefono: str, memoria: dict) -> None:

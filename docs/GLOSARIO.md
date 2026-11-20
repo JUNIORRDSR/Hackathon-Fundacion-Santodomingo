@@ -17,7 +17,9 @@ español; el inglés queda solo para los tipos del framework.
 | Bandeja | Solicitudes de un colectivo, por estado | `bandeja()` |
 | Zona | Sector del barrio, como Brisas de San Pablo o el Corredor comercial. Los encargados cubren zonas | `Zona…` |
 | Franja | Preferencia horaria del solicitante: mañana, tarde o noche | `Franja` |
-| Programación | Día, hora y encargado acordados (RN-02) | `programar()` |
+| Asignación | Encargado y día; con hora queda programada y se avisa al vecino (RN-02, ADR-0007) | `asignar()` |
+| Monitor | Pantalla de WhatsApp donde la coordinación ve lo que conversa el bot | `monitor.py` |
+| Tomar el control | La coordinación responde en una conversación y el bot calla hasta que se la devuelve | `tomar_control()` |
 | Habilitar | Admitir a un solicitante en el piloto (RN-08) | `habilitar()` |
 | Movimiento de puntos | Asiento que suma puntos por una recolección. No se edita ni se borra | `Movimiento` |
 | Regla de puntos | Base por recolección válida más un bono por kilo, con versión (RN-06) | `Regla` |
@@ -27,7 +29,9 @@ español; el inglés queda solo para los tipos del framework.
 | Conversador | El cerebro del bot: menú numerado o LLM | `Conversador` |
 | Herramientas | Lo único que el bot puede hacer en nombre de un solicitante | `Herramientas` |
 | Código | Identifica una solicitud (ORG-0042, REC-0017). La persona lo escribe en la bolsa y la coordinación lo busca al pesar | `codigo` |
-| Canje | Cambiar puntos por algo de la huerta o del territorio. Por ahora el bot solo informa qué se puede canjear | `Proposito.CANJE` |
+| Canje | El vecino cambia puntos por un premio: lo pide por WhatsApp (código CAN-0001) y la huerta lo entrega (ADR-0008) | `canjes.py` |
+| Premio | Lo que se puede canjear, con su costo en puntos. Lo edita la administración | `PremioVista` |
+| Puntos apartados | Los de un canje pedido y aún no entregado: no se pueden volver a usar | `disponible()` |
 | Revisión de foto | El bot mira la foto de lo que la persona va a entregar y le dice si está bien separado. Es orientativa: no bloquea ni da puntos | `evaluar`, `EvaluacionFoto` |
 | Veredicto | Resultado de la revisión: bien separado, mal separado o no concluyente | `Veredicto` |
 | Problema de separación | Lo que la revisión le explica a la persona, como comida entre los reciclables | `Problema` |
@@ -35,6 +39,7 @@ español; el inglés queda solo para los tipos del framework.
 
 ## Términos que no se usan
 
-- **Recolector:** la fundación pidió decir «recicladores» (20/11). El genérico es **Encargado**.
-- **Aprovechable:** se dice **reciclable**, como en el reto.
+- **Recolector:** la fundación pidió decir «recicladores» (20/11). El genérico es **Encargado**. Las pantallas de
+  Daniela aún dicen «Recolectores» para la lista de encargados: se cambia allí, no en el código.
+- **Aprovechable:** se dice **reciclable**, como en el reto. La pantalla puede aclarar «Reciclables (aprovechables)».
 - **En revisión:** no es un estado. Una solicitud recibida ya está en la bandeja.

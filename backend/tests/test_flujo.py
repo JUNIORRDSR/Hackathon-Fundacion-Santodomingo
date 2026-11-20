@@ -33,9 +33,11 @@ def _whatsapp(cliente: TestClient, texto: str) -> list[str]:
 
 
 def _registrar_por_whatsapp_y_habilitar(admin: TestClient) -> dict:
-    """Una unidad productiva se registra por WhatsApp y queda pendiente hasta que la habilitan (RN-08)."""
-    for texto in ("Hola", "1", "2", "2", "Restaurante La Esquina, local 3", "La Esquina"):
+    """Una unidad productiva se registra por WhatsApp con su primer pedido y queda pendiente hasta que la habilitan."""
+    for texto in ("Hola", "1", "2", "2", "Restaurante La Esquina, local 3", "La Esquina", "1"):
         _whatsapp(admin, texto)
+    assert "te enviamos el código para tu bolsa" in _whatsapp(admin, "3")[0]
+    assert admin.get("/api/solicitudes").json() == []  # el pedido espera la aprobación (RN-08)
     pendientes = admin.get("/api/directorio/solicitantes", params={"estado": "pendiente"}).json()
     solicitante = next(s for s in pendientes if s["telefono"] == TELEFONO)
     assert admin.post(f"/api/directorio/solicitantes/{solicitante['id']}/habilitacion").status_code == 200
@@ -43,9 +45,7 @@ def _registrar_por_whatsapp_y_habilitar(admin: TestClient) -> dict:
 
 
 def _pedir_organicos(admin: TestClient, huerteros: TestClient) -> dict:
-    """Pide orgánicos para la noche y la solicitud llega a la bandeja de huerteros (RN-01)."""
-    _whatsapp(admin, "1")
-    _whatsapp(admin, "3")
+    """Al habilitarlo, su primer pedido (orgánicos, en la noche) llega solo a la bandeja de huerteros (RN-01)."""
     recibidas = huerteros.get("/api/solicitudes", params={"estado": "recibida"}).json()
     return next(s for s in recibidas if s["telefono"] == TELEFONO)
 
@@ -67,8 +67,10 @@ def _asignar_programar_y_recoger(huerteros: TestClient, solicitud: dict) -> None
     """El coordinador asigna al sugerido, programa (RN-02, RN-03) y registra la recolección con kilos."""
     url = f"/api/solicitudes/{solicitud['id']}"
     sugerido = huerteros.get(f"{url}/sugerencias").json()[0]
-    assert huerteros.post(f"{url}/asignacion", json={"encargado_id": sugerido["id"]}).status_code == 200
-    programada = huerteros.post(f"{url}/programacion", json={"dia": "2026-11-21", "hora": "19:00"})
+    sin_hora = huerteros.post(f"{url}/asignacion", json={"encargado_id": sugerido["id"], "dia": "2026-11-21"})
+    assert sin_hora.json()["estado"] == "asignada", sin_hora.text
+    asignacion = {"encargado_id": sugerido["id"], "dia": "2026-11-21", "hora": "19:00"}
+    programada = huerteros.post(f"{url}/asignacion", json=asignacion)
     assert programada.json()["estado"] == "programada", programada.text
     assert huerteros.post(f"{url}/recoleccion", json={"kg": "2.5"}).json()["estado"] == "recolectada"
 
@@ -77,14 +79,41 @@ def _comprobar_avisos(admin: TestClient) -> None:
     """El solicitante recibió cada aviso por WhatsApp."""
     mensajes = admin.get("/api/whatsapp/simulador/mensajes", params={"telefono": TELEFONO}).json()
     textos = " | ".join(m["texto"] for m in mensajes)
-    assert "Recibimos tu solicitud ORG-" in textos and "en tu bolsa con marcador" in textos
+    assert "Recibimos tu solicitud ORG-" in textos and "Escríbelo en tu bolsa con marcador" in textos
+    assert "aprobó tu registro" in textos
     assert "Huertero Uno pasa por tu recolección ORG-" in textos
     assert "el sábado 21 de noviembre a las 7:00 p. m. |" in textos
-    assert "Ganaste 12 puntos" in textos and "Llevas 12" in textos
-    assert "Escribe 4 para ver qué puedes canjear" in textos
+    assert "Ganaste 12 puntos" in textos and "Ahora tienes 12 puntos" in textos
+    assert "Te faltan 18 puntos para Plántula de la huerta. Escribe 4" in textos
 
 
 def _consultar_puntos_y_canje(admin: TestClient) -> None:
-    """La opción 4 del menú da el saldo y lo que se puede canjear."""
+    """Opción 4: saldo y premios. El canje aparta los puntos y al entregarlo se descuentan del libro (ADR-0008)."""
     respuesta = _whatsapp(admin, "4")[0]
-    assert "Llevas 12 puntos." in respuesta and "Qué puedes canjear" in respuesta
+    assert "Llevas 12 puntos." in respuesta and "Plántula de la huerta: 30 puntos" in respuesta
+    assert "Te faltan 18 puntos" in _whatsapp(admin, "1")[0]
+    admin.post("/api/puntos/premios", json={"nombre": "Semillas de cilantro", "costo": 10})
+    _whatsapp(admin, "4")
+    assert "con el código *CAN-" in _whatsapp(admin, "1")[0]
+    assert "Llevas 2 puntos." in _whatsapp(admin, "4")[0]
+    _whatsapp(admin, "0")
+    canje = admin.get("/api/puntos/canjes", params={"estado": "pedido"}).json()[0]
+    assert canje["solicitante_nombre"] == "La Esquina" and canje["costo"] == 10
+    assert admin.post(f"/api/puntos/canjes/{canje['codigo']}/entrega").json()["estado"] == "entregado"
+    assert admin.post(f"/api/puntos/canjes/{canje['codigo']}/entrega").status_code == 409
+    assert admin.get(f"/api/puntos/solicitantes/{canje['solicitante_id']}").json()["saldo"] == 2
+    mensajes = admin.get("/api/whatsapp/simulador/mensajes", params={"telefono": TELEFONO}).json()
+    assert f"Entregamos tu canje {canje['codigo']}: Semillas de cilantro. Te quedan 2 puntos." in mensajes[-1]["texto"]
+
+
+def test_registro_de_coordinacion_con_el_codigo_de_la_fundacion():
+    """Sin el código no hay cuenta; con él, la cuenta entra y solo ve su colectivo (ADR-0009)."""
+    cliente = TestClient(app)
+    assert cliente.get("/api/acceso/yo").json() is None  # sin sesión: null, no un error
+    datos = {"nombre": "Coordinación de prueba", "usuario": "prueba-recicla", "colectivo": "recicladores",
+             "clave": "clave-de-prueba", "codigo": "otro"}
+    assert cliente.post("/api/acceso/registro", json=datos).status_code == 403
+    respuesta = cliente.post("/api/acceso/registro", json={**datos, "codigo": "villas-2026"})
+    assert respuesta.status_code == 201 and respuesta.json()["colectivo"] == "recicladores"
+    assert cliente.get("/api/acceso/yo").json()["usuario"] == "prueba-recicla"
+    assert cliente.post("/api/acceso/registro", json={**datos, "codigo": "villas-2026"}).status_code == 409

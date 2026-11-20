@@ -1,7 +1,6 @@
 """La Solicitud: agregado del núcleo. Reglas puras: sin base de datos ni FastAPI (ADR-0001).
-
-RECIBIDA → ASIGNADA → PROGRAMADA → RECOLECTADA | RECHAZADA; CANCELADA desde cualquier estado abierto.
-"""
+RECIBIDA → ASIGNADA (sin hora) | PROGRAMADA (con hora) → RECOLECTADA | RECHAZADA.
+CANCELADA desde cualquier estado abierto."""
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timezone
 from decimal import Decimal
@@ -21,6 +20,7 @@ class Estado(StrEnum):
 
 
 ABIERTOS = frozenset({Estado.RECIBIDA, Estado.ASIGNADA, Estado.PROGRAMADA})
+ASIGNADAS = frozenset({Estado.ASIGNADA, Estado.PROGRAMADA})
 PREFIJO = {Flujo.ORGANICO: "ORG", Flujo.RECICLABLE: "REC"}
 
 
@@ -50,6 +50,7 @@ class Solicitud:
     hora: time | None = None
     kg: Decimal | None = None
     motivo: str = ""
+    foto_url: str | None = None  # la que mandó el vecino por WhatsApp
     historial: list[Cambio] = field(default_factory=list)  # RN-04
 
     @classmethod
@@ -58,28 +59,23 @@ class Solicitud:
         solicitud._anotar(por, f"por {solicitud.canal.value}")
         return solicitud
 
-    def asignar(self, encargado_id: UUID, por: UUID) -> None:
+    def asignar(self, encargado_id: UUID, dia: date, hora: time | None, por: UUID) -> None:
+        """Sin hora queda ASIGNADA con su día; con hora queda PROGRAMADA (RN-02). Sirve para reasignar."""
         self._exigir(ABIERTOS, "asignar")
-        self.encargado_id, self.asignada_por = encargado_id, por
-        if self.estado == Estado.RECIBIDA:
-            self.estado = Estado.ASIGNADA
-        self._anotar(str(por), f"encargado {encargado_id}")
-
-    def programar(self, dia: date, hora: time, por: UUID) -> None:
-        # RN-02: no hay programación sin persona encargada, día y hora.
-        self._exigir({Estado.ASIGNADA, Estado.PROGRAMADA}, "programar")
-        self.dia, self.hora, self.estado = dia, hora, Estado.PROGRAMADA
-        self._anotar(str(por), f"{dia.isoformat()} {hora.strftime('%H:%M')}")
+        self.encargado_id, self.asignada_por, self.dia, self.hora = encargado_id, por, dia, hora
+        self.estado = Estado.PROGRAMADA if hora else Estado.ASIGNADA
+        cuando = dia.isoformat() + (f" {hora.strftime('%H:%M')}" if hora else "")
+        self._anotar(str(por), f"encargado {encargado_id} · {cuando}")
 
     def registrar_recoleccion(self, kg: Decimal | None, por: UUID) -> None:
-        self._exigir({Estado.PROGRAMADA}, "registrar la recolección de")
+        self._exigir(ASIGNADAS, "registrar la recolección de")
         if kg is not None and kg <= 0:
             raise ErrorDeNegocio("Los kilos deben ser mayores que cero.")
         self.kg, self.estado = kg, Estado.RECOLECTADA
         self._anotar(str(por), "sin pesar" if kg is None else f"{kg} kg")
 
     def rechazar(self, motivo: str, por: UUID) -> None:
-        self._exigir({Estado.PROGRAMADA}, "rechazar")
+        self._exigir(ASIGNADAS, "rechazar")
         self._cerrar(Estado.RECHAZADA, motivo, str(por))
 
     def cancelar(self, motivo: str, por: str) -> None:

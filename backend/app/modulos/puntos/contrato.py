@@ -10,6 +10,10 @@ from app.compartido.bd import transaccion
 from app.compartido.eventos import Evento, publicar, suscribir
 from app.compartido.tipos import ErrorDeNegocio, Flujo
 from app.modulos.puntos import tablas as t
+from app.modulos.puntos.canjes import (  # noqa: F401  el canje es parte del contrato público (ADR-0008)
+    CanjeEntregado, CanjeVista, EstadoCanje, NuevoPremio, PremioVista, canjes, disponible, entregar, guardar_premio,
+    pedir, por_codigo, premios)
+from app.modulos.puntos.canjes import cancelar as cancelar_canje  # noqa: F401
 from app.modulos.puntos.dominio import Regla
 from app.modulos.solicitudes import contrato as solicitudes
 

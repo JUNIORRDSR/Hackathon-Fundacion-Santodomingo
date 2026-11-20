@@ -38,6 +38,13 @@ def registrar_encargado(datos: directorio.NuevoEncargado, u: acceso.Usuario = Se
     return directorio.registrar_encargado(datos)
 
 
+@router.patch("/encargados/{id}")
+def actualizar_encargado(id: UUID, datos: directorio.CambioEncargado,
+                         u: acceso.Usuario = Sesion) -> directorio.EncargadoVista:
+    acceso.exigir_colectivo(u, directorio.encargado(id).colectivo)
+    return directorio.actualizar_encargado(id, datos)
+
+
 @router.get("/solicitantes")
 def solicitantes(estado: directorio.EstadoSolicitante | None = None,
                  _: acceso.Usuario = Sesion) -> list[directorio.SolicitanteVista]:

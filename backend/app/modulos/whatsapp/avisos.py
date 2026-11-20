@@ -3,13 +3,14 @@ from uuid import UUID
 
 from app.compartido.eventos import suscribir_despues
 from app.compartido.formato import NOMBRE_FLUJO, fecha_larga, hora_corta, kilos
-from app.compartido.tipos import Flujo
+from app.compartido.tipos import ErrorDeNegocio, Flujo, Franja
 from app.modulos.contenidos import contrato as contenidos
 from app.modulos.directorio import contrato as directorio
 from app.modulos.puntos import contrato as puntos
 from app.modulos.solicitudes import contrato as solicitudes
+from app.modulos.whatsapp import bot
 from app.modulos.whatsapp.bot import enviar
-from app.modulos.whatsapp.contrato import MensajeSaliente
+from app.modulos.whatsapp.contrato import Herramientas, MensajeSaliente
 from app.modulos.whatsapp.menu import texto_de_pieza
 
 
@@ -17,6 +18,7 @@ def escuchar() -> None:
     suscribir_despues(solicitudes.SolicitudRecibida, _al_recibir)
     suscribir_despues(solicitudes.SolicitudProgramada, _al_programar)
     suscribir_despues(puntos.PuntosAcreditados, _al_acreditar)
+    suscribir_despues(puntos.CanjeEntregado, _al_entregar_canje)
     suscribir_despues(solicitudes.SolicitudRechazada, _al_rechazar)
     suscribir_despues(solicitudes.SolicitudCancelada, _al_cancelar)
     suscribir_despues(directorio.SolicitanteHabilitado, _al_habilitar)
@@ -28,8 +30,10 @@ def _avisar(solicitante_id: UUID, texto: str) -> None:
 
 def _al_recibir(e: solicitudes.SolicitudRecibida) -> None:
     colectivo = "huerteros" if e.flujo == Flujo.ORGANICO else "recicladores"
-    _avisar(e.solicitante_id, f"Recibimos tu solicitud {e.codigo} de {NOMBRE_FLUJO[e.flujo]}. Escribe {e.codigo} en tu "
-                              f"bolsa con marcador. La coordinación de {colectivo} te confirma día, hora y quién pasa.")
+    _avisar(e.solicitante_id, f"Recibimos tu solicitud {e.codigo} de {NOMBRE_FLUJO[e.flujo]}. "
+                              f"Tu código es *{e.codigo}*: Escríbelo en tu bolsa con marcador para que la huerta "
+                              "la identifique al pesarla. "
+                              f"La coordinación de {colectivo} te confirma día, hora y quién pasa.")
 
 
 def _al_programar(e: solicitudes.SolicitudProgramada) -> None:
@@ -41,8 +45,28 @@ def _al_programar(e: solicitudes.SolicitudProgramada) -> None:
 
 def _al_acreditar(e: puntos.PuntosAcreditados) -> None:
     peso = f": {kilos(e.kg)} kg" if e.kg else ""
-    _avisar(e.solicitante_id, f"Recibimos tus {NOMBRE_FLUJO[e.flujo]}{peso}. Ganaste {e.puntos} puntos "
-                              f"({e.explicacion}). Llevas {e.saldo}. Escribe 4 para ver qué puedes canjear.")
+    disponible = puntos.disponible(e.solicitante_id)
+    _avisar(e.solicitante_id, f"¡Gracias por separar! Recibimos tus {NOMBRE_FLUJO[e.flujo]} de {e.codigo}{peso}. "
+                              f"Ganaste {e.puntos} puntos ({e.explicacion}). Ahora tienes {disponible} puntos.\n\n"
+                              + _lo_que_alcanza(disponible))
+
+
+def _lo_que_alcanza(disponible: int) -> str:
+    """Dice qué premio ya puede pedir o cuánto le falta para el más barato (ADR-0008)."""
+    premios = puntos.premios(solo_activos=True)
+    alcanza = [p for p in premios if p.costo <= disponible]
+    if alcanza:
+        return f"Ya te alcanza para {alcanza[-1].nombre}. Escribe 4 para pedir tu premio."
+    if premios:
+        faltan = premios[0].costo - disponible
+        return f"Te faltan {faltan} puntos para {premios[0].nombre}. Escribe 4 para ver los premios."
+    return "Escribe 4 para ver tus puntos."
+
+
+
+def _al_entregar_canje(e: puntos.CanjeEntregado) -> None:
+    _avisar(e.solicitante_id, f"Entregamos tu canje {e.codigo}: {e.premio}. Te quedan {e.saldo} puntos. ¡Gracias por "
+                              "separar!")
 
 
 def _al_rechazar(e: solicitudes.SolicitudRechazada) -> None:
@@ -56,4 +80,14 @@ def _al_cancelar(e: solicitudes.SolicitudCancelada) -> None:
 
 
 def _al_habilitar(e: directorio.SolicitanteHabilitado) -> None:
-    _avisar(e.solicitante_id, "¡Listo! Ya puedes pedir recolecciones. Escribe MENÚ para empezar.")
+    """Si dejó su primer pedido al registrarse, entra ahora: el aviso de «recibida» le da el código de la bolsa."""
+    pedido = bot.tomar_pedido_en_espera(directorio.solicitante(e.solicitante_id).telefono)
+    if pedido is None:
+        _avisar(e.solicitante_id, "¡Listo! Ya puedes pedir recolecciones. Escribe MENÚ para empezar.")
+        return
+    _avisar(e.solicitante_id, "¡Bienvenido a EcoConecta! La coordinación aprobó tu registro y ya entra tu "
+                              "primer pedido.")
+    try:
+        Herramientas(e.solicitante_id).pedir_recoleccion(Flujo(pedido["flujo"]), Franja(pedido["preferencia"]))
+    except ErrorDeNegocio as error:
+        _avisar(e.solicitante_id, str(error))

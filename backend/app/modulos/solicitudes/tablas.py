@@ -23,6 +23,7 @@ solicitudes = Table(
     Column("hora", Time),
     Column("kg", Numeric(6, 2)),
     Column("motivo", Text, nullable=False),
+    Column("foto_url", Text),
     Column("historial", JSONB, nullable=False),
     Column("recibida", DateTime(timezone=True), nullable=False),
     schema="solicitudes",

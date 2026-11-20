@@ -1,6 +1,6 @@
 /* Pantallas del host (entrar, registros, canjes, WhatsApp) con los tokens del módulo de Daniela (.eco-app). */
 .eco-app {
-  & ::selection { background: #f6c40055; color: inherit; }
+  & ::selection { background: #f6c40066; color: var(--ink); }
   & input, & textarea { caret-color: var(--highlight); }
   & .field-help { color: var(--muted); font-size: .8125rem; }
 

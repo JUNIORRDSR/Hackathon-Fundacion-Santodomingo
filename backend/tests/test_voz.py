@@ -1,4 +1,4 @@
-"""Notas de voz y salvaguardas de los adjuntos (ADR-0012): solo de vecinos habilitados, el texto sigue al conversador
+"""Notas de voz y salvaguardas de los adjuntos (ADR-0013): solo de vecinos habilitados, el texto sigue al conversador
 como si lo hubieran escrito y un número no puede agotar la cuota de los modelos. Se sustituye solo lo externo."""
 import base64
 import email.message
@@ -113,16 +113,25 @@ class RespuestaWhisper:
         return b'{"text": "Quiero que recojan mis org\\u00e1nicos"}'
 
 
-def test_a_whisper_le_llegan_el_audio_el_idioma_y_el_despliegue(monkeypatch):
-    monkeypatch.setenv("OPENAI_BASE_URL", "https://recurso.openai.azure.com/openai/v1/")
+@pytest.mark.parametrize(("base", "url", "cabecera", "credencial"), [
+    # La API v1 de Azure no enruta Whisper (404 DeploymentNotFound): va por la ruta clásica del despliegue.
+    ("https://recurso.openai.azure.com/openai/v1/",
+     "https://recurso.openai.azure.com/openai/deployments/whisper/audio/transcriptions?api-version=2024-06-01",
+     "Api-key", "clave-de-prueba"),
+    (None, "https://api.openai.com/v1/audio/transcriptions", "Authorization", "Bearer clave-de-prueba"),
+])
+def test_a_whisper_le_llegan_el_audio_el_idioma_y_el_despliegue(monkeypatch, base, url, cabecera, credencial):
+    if base:
+        monkeypatch.setenv("OPENAI_BASE_URL", base)
+    else:
+        monkeypatch.delenv("OPENAI_BASE_URL", raising=False)
     monkeypatch.setenv("OPENAI_API_KEY", "clave-de-prueba")
     monkeypatch.setenv("TRANSCRIPCION_MODELO", "whisper")
     pedidos = []
     monkeypatch.setattr(urllib.request, "urlopen", lambda pedido, timeout: pedidos.append(pedido) or RespuestaWhisper())
     assert voz.transcribir(OGG, "audio/ogg") == "Quiero que recojan mis orgánicos"
     pedido = pedidos[0]
-    assert pedido.full_url == "https://recurso.openai.azure.com/openai/v1/audio/transcriptions"
-    assert pedido.get_header("Authorization") == "Bearer clave-de-prueba"
+    assert pedido.full_url == url and pedido.get_header(cabecera) == credencial
     assert pedido.get_header("Content-type").startswith("multipart/form-data; boundary=")
     assert b'name="model"\r\n\r\nwhisper\r\n' in pedido.data and b'name="language"\r\n\r\nes\r\n' in pedido.data
     assert OGG in pedido.data and b'filename="nota.og' in pedido.data

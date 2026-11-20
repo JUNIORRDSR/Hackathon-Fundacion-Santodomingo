@@ -31,9 +31,10 @@
   & .premio-nota { color: var(--muted); font-size: .8125rem; padding: .65rem 1rem 0; }
 
   /* Botón flotante de WhatsApp */
-  & .whatsapp-fab { position: fixed; z-index: 4; right: max(1.25rem, env(safe-area-inset-right)); bottom: max(1.25rem, env(safe-area-inset-bottom)); display: inline-flex; align-items: center; gap: .5rem; min-height: 52px; padding: .7rem 1.15rem .7rem .95rem; border-radius: 9999px; background: var(--highlight); color: var(--on-highlight); font-weight: 650; text-decoration: none; box-shadow: 0 10px 24px -8px #063b2e80, 0 3px 8px #2d4b3f26; --icon-stroke: var(--accent-on-highlight); transition: transform 180ms, background-color 180ms; }
-  & .whatsapp-fab:hover { background: var(--highlight-hover); transform: translateY(-2px); }
-  & .whatsapp-fab svg { width: 1.3rem; height: 1.3rem; }
+  &:has(> .whatsapp-fab) .site-footer { padding-bottom: 5.5rem; }
+  & .whatsapp-fab { position: fixed; z-index: 4; right: max(1.25rem, env(safe-area-inset-right)); bottom: max(1.25rem, env(safe-area-inset-bottom)); display: inline-flex; align-items: center; gap: .6rem; min-height: 54px; padding: .45rem 1.2rem .45rem .45rem; border-radius: 9999px; background: #f28c00; color: #063b2e; font-weight: 700; text-decoration: none; box-shadow: 0 12px 26px -10px #f28c00aa, 0 3px 8px #2d4b3f26; transition: transform 180ms, background-color 180ms; }
+  & .whatsapp-fab:hover { background: #f69a1f; transform: translateY(-2px); }
+  & .whatsapp-fab svg { width: 2.6rem; height: 2.6rem; padding: .6rem; border-radius: 50%; background: #ffffff; --icon-stroke: #168a2e; stroke-width: 2.4; }
 
   /* Monitor de WhatsApp */
   & .monitor { display: grid; grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr); gap: 1rem; height: max(32rem, calc(100svh - 17rem)); }
@@ -82,8 +83,6 @@
   & .hilo [data-autor="aviso"] > [data-slot="bubble-content"] { background: #fbf3d4; color: var(--ink); border: 1px solid #ecd98f; border-bottom-right-radius: .35rem; }
 
   @media (max-width: 575px) {
-    & .main-nav { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; scrollbar-width: none; }
-    & .main-nav a { flex: 0 0 auto; }
     & .whatsapp-fab span { display: none; }
     & .whatsapp-fab { padding: .85rem; }
   }

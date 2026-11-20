@@ -23,6 +23,8 @@ const navigation: { page: EcoPage; label: string; icon: IconName }[] = [
   { page: 'canjes', label: 'Canjes', icon: 'gift' },
 ]
 const modulePages: EcoPage[] = ['inicio', 'solicitudes', 'recolecciones', 'recolectores', 'capacitacion']
+// Las cuatro del flujo quedan a la vista; el resto, en «Más», para que la barra quepa en una línea.
+const mainPages: EcoPage[] = ['inicio', 'solicitudes', 'recolecciones', 'canjes']
 
 export function PageHeader({ title, description, action }: { title: string; description: string; action?: ReactNode }) {
   return (
@@ -104,6 +106,9 @@ export function Layout({
   children: ReactNode
 }) {
   const visible = navigation.filter((item) => modulePages.includes(item.page) || extraPages.includes(item.page))
+  const inBar = visible.filter((item) => mainPages.includes(item.page))
+  const inMore = visible.filter((item) => !mainPages.includes(item.page))
+  const currentInMore = inMore.find((item) => item.page === page)
   const main = useRef<HTMLElement>(null)
   const stage = useRef<HTMLDivElement>(null)
   const { visiblePage, content } = useRouteScene(
@@ -158,12 +163,40 @@ export function Layout({
           {coordinator && (
             <>
               <MotionPills as="nav" className="main-nav" label="Navegación principal" active={page}>
-                {visible.map(({ page: target, label, icon }) => (
+                {inBar.map(({ page: target, label, icon }) => (
                   <a key={target} href={href({ page: target })} aria-current={page === target ? 'page' : undefined}>
                     <Icon name={icon} />
                     <span>{label}</span>
                   </a>
                 ))}
+                {inMore.length > 0 && (
+                  <details
+                    key={page}
+                    className="nav-more"
+                    aria-current={currentInMore ? 'page' : undefined}
+                    onBlur={(event) => {
+                      if (!event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false
+                    }}
+                  >
+                    <summary>
+                      <Icon name={currentInMore?.icon ?? 'dashboard'} />
+                      <span>{currentInMore?.label ?? 'Más'}</span>
+                      <Icon name="chevron" className="nav-more-chevron" />
+                    </summary>
+                    <div className="nav-more-menu">
+                      {inMore.map(({ page: target, label, icon }) => (
+                        <a
+                          key={target}
+                          href={href({ page: target })}
+                          aria-current={page === target ? 'page' : undefined}
+                        >
+                          <Icon name={icon} />
+                          <span>{label}</span>
+                        </a>
+                      ))}
+                    </div>
+                  </details>
+                )}
               </MotionPills>
               <div className="topbar-actions">
                 <CoordinatorIdentity coordinator={coordinator} choices={choices} onChange={onChange} demo={demo} />

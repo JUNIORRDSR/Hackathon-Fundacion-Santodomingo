@@ -37,25 +37,46 @@ def _usuarios(clave: str) -> None:
                                                  clave=clave))
 
 
+def _guia(titulo: str, categoria: str, descripcion: str, pasos: list[str]) -> C.NuevoContenido:
+    """Las guías de capacitación que diseñó Daniela; son de ejemplo hasta tener el material de la fundación."""
+    flujo = {"organico": Flujo.ORGANICO, "reciclable": Flujo.RECICLABLE}.get(categoria)
+    return C.NuevoContenido(titulo=titulo, proposito=C.Proposito.EDUCACION, audiencia=C.Audiencia.SOLICITANTE,
+                            flujo=flujo, formato=C.Formato.TEXTO, categoria=categoria, texto_corto=descripcion,
+                            pasos=pasos)
+
+
 PIEZAS = [
-    C.NuevoContenido(titulo="Qué va en la bolsa de orgánicos", proposito=C.Proposito.EDUCACION,
-                     audiencia=C.Audiencia.SOLICITANTE, flujo=Flujo.ORGANICO, formato=C.Formato.TEXTO,
-                     texto_corto="Cáscaras de frutas y verduras, restos de comida, cuncho de café y hojas. "
-                                 "Sin plástico, vidrio, metal ni papel higiénico. (Texto de ejemplo: validarlo con la "
-                                 "huerta.)"),
-    C.NuevoContenido(titulo="Qué va en la bolsa de reciclables", proposito=C.Proposito.EDUCACION,
-                     audiencia=C.Audiencia.SOLICITANTE, flujo=Flujo.RECICLABLE, formato=C.Formato.TEXTO,
-                     texto_corto="Cartón, papel, botellas plásticas, vidrio y latas, limpios y secos. Aplasta cajas y "
-                                 "botellas para que quepa más. (Texto de ejemplo: validarlo con los recicladores.)"),
+    _guia("Residuos orgánicos", "organico",
+          "Identifica los restos de origen vegetal que puedes separar en casa o en tu negocio.",
+          ["Aparta cáscaras de frutas, restos de verduras y café usado.",
+           "Retira bolsas, etiquetas y ligas antes de guardar los restos.",
+           "Reserva un recipiente separado y mantenlo tapado."]),
+    _guia("Residuos reciclables (aprovechables)", "reciclable",
+          "Prepara los materiales que pueden recuperarse para que conserven su valor.",
+          ["Separa papel y cartón secos, botellas plásticas, latas y envases de vidrio.",
+           "Vacía y seca los envases antes de guardarlos.",
+           "Confirma con el programa local qué materiales recibe."]),
+    _guia("Qué evitar mezclar", "mezclas",
+          "Mantén separados los materiales para facilitar el manejo de cada grupo.",
+          ["Evita mezclar restos de comida con papel, cartón y envases.",
+           "Mantén pañales, papel higiénico y servilletas sucias aparte.",
+           "Separa pilas y residuos peligrosos para entregarlos en puntos habilitados."]),
+    _guia("Buenas prácticas", "practicas",
+          "Adopta hábitos sencillos para mantener ordenado el lugar donde separas.",
+          ["Usa recipientes identificados y fáciles de limpiar.",
+           "Acuerda con tu hogar o negocio dónde va cada grupo.",
+           "Mantén los residuos protegidos de la lluvia hasta la entrega."]),
+    C.NuevoContenido(titulo="Cómo separar tus residuos", proposito=C.Proposito.EDUCACION,
+                     audiencia=C.Audiencia.SOLICITANTE, formato=C.Formato.VIDEO, categoria="practicas",
+                     texto_corto="Video breve de aproximadamente 30 segundos."),
     C.NuevoContenido(titulo="Cómo pedir la recolección por WhatsApp", proposito=C.Proposito.TUTORIAL,
-                     audiencia=C.Audiencia.SOLICITANTE, formato=C.Formato.TEXTO,
+                     audiencia=C.Audiencia.SOLICITANTE, formato=C.Formato.TEXTO, categoria="practicas",
                      texto_corto="Escribe HOLA, elige 1 para orgánicos o 2 para reciclables y tu horario. Te "
                                  "confirmamos día, hora y quién pasa."),
     C.NuevoContenido(titulo="Cómo usar la bandeja", proposito=C.Proposito.TUTORIAL,
                      audiencia=C.Audiencia.COORDINADOR, formato=C.Formato.TEXTO,
-                     texto_corto="Toca una solicitud nueva, elige al encargado que sugiere el sistema, pon día y "
-                                 "hora y toca Asignar y programar. Cuando te reporten la recolección, registra los "
-                                 "kilos."),
+                     texto_corto="Abre una solicitud pendiente, elige al encargado que sugiere el sistema, pon día y "
+                                 "hora y confirma. Cuando te reporten la recolección, registra los kilos."),
     C.NuevoContenido(titulo="Qué puedes canjear", proposito=C.Proposito.CANJE, audiencia=C.Audiencia.SOLICITANTE,
                      formato=C.Formato.TEXTO,
                      texto_corto="30 puntos: una plántula de la huerta. 60 puntos: un paquete de bolsas para "

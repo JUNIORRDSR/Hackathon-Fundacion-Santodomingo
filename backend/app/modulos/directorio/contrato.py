@@ -57,6 +57,14 @@ class EncargadoVista(NuevoEncargado):
     activo: bool = True
 
 
+class CambioEncargado(BaseModel):
+    """Edición desde la tablet: un encargado inactivo sale de las sugerencias y conserva su historial."""
+
+    nombre: str = Field(min_length=2, max_length=60)
+    zonas: list[UUID] = []
+    activo: bool = True
+
+
 class SolicitanteHabilitado(Evento):
     solicitante_id: UUID
 
@@ -129,6 +137,17 @@ def registrar_encargado(nuevo: NuevoEncargado) -> EncargadoVista:
         c.execute(insert(t.encargados).values({**encargado_nuevo.model_dump(),
                                                "zonas": [str(z) for z in encargado_nuevo.zonas]}))
     return encargado_nuevo
+
+
+def actualizar_encargado(id: UUID, cambio: CambioEncargado) -> EncargadoVista:
+    actual = encargado(id)
+    for id_zona in cambio.zonas:
+        zona(id_zona)
+    nuevo = actual.model_copy(update=cambio.model_dump())
+    with transaccion() as c:
+        c.execute(update(t.encargados).where(t.encargados.c.id == id).values(
+            nombre=nuevo.nombre, zonas=[str(z) for z in nuevo.zonas], activo=nuevo.activo))
+    return nuevo
 
 
 def encargado(id: UUID) -> EncargadoVista:

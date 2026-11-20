@@ -11,6 +11,12 @@ router = APIRouter(prefix="/api/contenidos", tags=["contenidos"])
 Sesion = Depends(acceso.usuario_actual)
 
 
+@router.get("/publicos")
+def publicos() -> list[contenidos.ContenidoVista]:
+    """Capacitación pública, sin sesión: la vista abierta del frontend la lee de aquí."""
+    return contenidos.capacitacion_publica()
+
+
 @router.get("")
 def listar(audiencia: contenidos.Audiencia | None = None, flujo: Flujo | None = None,
            proposito: contenidos.Proposito | None = None,

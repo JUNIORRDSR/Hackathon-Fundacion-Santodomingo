@@ -67,8 +67,10 @@ def _asignar_programar_y_recoger(huerteros: TestClient, solicitud: dict) -> None
     """El coordinador asigna al sugerido, programa (RN-02, RN-03) y registra la recolección con kilos."""
     url = f"/api/solicitudes/{solicitud['id']}"
     sugerido = huerteros.get(f"{url}/sugerencias").json()[0]
-    assert huerteros.post(f"{url}/asignacion", json={"encargado_id": sugerido["id"]}).status_code == 200
-    programada = huerteros.post(f"{url}/programacion", json={"dia": "2026-11-21", "hora": "19:00"})
+    sin_hora = huerteros.post(f"{url}/asignacion", json={"encargado_id": sugerido["id"], "dia": "2026-11-21"})
+    assert sin_hora.json()["estado"] == "asignada", sin_hora.text
+    asignacion = {"encargado_id": sugerido["id"], "dia": "2026-11-21", "hora": "19:00"}
+    programada = huerteros.post(f"{url}/asignacion", json=asignacion)
     assert programada.json()["estado"] == "programada", programada.text
     assert huerteros.post(f"{url}/recoleccion", json={"kg": "2.5"}).json()["estado"] == "recolectada"
 

@@ -62,10 +62,11 @@ class Herramientas:
     def __init__(self, solicitante_id: UUID):
         self._id = solicitante_id
 
-    def pedir_recoleccion(self, flujo: Flujo, preferencia: Franja, observaciones: str = "") -> SolicitudResumida:
-        """Registra una solicitud. Levanta ErrorDeNegocio si ya hay una abierta del mismo flujo."""
+    def pedir_recoleccion(self, flujo: Flujo, preferencia: Franja, observaciones: str = "",
+                          foto_url: str | None = None) -> SolicitudResumida:
+        """Registra una solicitud, con la foto si la mandó. ErrorDeNegocio si ya hay una abierta del mismo flujo."""
         nueva = solicitudes.NuevaSolicitud(solicitante_id=self._id, flujo=flujo, preferencia=preferencia,
-                                           observaciones=observaciones, canal=Canal.WHATSAPP)
+                                           observaciones=observaciones, canal=Canal.WHATSAPP, foto_url=foto_url)
         return _resumir(solicitudes.registrar(nueva))
 
     def mis_solicitudes(self) -> list[SolicitudResumida]:
@@ -82,8 +83,7 @@ class Herramientas:
         return puntos.saldo(self._id).saldo
 
     def aprender(self, flujo: Flujo | None = None) -> list[contenidos.ContenidoVista]:
-        piezas = contenidos.listar(contenidos.Audiencia.SOLICITANTE, flujo)
-        return [c for c in piezas if c.proposito != contenidos.Proposito.CANJE]
+        return contenidos.capacitacion_publica(flujo)
 
     def que_puedo_canjear(self) -> list[contenidos.ContenidoVista]:
         """Lo que se ofrece por los puntos; el canje se hace en la huerta."""

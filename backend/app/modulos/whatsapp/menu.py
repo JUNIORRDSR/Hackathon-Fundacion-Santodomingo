@@ -20,6 +20,8 @@ class ConversadorMenu:
 
     def responder(self, turno: Turno, memoria: dict, herramientas: Herramientas) -> Respuesta:
         texto = turno.texto.strip().lower()
+        if turno.media_url:
+            memoria["foto"] = turno.media_url  # la foto es opcional y se guarda con el pedido
         if "pidiendo" in memoria:
             textos = _pedir(texto, memoria, herramientas)
         elif texto in _OPCIONES:
@@ -32,7 +34,8 @@ class ConversadorMenu:
 
 
 def texto_de_pieza(contenido: contenidos.ContenidoVista) -> str:
-    return f"*{contenido.titulo}*\n{contenido.texto_corto}" + (f"\n{contenido.url}" if contenido.url else "")
+    pasos = "".join(f"\n• {paso}" for paso in contenido.pasos)
+    return f"*{contenido.titulo}*\n{contenido.texto_corto}{pasos}" + (f"\n{contenido.url}" if contenido.url else "")
 
 
 def _pedir(texto: str, memoria: dict, herramientas: Herramientas) -> list[str]:
@@ -40,7 +43,7 @@ def _pedir(texto: str, memoria: dict, herramientas: Herramientas) -> list[str]:
     if franja is None:
         return [FRANJAS]
     try:
-        herramientas.pedir_recoleccion(Flujo(memoria.pop("pidiendo")), franja)
+        herramientas.pedir_recoleccion(Flujo(memoria.pop("pidiendo")), franja, foto_url=memoria.pop("foto", None))
     except ErrorDeNegocio as error:
         return [str(error)]
     return []  # el aviso de «recibida» ya lleva el código

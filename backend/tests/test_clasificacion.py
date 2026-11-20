@@ -12,7 +12,7 @@ from app.compartido.tipos import Flujo
 from app.main import app
 from app.modulos.clasificacion import contrato as clasificacion
 from app.modulos.clasificacion import vision
-from app.modulos.whatsapp import fotos
+from app.modulos.whatsapp import adjuntos
 
 TELEFONO = "+573000000009"  # ficticio; el 5 lo usa la prueba de concurrencia de Twilio
 JPEG = b"\xff\xd8\xff\xe0foto-de-prueba"
@@ -185,16 +185,34 @@ def test_si_azure_se_niega_a_responder_se_lanza_para_que_el_contrato_responda_no
         vision.preguntar(JPEG, "image/jpeg", "Va a entregar orgánicos.")
 
 
-@pytest.mark.parametrize(("url", "lleva_credencial"), [
-    ("https://api.twilio.com/2010-04-01/Accounts/AC1/Messages/MM1/Media/ME1", True),
-    ("https://otro-sitio.example/foto.jpg", False),
-])
-def test_las_credenciales_de_twilio_solo_viajan_a_twilio_y_no_siguen_redirecciones(monkeypatch, url, lleva_credencial):
+def _urlopen_falso(monkeypatch) -> list[urllib.request.Request]:
     monkeypatch.setenv("TWILIO_ACCOUNT_SID", "AC-prueba")
     monkeypatch.setenv("TWILIO_AUTH_TOKEN", "token-de-prueba")
     pedidos = []
     monkeypatch.setattr(urllib.request, "urlopen",
                         lambda pedido, timeout: pedidos.append(pedido) or RespuestaFalsa(JPEG, "image/jpeg"))
-    assert fotos.descargar(url) == clasificacion.Foto(contenido=JPEG, tipo="image/jpeg")
-    assert ("Authorization" in pedidos[0].unredirected_hdrs) == lleva_credencial
+    return pedidos
+
+
+def test_la_credencial_de_twilio_va_solo_a_twilio_y_no_sigue_la_redireccion(monkeypatch):
+    pedidos = _urlopen_falso(monkeypatch)
+    url = "https://api.twilio.com/2010-04-01/Accounts/AC1/Messages/MM1/Media/ME1"
+    assert adjuntos.descargar(url) == adjuntos.Adjunto(JPEG, "image/jpeg")
+    assert "Authorization" in pedidos[0].unredirected_hdrs
     assert "Authorization" not in pedidos[0].headers  # S3, adonde redirige Twilio, no la recibe
+
+
+@pytest.mark.parametrize("url", ["https://otro-sitio.example/foto.jpg", "http://api.twilio.com/foto.jpg",
+                                 "http://169.254.169.254/metadata", "file:///etc/passwd"])
+def test_un_adjunto_que_no_viene_de_twilio_por_https_no_se_descarga(monkeypatch, url):
+    pedidos = _urlopen_falso(monkeypatch)
+    with pytest.raises(ValueError):
+        adjuntos.descargar(url)
+    assert pedidos == []  # sin SSRF: el servidor no visita direcciones que elija quien escribe
+
+
+def test_la_api_rechaza_una_foto_demasiado_grande_sin_llamar_al_modelo(modelo):
+    falso = modelo(MAL_SEPARADA)
+    grande = b"0" * (clasificacion.TAMANO_MAXIMO + 1)
+    respuesta = _admin().post("/api/clasificacion/evaluar", content=grande, headers={"Content-Type": "image/jpeg"})
+    assert respuesta.status_code == 413 and falso.pedidos == []

@@ -5,12 +5,17 @@ from decimal import Decimal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
+from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 
+from app.compartido.bd import transaccion
 from app.compartido.eventos import Evento, publicar
 from app.compartido.formato import NOMBRE_FLUJO
 from app.compartido.tipos import COLECTIVO_DEL_FLUJO, Canal, Colectivo, ErrorDeNegocio, Flujo, Franja, NoEncontrado
 from app.modulos.directorio import contrato as directorio
-from app.modulos.solicitudes.dominio import ABIERTOS, PREFIJO, Estado, Solicitud
+from app.modulos.solicitudes.dominio import ABIERTOS, PREFIJO, Cambio, Estado, Solicitud
+from app.modulos.solicitudes.tablas import consecutivos
+from app.modulos.solicitudes.tablas import solicitudes as tabla
 
 
 class NuevaSolicitud(BaseModel):
@@ -85,103 +90,122 @@ class SolicitudCancelada(EventoDeSolicitud):
     motivo: str
 
 
-# ponytail: en memoria hasta que entre Postgres (tabla en su esquema e índice único parcial para «una abierta por flujo»).
-_solicitudes: dict[UUID, Solicitud] = {}
-_consecutivo = {flujo: 0 for flujo in Flujo}
-
-
 def registrar(nueva: NuevaSolicitud, por: str = "solicitante") -> SolicitudVista:
     """Entrada única para WhatsApp, el registro asistido y el simulador (ADR-0003)."""
-    solicitante = directorio.solicitante(nueva.solicitante_id)
-    if solicitante.estado != directorio.EstadoSolicitante.HABILITADO:
-        raise ErrorDeNegocio("El solicitante todavía no está habilitado en el piloto (RN-08).")
-    abierta = next((s for s in _solicitudes.values() if s.solicitante_id == nueva.solicitante_id
-                    and s.flujo == nueva.flujo and s.estado in ABIERTOS), None)
-    if abierta:
-        raise ErrorDeNegocio(f"Ya hay una solicitud abierta de {NOMBRE_FLUJO[nueva.flujo]}: {abierta.codigo}.")
-    _consecutivo[nueva.flujo] += 1
-    solicitud = Solicitud.recibir(
-        por,
-        codigo=f"{PREFIJO[nueva.flujo]}-{_consecutivo[nueva.flujo]:04d}",
-        zona_id=solicitante.zona_id,
-        direccion=solicitante.direccion,
-        **nueva.model_dump(),
-    )
-    _solicitudes[solicitud.id] = solicitud
-    publicar(SolicitudRecibida(**_ids(solicitud)))
-    return _vista(solicitud)
+    with transaccion() as c:
+        solicitante = directorio.solicitante(nueva.solicitante_id)
+        if solicitante.estado != directorio.EstadoSolicitante.HABILITADO:
+            raise ErrorDeNegocio("El solicitante todavía no está habilitado en el piloto (RN-08).")
+        abierta = c.execute(select(tabla.c.codigo).where(
+            tabla.c.solicitante_id == nueva.solicitante_id, tabla.c.flujo == nueva.flujo,
+            tabla.c.estado.in_(sorted(ABIERTOS)))).scalar()
+        if abierta:
+            raise ErrorDeNegocio(f"Ya hay una solicitud abierta de {NOMBRE_FLUJO[nueva.flujo]}: {abierta}.")
+        numero = c.execute(select(consecutivos[nueva.flujo].next_value())).scalar_one()
+        solicitud = Solicitud.recibir(por, codigo=f"{PREFIJO[nueva.flujo]}-{numero:04d}", zona_id=solicitante.zona_id,
+                                      direccion=solicitante.direccion, **nueva.model_dump())
+        _guardar(c, solicitud)
+        publicar(SolicitudRecibida(**_ids(solicitud)))
+        return _vista(solicitud)
 
 
 def asignar(id: UUID, encargado_id: UUID, por: UUID) -> SolicitudVista:
-    solicitud = _obtener(id)
-    if directorio.encargado(encargado_id).colectivo != COLECTIVO_DEL_FLUJO[solicitud.flujo]:
-        raise ErrorDeNegocio("Ese encargado no es del colectivo de la solicitud (RN-01).")
-    solicitud.asignar(encargado_id, por)
-    return _vista(solicitud)
+    encargado = directorio.encargado(encargado_id)
+
+    def accion(s: Solicitud) -> None:
+        if encargado.colectivo != COLECTIVO_DEL_FLUJO[s.flujo]:
+            raise ErrorDeNegocio("Ese encargado no es del colectivo de la solicitud (RN-01).")
+        s.asignar(encargado_id, por)
+
+    return _operar(id, accion)
 
 
 def programar(id: UUID, dia: date, hora: time, por: UUID) -> SolicitudVista:
-    solicitud = _obtener(id)
-    solicitud.programar(dia, hora, por)
-    publicar(SolicitudProgramada(**_ids(solicitud), encargado_id=solicitud.encargado_id, dia=dia, hora=hora))
-    return _vista(solicitud)
+    return _operar(id, lambda s: s.programar(dia, hora, por),
+                   lambda s: SolicitudProgramada(**_ids(s), encargado_id=s.encargado_id, dia=dia, hora=hora))
 
 
 def registrar_recoleccion(id: UUID, kg: Decimal | None, por: UUID) -> SolicitudVista:
-    solicitud = _obtener(id)
-    solicitud.registrar_recoleccion(kg, por)
-    publicar(RecoleccionRegistrada(**_ids(solicitud), kg=kg))
-    return _vista(solicitud)
+    return _operar(id, lambda s: s.registrar_recoleccion(kg, por), lambda s: RecoleccionRegistrada(**_ids(s), kg=kg))
 
 
 def rechazar(id: UUID, motivo: str, por: UUID) -> SolicitudVista:
-    solicitud = _obtener(id)
-    solicitud.rechazar(motivo, por)
-    publicar(SolicitudRechazada(**_ids(solicitud), motivo=solicitud.motivo))
-    return _vista(solicitud)
+    return _operar(id, lambda s: s.rechazar(motivo, por), lambda s: SolicitudRechazada(**_ids(s), motivo=s.motivo))
 
 
 def cancelar(id: UUID, motivo: str, por: str) -> SolicitudVista:
-    solicitud = _obtener(id)
-    solicitud.cancelar(motivo, por)
-    publicar(SolicitudCancelada(**_ids(solicitud), motivo=solicitud.motivo))
-    return _vista(solicitud)
+    return _operar(id, lambda s: s.cancelar(motivo, por), lambda s: SolicitudCancelada(**_ids(s), motivo=s.motivo))
 
 
 def obtener(id: UUID) -> SolicitudVista:
-    return _vista(_obtener(id))
+    with transaccion() as c:
+        return _vista(_cargar(c, id))
 
 
 def por_codigo(codigo: str) -> SolicitudVista:
-    solicitud = next((s for s in _solicitudes.values() if s.codigo == codigo.strip().upper()), None)
-    if solicitud is None:
+    encontradas = _consultar(select(tabla).where(tabla.c.codigo == codigo.strip().upper()))
+    if not encontradas:
         raise NoEncontrado(f"No existe la solicitud {codigo}.")
-    return _vista(solicitud)
+    return encontradas[0]
 
 
 def bandeja(colectivo: Colectivo | None = None, estados: set[Estado] | None = None) -> list[SolicitudVista]:
     """Solicitudes de un colectivo, las más nuevas primero (RN-01). Sin colectivo: todas (administrador y reportes)."""
-    return _vistas(s for s in _solicitudes.values()
-                   if (colectivo is None or COLECTIVO_DEL_FLUJO[s.flujo] == colectivo)
-                   and (not estados or s.estado in estados))
+    consulta = select(tabla).order_by(tabla.c.recibida.desc())
+    if colectivo is not None:
+        consulta = consulta.where(tabla.c.flujo.in_([f for f, col in COLECTIVO_DEL_FLUJO.items() if col == colectivo]))
+    if estados:
+        consulta = consulta.where(tabla.c.estado.in_(sorted(estados)))
+    return _consultar(consulta)
 
 
 def de_solicitante(solicitante_id: UUID) -> list[SolicitudVista]:
-    return _vistas(s for s in _solicitudes.values() if s.solicitante_id == solicitante_id)
+    return _consultar(select(tabla).where(tabla.c.solicitante_id == solicitante_id).order_by(tabla.c.recibida.desc()))
 
 
-def _obtener(id: UUID) -> Solicitud:
-    if id not in _solicitudes:
+def _operar(id: UUID, accion, evento=None) -> SolicitudVista:
+    """Carga, aplica la regla del dominio, guarda y publica, todo en una transacción."""
+    with transaccion() as c:
+        solicitud = _cargar(c, id)
+        accion(solicitud)
+        _guardar(c, solicitud)
+        if evento:
+            publicar(evento(solicitud))
+        return _vista(solicitud)
+
+
+def _consultar(consulta) -> list[SolicitudVista]:
+    with transaccion() as c:
+        return [_vista(_de_fila(fila)) for fila in c.execute(consulta).all()]
+
+
+def _cargar(c, id: UUID) -> Solicitud:
+    fila = c.execute(select(tabla).where(tabla.c.id == id)).first()
+    if fila is None:
         raise NoEncontrado(f"No existe la solicitud {id}.")
-    return _solicitudes[id]
+    return _de_fila(fila)
+
+
+def _guardar(c, s: Solicitud) -> None:
+    fila = asdict(s)
+    fila["historial"] = [{"fecha": x.fecha.isoformat(), "estado": x.estado.value, "por": x.por, "nota": x.nota}
+                         for x in s.historial]
+    fila["recibida"] = s.historial[0].fecha
+    c.execute(insert(tabla).values(fila).on_conflict_do_update(index_elements=[tabla.c.id], set_=fila))
+
+
+def _de_fila(fila) -> Solicitud:
+    datos = dict(fila._mapping)
+    datos.pop("recibida")
+    historial = [Cambio(datetime.fromisoformat(x["fecha"]), Estado(x["estado"]), x["por"], x["nota"])
+                 for x in datos.pop("historial")]
+    datos.update(flujo=Flujo(datos["flujo"]), preferencia=Franja(datos["preferencia"]), canal=Canal(datos["canal"]),
+                 estado=Estado(datos["estado"]))
+    return Solicitud(**datos, historial=historial)
 
 
 def _ids(s: Solicitud) -> dict:
     return {"solicitud_id": s.id, "codigo": s.codigo, "solicitante_id": s.solicitante_id, "flujo": s.flujo}
-
-
-def _vistas(solicitudes) -> list[SolicitudVista]:
-    return [_vista(s) for s in sorted(solicitudes, key=lambda s: s.historial[0].fecha, reverse=True)]
 
 
 def _vista(s: Solicitud) -> SolicitudVista:

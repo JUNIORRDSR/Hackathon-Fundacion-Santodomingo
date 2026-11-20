@@ -16,7 +16,7 @@ haga hoy encaje sin retrabajo:
 - `npm run build` deja `frontend/dist`, que el backend sirve en la misma URL.
 - Tablet: horizontal, con la bandeja a la izquierda y el detalle a la derecha; botones de 48 px o más; nada que dependa
   del hover; kilos con `inputMode="decimal"`; fecha y hora con `<input type="date">` y `<input type="time">`.
-- Identidad: `Identidad Visual/Manual_Identidad_Visual_EcoConecta_Villas_de_San_Pablo.pdf`.
+- Identidad: `docs/Identidad Visual/Manual_Identidad_Visual_EcoConecta_Villas_de_San_Pablo.pdf`.
 
 ## Pantallas del MVP y su contrato
 

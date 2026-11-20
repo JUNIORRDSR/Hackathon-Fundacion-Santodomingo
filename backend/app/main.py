@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from app import semillas
+from app.compartido import bd
 from app.compartido.tipos import ErrorDeNegocio, NoEncontrado
 from app.modulos.acceso import api as acceso_api
 from app.modulos.contenidos import api as contenidos_api
@@ -43,6 +44,7 @@ def crear_app() -> FastAPI:
     puntos.escuchar()
     bot.escuchar()
     bot.configurar_desde_entorno()
+    bd.crear_tablas()
     if os.getenv("SEMBRAR_DEMO", "1") == "1":
         semillas.sembrar()
     _servir_spa(app)

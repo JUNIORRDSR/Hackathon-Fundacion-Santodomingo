@@ -20,11 +20,11 @@ de punta a punta. El reto pide un solo repositorio.
 - Eventos de dominio por un bus en memoria. `suscribir` corre dentro de la operación (puntos: si falla, falla todo);
   `suscribir_despues` es para efectos hacia afuera (WhatsApp): un fallo se registra y no tumba la operación.
 - Un contenedor sirve la API y la SPA: una URL, sin CORS.
-- Persistencia: en memoria en el esqueleto. Después, PostgreSQL con un esquema por módulo, referencias entre módulos
-  por ID sin claves foráneas cruzadas y `create_all` al arrancar (Alembic cuando el piloto tenga datos reales).
+- Persistencia: PostgreSQL con un esquema por módulo (`tablas.py`), referencias entre módulos por ID sin claves
+  foráneas cruzadas y `create_all` al arrancar (Alembic cuando el piloto tenga datos reales). Una operación es una
+  transacción, y lo que escucha dentro de ella se une a la misma.
 
 ## Consecuencias
 
 - Cada pieza del equipo se reemplaza sin tocar a las demás, y el OpenAPI existe desde el primer commit.
-- Puntos y solicitud comparten la operación. Si algún día hay más de un proceso, eso pasa a una tabla outbox.
-- Mientras la persistencia esté en memoria, los datos se pierden al reiniciar y la app corre con una sola réplica.
+- Puntos y solicitud comparten la transacción. Si algún día hay más de un proceso, los avisos pasan a una tabla outbox.

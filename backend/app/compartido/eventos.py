@@ -1,14 +1,17 @@
 """Eventos de dominio y bus en memoria (ADR-0001).
 
-- suscribir: el manejador corre dentro de la operación; si falla, falla todo (por ejemplo, puntos).
-- suscribir_despues: efectos hacia afuera (WhatsApp); un fallo se registra y no tumba la operación.
+- suscribir: el manejador corre dentro de la operación y de su transacción; si falla, falla todo (puntos).
+- suscribir_despues: efectos hacia afuera (WhatsApp). Corren después del commit y un fallo se registra sin tumbar nada.
 """
 import logging
 from collections import defaultdict
 from collections.abc import Callable
 from datetime import datetime, timezone
+from functools import partial
 
 from pydantic import BaseModel, Field
+
+from app.compartido import bd
 
 log = logging.getLogger("eventos")
 
@@ -34,9 +37,14 @@ def suscribir_despues(tipo: type[Evento], manejador: Callable) -> None:
 def publicar(evento: Evento) -> None:
     for manejador in _dentro[type(evento)]:
         manejador(evento)
-    # ponytail: «después» corre en el acto; con Postgres se difiere al commit de la sesión.
     for manejador in _despues[type(evento)]:
-        try:
-            manejador(evento)
-        except Exception:
-            log.exception("Falló %s con %s", getattr(manejador, "__name__", manejador), type(evento).__name__)
+        efecto = partial(_sin_tumbar, manejador, evento)
+        if not bd.despues_del_commit(efecto):
+            efecto()
+
+
+def _sin_tumbar(manejador: Callable, evento: Evento) -> None:
+    try:
+        manejador(evento)
+    except Exception:
+        log.exception("Falló %s con %s", getattr(manejador, "__name__", manejador), type(evento).__name__)

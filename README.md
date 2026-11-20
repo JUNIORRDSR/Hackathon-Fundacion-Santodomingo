@@ -21,6 +21,7 @@ Abre http://localhost:8000/docs: cada etiqueta es un módulo y su contrato. Los 
 ## Backend sin Docker
 
 ```bash
+docker compose up -d db          # PostgreSQL en el puerto 5440
 cd backend
 python -m venv .venv
 .venv\Scripts\activate          # en Linux o macOS: source .venv/bin/activate
@@ -51,7 +52,7 @@ Los contratos de esas piezas están en `backend/app/modulos/whatsapp/contrato.py
 | Recurso | Servicio |
 |---|---|
 | Cómputo | Azure Container Apps: una app con la imagen única (API y SPA) y HTTPS |
-| Base de datos | Azure Database for PostgreSQL Flexible Server cuando entre Postgres; hoy, en memoria |
+| Base de datos | Azure Database for PostgreSQL Flexible Server, con un esquema por módulo |
 | Almacenamiento | Ninguno propio: los contenidos son URLs públicas |
 | Redes | Ingreso HTTPS público de Container Apps, que es también la URL del webhook de WhatsApp |
 
@@ -64,6 +65,7 @@ Los nombres están en [.env.example](.env.example); los valores nunca van al rep
 | Variable | Para qué |
 |---|---|
 | `ENTORNO` | `local` o `produccion`; en producción la cookie de sesión va solo por HTTPS |
+| `DATABASE_URL` | Conexión a PostgreSQL; en local, si falta, usa la base de `docker-compose.yml` |
 | `CLAVE_SESION` | Firma la cookie de sesión |
 | `CLAVE_DEMO` | Clave de los usuarios de demostración |
 | `SEMBRAR_DEMO` | `1` carga zonas, encargados, usuarios y contenidos ficticios |

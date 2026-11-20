@@ -114,6 +114,6 @@ pieza educativa) · cancelación · habilitación. Son plantillas fijas: no las 
 
 ## Estado del esqueleto
 
-- **Hoy:** los contratos funcionan con datos en memoria y el escenario de demostración del reto corre completo en el
-  simulador (`backend/tests/test_flujo.py`).
-- **Sigue:** Postgres con un esquema por módulo, adaptador básico de Twilio, host del frontend y despliegue en Azure.
+- **Hoy:** los contratos funcionan sobre PostgreSQL, un esquema por módulo, y el escenario de demostración del reto corre
+  completo en el simulador (`backend/tests/test_flujo.py`).
+- **Sigue:** adaptador básico de Twilio, host del frontend y despliegue en Azure.

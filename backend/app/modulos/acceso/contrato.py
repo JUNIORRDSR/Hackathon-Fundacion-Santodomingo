@@ -7,8 +7,11 @@ from uuid import UUID, uuid4
 
 from fastapi import HTTPException, Request
 from pydantic import BaseModel, Field
+from sqlalchemy import insert, select
 
+from app.compartido.bd import transaccion
 from app.compartido.tipos import Colectivo, ErrorDeNegocio
+from app.modulos.acceso import tablas as t
 
 
 class Rol(StrEnum):
@@ -32,23 +35,23 @@ class NuevoUsuario(BaseModel):
     clave: str = Field(min_length=8, max_length=128)
 
 
-# ponytail: en memoria hasta que entre Postgres.
-_usuarios: dict[str, tuple[Usuario, str]] = {}  # usuario → (datos, hash de la clave)
-
-
 def crear_usuario(nuevo: NuevoUsuario) -> Usuario:
     if (nuevo.rol == Rol.COORDINADOR) != (nuevo.colectivo is not None):
         raise ErrorDeNegocio("Un coordinador tiene colectivo; un administrador no.")
-    if nuevo.usuario in _usuarios:
-        raise ErrorDeNegocio("Ese usuario ya existe.")
     usuario = Usuario(id=uuid4(), **nuevo.model_dump(exclude={"clave"}))
-    _usuarios[usuario.usuario] = (usuario, _hash(nuevo.clave))
+    with transaccion() as c:
+        if c.execute(select(t.usuarios.c.id).where(t.usuarios.c.usuario == nuevo.usuario)).first():
+            raise ErrorDeNegocio("Ese usuario ya existe.")
+        c.execute(insert(t.usuarios).values(**usuario.model_dump(), clave=_hash(nuevo.clave)))
     return usuario
 
 
 def autenticar(usuario: str, clave: str) -> Usuario | None:
-    registro = _usuarios.get(usuario)
-    return registro[0] if registro and _verificar(clave, registro[1]) else None
+    with transaccion() as c:
+        fila = c.execute(select(t.usuarios).where(t.usuarios.c.usuario == usuario)).first()
+    if fila is None or not _verificar(clave, fila.clave):
+        return None
+    return Usuario.model_validate(dict(fila._mapping))
 
 
 def usuario_actual(request: Request) -> Usuario:

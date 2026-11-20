@@ -5,8 +5,13 @@ La pieza de Jorge entra con TRANSPORTE=twilio y la de Leonardo con CONVERSADOR=l
 import importlib
 import logging
 import os
+from datetime import datetime, timezone
 from uuid import UUID
 
+from sqlalchemy import insert, select
+from sqlalchemy.dialects.postgresql import insert as insertar_o_actualizar
+
+from app.compartido.bd import transaccion
 from app.compartido.eventos import suscribir_despues
 from app.compartido.formato import NOMBRE_FLUJO, fecha_larga, hora_corta, kilos
 from app.compartido.tipos import ErrorDeNegocio, Flujo, Franja, NoEncontrado, TipoGenerador
@@ -14,6 +19,7 @@ from app.modulos.contenidos import contrato as contenidos
 from app.modulos.directorio import contrato as directorio
 from app.modulos.puntos import contrato as puntos
 from app.modulos.solicitudes import contrato as solicitudes
+from app.modulos.whatsapp import tablas as t
 from app.modulos.whatsapp.contrato import (Conversador, Herramientas, MensajeEntrante, MensajeSaliente, Respuesta,
                                            Transporte, Turno)
 
@@ -31,13 +37,10 @@ ESTADO = {"recibida": "recibida; la coordinación la está revisando", "asignada
 
 
 class TransporteSimulado:
-    """Guarda lo que «se envía» para verlo en el simulador."""
-
-    def __init__(self) -> None:
-        self.enviados: list[MensajeSaliente] = []
+    """No envía nada: el registro de mensajes (whatsapp.mensajes) hace de bandeja de salida del simulador."""
 
     def enviar(self, mensaje: MensajeSaliente) -> None:
-        self.enviados.append(mensaje)
+        pass
 
 
 class ConversadorMenu:
@@ -76,7 +79,6 @@ class ConversadorMenu:
 
 _transporte: Transporte = TransporteSimulado()
 _conversador: Conversador = ConversadorMenu()
-_memorias: dict[str, dict] = {}  # ponytail: en memoria; con Postgres, una fila por número
 
 
 def configurar(transporte: Transporte | None = None, conversador: Conversador | None = None) -> None:
@@ -97,31 +99,59 @@ def configurar_desde_entorno() -> None:
 
 
 def recibir(mensaje: MensajeEntrante) -> list[str]:
-    """Entrada de todo mensaje, del webhook real o del simulador. Responde por el transporte y devuelve lo respondido."""
-    memoria = _memorias.setdefault(mensaje.telefono, {})
-    solicitante = directorio.solicitante_por_telefono(mensaje.telefono)
-    if solicitante is None:
-        textos = _registro(mensaje, memoria)
-    elif solicitante.estado != directorio.EstadoSolicitante.HABILITADO:
-        textos = ["Tu registro está en revisión. Te avisamos por aquí cuando quedes habilitado."]
-    else:
-        turno = Turno(nombre=solicitante.nombre, texto=mensaje.texto, media_url=mensaje.media_url)
-        try:
-            respuesta = _conversador.responder(turno, memoria, Herramientas(solicitante.id))
-        except Exception:
-            log.exception("El conversador falló; responde el menú")
-            respuesta = ConversadorMenu().responder(turno, {}, Herramientas(solicitante.id))
-        textos, _memorias[mensaje.telefono] = respuesta.textos, respuesta.memoria
+    """Entrada de todo mensaje, del webhook real o del simulador. Las respuestas salen después del commit."""
+    with transaccion():
+        memoria = _memoria(mensaje.telefono)
+        solicitante = directorio.solicitante_por_telefono(mensaje.telefono)
+        if solicitante is None:
+            textos = _registro(mensaje, memoria)
+        elif solicitante.estado != directorio.EstadoSolicitante.HABILITADO:
+            textos = ["Tu registro está en revisión. Te avisamos por aquí cuando quedes habilitado."]
+        else:
+            turno = Turno(nombre=solicitante.nombre, texto=mensaje.texto, media_url=mensaje.media_url)
+            try:
+                respuesta = _conversador.responder(turno, memoria, Herramientas(solicitante.id))
+            except Exception:
+                log.exception("El conversador falló; responde el menú")
+                respuesta = ConversadorMenu().responder(turno, {}, Herramientas(solicitante.id))
+            textos, memoria = respuesta.textos, respuesta.memoria
+        _guardar_memoria(mensaje.telefono, memoria)
     for texto in textos:
-        _transporte.enviar(MensajeSaliente(telefono=mensaje.telefono, texto=texto))
+        _enviar(MensajeSaliente(telefono=mensaje.telefono, texto=texto))
     return textos
 
 
 def enviados(telefono: str | None = None) -> list[MensajeSaliente]:
-    """Bandeja de salida del simulador: respuestas y avisos."""
-    if not isinstance(_transporte, TransporteSimulado):
-        return []
-    return [m for m in _transporte.enviados if telefono is None or m.telefono == telefono]
+    """Todo lo que salió por WhatsApp, en orden: respuestas y avisos."""
+    consulta = select(t.mensajes).order_by(t.mensajes.c.id)
+    if telefono is not None:
+        consulta = consulta.where(t.mensajes.c.telefono == telefono)
+    with transaccion() as c:
+        return [MensajeSaliente.model_validate(dict(fila._mapping)) for fila in c.execute(consulta).all()]
+
+
+def _enviar(mensaje: MensajeSaliente) -> None:
+    try:
+        _transporte.enviar(mensaje)
+        estado = "enviado"
+    except Exception:
+        log.exception("No se pudo enviar un mensaje de WhatsApp")
+        estado = "fallido"
+    with transaccion() as c:
+        c.execute(insert(t.mensajes).values(**mensaje.model_dump(), estado=estado, enviado_en=datetime.now(timezone.utc)))
+
+
+def _memoria(telefono: str) -> dict:
+    with transaccion() as c:
+        fila = c.execute(select(t.conversaciones.c.memoria).where(t.conversaciones.c.telefono == telefono)).first()
+    return dict(fila.memoria) if fila else {}
+
+
+def _guardar_memoria(telefono: str, memoria: dict) -> None:
+    valores = {"telefono": telefono, "memoria": memoria, "actualizada": datetime.now(timezone.utc)}
+    with transaccion() as c:
+        c.execute(insertar_o_actualizar(t.conversaciones).values(valores)
+                  .on_conflict_do_update(index_elements=[t.conversaciones.c.telefono], set_=valores))
 
 
 def _registro(mensaje: MensajeEntrante, memoria: dict) -> list[str]:
@@ -181,7 +211,7 @@ def _pieza(c: contenidos.ContenidoVista) -> str:
     return f"*{c.titulo}*\n{c.texto_corto}" + (f"\n{c.url}" if c.url else "")
 
 
-# ---- Avisos: plantillas fijas, después de cada operación (ADR-0003) ----
+# ---- Avisos: plantillas fijas, después del commit de cada operación (ADR-0003) ----
 
 def escuchar() -> None:
     suscribir_despues(solicitudes.SolicitudRecibida, _al_recibir)
@@ -193,7 +223,7 @@ def escuchar() -> None:
 
 
 def _avisar(solicitante_id: UUID, texto: str) -> None:
-    _transporte.enviar(MensajeSaliente(telefono=directorio.solicitante(solicitante_id).telefono, texto=texto))
+    _enviar(MensajeSaliente(telefono=directorio.solicitante(solicitante_id).telefono, texto=texto))
 
 
 def _al_recibir(e: solicitudes.SolicitudRecibida) -> None:

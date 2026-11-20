@@ -47,6 +47,8 @@ def _conectar_modulos() -> None:
     puntos.escuchar()
     avisos.escuchar()
     bot.configurar_desde_entorno()
+    if bd.reiniciar_si_se_pidio():
+        logging.getLogger("ecoconecta").warning("Base reiniciada: los esquemas se crean de nuevo")
     bd.crear_tablas()
     if os.getenv("SEMBRAR_DEMO", "1") == "1":
         semillas.sembrar()

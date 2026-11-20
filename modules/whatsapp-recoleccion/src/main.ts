@@ -48,6 +48,7 @@ async function main(): Promise<void> {
   const server = createWhatsappServer({
     authToken: config.authToken,
     webhookUrl: config.webhookUrl,
+    contactAliases: config.contactAliases,
     receive: (message) => receiver.execute(message),
   });
 

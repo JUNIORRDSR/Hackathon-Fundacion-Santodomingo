@@ -1,10 +1,27 @@
 import { resolve } from 'node:path';
 import { isContactPhone } from './domain/collection.js';
-import { WHATSAPP_WEBHOOK_PATH } from './infrastructure/twilio-webhook.js';
+import { isWhatsappBusinessUserId, WHATSAPP_WEBHOOK_PATH } from './infrastructure/twilio-webhook.js';
 
 type CollectionMode =
   | { mode: 'demo' }
   | { mode: 'api'; databaseUrl: string; collectionUrl: URL; collectionToken: string };
+
+function readContactAliases(raw: string | undefined): ReadonlyMap<string, string> | undefined {
+  if (!raw?.trim()) return undefined;
+
+  const aliases = new Map<string, string>();
+  for (const entry of raw.split(',')) {
+    const fields = entry.split('=').map((field) => field.trim());
+    const [identity, number] = fields;
+    if (fields.length !== 2 || !identity || !isWhatsappBusinessUserId(identity) ||
+        !number || !isContactPhone(number) || aliases.has(identity)) {
+      throw new Error('WHATSAPP_CONTACT_ALIASES debe contener pares BSUID=teléfono E.164 separados por comas y sin BSUID repetidos.');
+    }
+    aliases.set(identity, number);
+  }
+
+  return aliases;
+}
 
 export function readConfig(env: NodeJS.ProcessEnv): {
   host: string;
@@ -13,6 +30,7 @@ export function readConfig(env: NodeJS.ProcessEnv): {
   webhookUrl: string;
   replyFile: string;
   pilotNumbers?: ReadonlySet<string>;
+  contactAliases?: ReadonlyMap<string, string>;
   collection: CollectionMode;
 } {
   function required(name: string): string {
@@ -66,6 +84,7 @@ export function readConfig(env: NodeJS.ProcessEnv): {
     webhookUrl,
     replyFile: resolve(env.WHATSAPP_RULES_FILE?.trim() || 'config/replies.es.json'),
     pilotNumbers: pilotNumbers ? new Set(pilotNumbers) : undefined,
+    contactAliases: readContactAliases(env.WHATSAPP_CONTACT_ALIASES),
     collection,
   };
 }

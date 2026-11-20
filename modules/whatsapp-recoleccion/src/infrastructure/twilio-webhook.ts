@@ -2,11 +2,12 @@ import { createServer, type IncomingMessage, type Server } from 'node:http';
 import { URLSearchParams } from 'node:url';
 import twilio from 'twilio';
 import type { InboundWhatsappMessage } from '../application/ports.js';
+import { isContactPhone } from '../domain/collection.js';
 
 export const WHATSAPP_WEBHOOK_PATH = '/webhooks/twilio/whatsapp';
 
 const MAX_FORM_BYTES = 32 * 1024;
-const WHATSAPP_ADDRESS = /^whatsapp:(\+[1-9][0-9]{1,14})$/;
+const WHATSAPP_PREFIX = 'whatsapp:';
 const MESSAGE_SID = /^(SM|MM)[0-9a-fA-F]{32}$/;
 
 type FormParams = Record<string, string | string[] | undefined>;
@@ -14,7 +15,12 @@ type FormParams = Record<string, string | string[] | undefined>;
 interface WhatsappServerOptions {
   authToken: string;
   webhookUrl: string;
+  contactAliases?: ReadonlyMap<string, string>;
   receive: (input: InboundWhatsappMessage) => Promise<string | null>;
+}
+
+export function isWhatsappBusinessUserId(value: string): boolean {
+  return /^[A-Z]{2}\.(?:ENT\.)?[A-Za-z0-9]{1,128}$/.test(value);
 }
 
 async function readForm(request: IncomingMessage): Promise<FormParams | null> {
@@ -39,13 +45,23 @@ async function readForm(request: IncomingMessage): Promise<FormParams | null> {
   return params;
 }
 
-function toInboundMessage(params: FormParams): InboundWhatsappMessage | null {
+function whatsappAddress(value: FormParams[string]): string {
+  return typeof value === 'string' && value.startsWith(WHATSAPP_PREFIX)
+    ? value.slice(WHATSAPP_PREFIX.length)
+    : '';
+}
+
+function toInboundMessage(
+  params: FormParams,
+  contactAliases?: ReadonlyMap<string, string>,
+): InboundWhatsappMessage | null {
   const { MessageSid, From, To, Body = '', NumMedia = '0' } = params;
-  const contactPhone = typeof From === 'string' ? WHATSAPP_ADDRESS.exec(From)?.[1] : undefined;
+  const sender = whatsappAddress(From);
+  const contactPhone = isWhatsappBusinessUserId(sender) ? contactAliases?.get(sender) : sender;
 
   if (
-    !contactPhone ||
-    typeof To !== 'string' || !WHATSAPP_ADDRESS.test(To) ||
+    !contactPhone || !isContactPhone(contactPhone) ||
+    !isContactPhone(whatsappAddress(To)) ||
     typeof MessageSid !== 'string' || !MESSAGE_SID.test(MessageSid) ||
     typeof Body !== 'string' ||
     typeof NumMedia !== 'string' || !/^[0-9]+$/.test(NumMedia)
@@ -56,7 +72,7 @@ function toInboundMessage(params: FormParams): InboundWhatsappMessage | null {
   return { messageId: MessageSid, contactPhone, body: Body, hasMedia: Number(NumMedia) > 0 };
 }
 
-export function createWhatsappServer({ authToken, webhookUrl, receive }: WhatsappServerOptions): Server {
+export function createWhatsappServer({ authToken, webhookUrl, contactAliases, receive }: WhatsappServerOptions): Server {
   return createServer(async (request, response) => {
     if (request.method === 'GET' && request.url === '/health') {
       response.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' }).end('ok');
@@ -92,7 +108,7 @@ export function createWhatsappServer({ authToken, webhookUrl, receive }: Whatsap
         response.writeHead(403).end();
         return;
       }
-      const message = toInboundMessage(params);
+      const message = toInboundMessage(params, contactAliases);
       if (!message) {
         response.writeHead(400).end();
         return;

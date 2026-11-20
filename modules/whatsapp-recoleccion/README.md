@@ -26,7 +26,8 @@ npm test
 | `HOST` | Dirección de escucha. Por defecto, `127.0.0.1`. |
 | `PORT` | Puerto de escucha. Por defecto, `3000`. |
 | `WHATSAPP_RULES_FILE` | Ruta opcional al archivo de respuestas. Por defecto, `config/replies.es.json`. |
-| `WHATSAPP_PILOT_NUMBERS` | Números habilitados para el piloto, en formato E.164 y separados por comas. Si se omite, se aceptan los remitentes de WhatsApp que llegan por el webhook firmado. |
+| `WHATSAPP_PILOT_NUMBERS` | Números habilitados para el piloto, en formato E.164 y separados por comas. Si se omite, se acepta cualquier número E.164 directo o resuelto por una asociación en el webhook firmado. |
+| `WHATSAPP_CONTACT_ALIASES` | Asociaciones verificadas de un identificador de WhatsApp (BSUID) con un teléfono E.164. Usa pares como `CO.identificador=+573000000000`, separados por comas, y conserva las mayúsculas y minúsculas del identificador. |
 | `DATABASE_URL` | Cadena de conexión a PostgreSQL, requerida en modo `api`. El módulo inicializa sus propias tablas. |
 | `COLLECTION_API_URL` | URL completa del endpoint de alta por `POST`, requerida en modo `api`. |
 | `COLLECTION_API_TOKEN` | Token Bearer del backend de recolección, requerido en modo `api`. |
@@ -53,6 +54,8 @@ Para el modo `api`, la base de datos y el backend deben ser accesibles desde el 
 1. Activa el Sandbox de WhatsApp en la consola clásica de Twilio. Une tu teléfono con el código `join` o el QR que muestra Twilio. [Sandbox de Twilio](https://www.twilio.com/docs/whatsapp/sandbox#how-to-activate-and-join-the-sandbox)
 2. Publica el puerto local con un túnel HTTPS o usa la URL HTTPS de tu despliegue. Configura esa URL completa en `TWILIO_WEBHOOK_URL` y en el campo **When a message comes in** del Sandbox, con método `POST`. [Configuración del webhook del Sandbox](https://www.twilio.com/docs/whatsapp/sandbox#webhook-url)
 3. Inicia el módulo con `WHATSAPP_MODE=demo`. Desde el teléfono unido al Sandbox, escribe `MENU` y completa el flujo con una dirección ficticia.
+
+Si Twilio muestra un BSUID en **Sandbox Participants**, copia el identificador sin el prefijo `whatsapp:` y asócialo con el teléfono del participante que verificaste. El módulo usa esa asociación para aplicar la lista piloto y enviar el contacto al backend. [Identificadores de WhatsApp en Twilio](https://www.twilio.com/docs/whatsapp/key-concepts#whatsapp-usernames)
 
 | Paso | Respuesta de ejemplo |
 | --- | --- |

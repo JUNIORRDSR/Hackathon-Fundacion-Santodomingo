@@ -19,19 +19,19 @@ const publicWebhookUrl = new URL('https://ecoconecta.example/webhooks/twilio/wha
 const defaultRepliesPath = 'config/replies.es.json';
 const householdPhone = '+15550100001';
 const businessPhone = '+15550100002';
+const demoSettings = {
+  TWILIO_AUTH_TOKEN: authToken,
+  TWILIO_WEBHOOK_URL: publicWebhookUrl.href,
+  WHATSAPP_MODE: 'demo',
+};
 
 test('una lista piloto vacía permite iniciar el modo demo', () => {
-  const settings = {
-    TWILIO_AUTH_TOKEN: authToken,
-    TWILIO_WEBHOOK_URL: publicWebhookUrl.href,
-    WHATSAPP_MODE: 'demo',
-  };
-  assert.equal(readConfig({ ...settings, WHATSAPP_PILOT_NUMBERS: ' ' }).pilotNumbers, undefined);
+  assert.equal(readConfig({ ...demoSettings, WHATSAPP_PILOT_NUMBERS: ' ' }).pilotNumbers, undefined);
   assert.deepEqual(
-    readConfig({ ...settings, WHATSAPP_PILOT_NUMBERS: `${householdPhone}, ${businessPhone}` }).pilotNumbers,
+    readConfig({ ...demoSettings, WHATSAPP_PILOT_NUMBERS: `${householdPhone}, ${businessPhone}` }).pilotNumbers,
     new Set([householdPhone, businessPhone]),
   );
-  assert.throws(() => readConfig({ ...settings, WHATSAPP_PILOT_NUMBERS: 'sin indicativo' }), /E\.164/);
+  assert.throws(() => readConfig({ ...demoSettings, WHATSAPP_PILOT_NUMBERS: 'sin indicativo' }), /E\.164/);
 });
 
 interface ApiCall {
@@ -53,7 +53,11 @@ async function listen(context: TestContext, server: Server): Promise<string> {
   return `http://127.0.0.1:${address.port}`;
 }
 
-async function makeWebhook(context: TestContext, failFirstSubmission = false) {
+async function makeWebhook(context: TestContext, options: {
+  failFirstSubmission?: boolean;
+  contactAliases?: ReadonlyMap<string, string>;
+  pilotNumbers?: ReadonlySet<string>;
+} = {}) {
   const apiCalls: ApiCall[] = [];
   const apiUrl = await listen(context, createServer(async (request, response) => {
     try {
@@ -67,7 +71,7 @@ async function makeWebhook(context: TestContext, failFirstSubmission = false) {
         payload: JSON.parse(Buffer.concat(chunks).toString('utf8')) as Record<string, unknown>,
       });
 
-      if (failFirstSubmission && apiCalls.length === 1) {
+      if (options.failFirstSubmission && apiCalls.length === 1) {
         response.writeHead(503).end();
         return;
       }
@@ -84,21 +88,28 @@ async function makeWebhook(context: TestContext, failFirstSubmission = false) {
     new MemoryConversationStore(),
     new HttpCollectionRequests(new URL('/collection-requests', apiUrl), apiToken),
     policy,
+    options.pilotNumbers,
   );
   const origin = await listen(context, createWhatsappServer({
     authToken,
     webhookUrl: publicWebhookUrl.href,
     receive: message => useCase.execute(message),
+    contactAliases: options.contactAliases,
   }));
 
   let sequence = 0;
-  async function send(phone: string, body: string, options: { messageId?: string; validSignature?: boolean } = {}) {
+  async function send(sender: string, body: string, options: {
+    messageId?: string;
+    validSignature?: boolean;
+    waId?: string;
+  } = {}) {
     const fields = {
-      From: `whatsapp:${phone}`,
+      From: `whatsapp:${sender}`,
       To: 'whatsapp:+15550100099',
       Body: body,
       NumMedia: '0',
       MessageSid: options.messageId ?? `SM${String(++sequence).padStart(32, '0')}`,
+      ...(options.waId === undefined ? {} : { WaId: options.waId }),
     };
     const signature = options.validSignature === false
       ? 'incorrect-signature'
@@ -116,11 +127,11 @@ async function makeWebhook(context: TestContext, failFirstSubmission = false) {
 
 async function prepareDraft(
   send: Awaited<ReturnType<typeof makeWebhook>>['send'],
-  phone: string,
+  sender: string,
   answers: string[],
 ): Promise<void> {
   for (const answer of answers) {
-    const response = await send(phone, answer);
+    const response = await send(sender, answer);
     assert.equal(response.status, 200);
     assert.match(response.contentType ?? '', /xml/i);
     assert.match(response.content, /<Message[\s>]/);
@@ -187,6 +198,44 @@ test('la firma inválida no cambia el borrador de una conversación', async cont
   assert.equal(apiCalls[0]?.payload.address, 'Torre C, apto 101');
 });
 
+test('un BSUID configurado comparte el borrador y envía el teléfono autorizado al backend', async context => {
+  const alias = 'CO.testResident';
+  const parentAlias = 'CO.ENT.testPortfolio';
+  const { contactAliases, pilotNumbers } = readConfig({
+    ...demoSettings,
+    WHATSAPP_CONTACT_ALIASES: `${alias}=${householdPhone}, ${parentAlias}=${householdPhone}`,
+    WHATSAPP_PILOT_NUMBERS: householdPhone,
+  });
+  const { apiCalls, send } = await makeWebhook(context, { contactAliases, pilotNumbers });
+
+  await prepareDraft(send, alias, ['1', '1', 'Torre B, apto 210', 'Mañana', 'ninguna']);
+  const receipt = await send(householdPhone, 'SI');
+  assert.equal(receipt.status, 200);
+  assert.match(receipt.content, /ECO-1/);
+  assert.equal(apiCalls.length, 1);
+  assert.equal(apiCalls[0]?.payload.contactPhone, householdPhone);
+
+  assert.match((await send(parentAlias, 'ESTADO')).content, /ECO-1/);
+});
+
+test('un BSUID sin asociación exacta se rechaza aunque WaId tenga un teléfono autorizado', async context => {
+  const { apiCalls, send } = await makeWebhook(context, {
+    contactAliases: new Map([['CO.testResident', householdPhone]]),
+    pilotNumbers: new Set([householdPhone]),
+  });
+
+  const unmapped = [
+    { alias: 'CO.testresident', waId: householdPhone.slice(1) },
+    { alias: 'CO.unregistered', waId: householdPhone },
+  ];
+  for (const { alias, waId } of unmapped) {
+    const response = await send(alias, '1', { waId });
+    assert.equal(response.status, 400);
+    assert.doesNotMatch(response.content, /<Message[\s>]/);
+  }
+  assert.equal(apiCalls.length, 0);
+});
+
 test('dos webhooks concurrentes con el mismo SID solo registran una solicitud', async context => {
   const { apiCalls, send } = await makeWebhook(context);
   await prepareDraft(send, householdPhone, ['1', '1', 'Torre B, apto 210', 'Mañana', 'ninguna']);
@@ -203,7 +252,7 @@ test('dos webhooks concurrentes con el mismo SID solo registran una solicitud', 
 });
 
 test('un fallo de la API conserva el borrador y la clave de idempotencia', async context => {
-  const { apiCalls, send } = await makeWebhook(context, true);
+  const { apiCalls, send } = await makeWebhook(context, { failFirstSubmission: true });
   await prepareDraft(send, householdPhone, ['1', '1', 'Torre B, apto 210', 'Mañana', 'ninguna']);
 
   const firstAttempt = await send(householdPhone, 'SI');

@@ -30,6 +30,9 @@ uvicorn app.main:app --reload
 pytest
 ```
 
+`pytest` también corre las reglas de arquitectura y de tamaño: si una falla, se corrige el código, no la regla
+([ADR-0006](docs/adr/0006-reglas-de-arquitectura-en-pruebas.md)).
+
 ## Probar el bot sin WhatsApp
 
 1. `POST /api/acceso/entrar` con `{"usuario": "admin", "clave": "ecoconecta-demo"}`.

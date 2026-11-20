@@ -14,7 +14,7 @@ de punta a punta. El reto pide un solo repositorio.
   whatsapp, contenidos, reportes y acceso.
 - Cada módulo tiene `contrato.py` (lo único importable desde fuera: funciones, DTOs de Pydantic y eventos),
   `dominio.py` cuando tiene reglas (Python puro) y `api.py` (router con su etiqueta en OpenAPI).
-- `backend/tests/test_fronteras.py` falla si un módulo importa algo de otro que no sea su contrato.
+- `backend/tests/test_arquitectura.py` falla si un módulo importa algo de otro que no sea su contrato (ADR-0006).
 - Núcleo compartido mínimo en `app/compartido`: Flujo, Colectivo, TipoGenerador, Franja, Canal, errores, eventos y
   formato.
 - Eventos de dominio por un bus en memoria. `suscribir` corre dentro de la operación (puntos: si falla, falla todo);

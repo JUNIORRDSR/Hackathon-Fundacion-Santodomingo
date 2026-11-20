@@ -1,8 +1,6 @@
 """PostgreSQL (ADR-0001): un esquema por módulo, sin claves foráneas entre módulos y create_all al arrancar.
-
-Una operación es una transacción. Si ya hay una abierta, la operación se une a ella: así los puntos se guardan en la
-misma transacción que la recolección. Los efectos hacia afuera (WhatsApp) corren después del commit.
-"""
+Una operación es una transacción; si ya hay una abierta, se une a ella (así puntos y recolección van juntos).
+Los efectos hacia afuera (WhatsApp) corren después del commit."""
 import os
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager

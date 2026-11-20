@@ -14,7 +14,8 @@ from app.modulos.puntos.dominio import Regla
 from app.modulos.solicitudes import contrato as solicitudes
 
 # Valores de ejemplo hasta que la fundación los valide.
-INICIAL = Regla(1, {Flujo.ORGANICO: 10, Flujo.RECICLABLE: 10}, {Flujo.ORGANICO: Decimal(1), Flujo.RECICLABLE: Decimal(1)})
+INICIAL = Regla(1, base={Flujo.ORGANICO: 10, Flujo.RECICLABLE: 10},
+                por_kg={Flujo.ORGANICO: Decimal(1), Flujo.RECICLABLE: Decimal(1)})
 
 
 class ReglaVista(BaseModel):

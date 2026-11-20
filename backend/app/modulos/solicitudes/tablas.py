@@ -32,4 +32,5 @@ solicitudes = Table(
 Index("una_abierta_por_flujo", solicitudes.c.solicitante_id, solicitudes.c.flujo, unique=True,
       postgresql_where=text("estado IN ('recibida', 'asignada', 'programada')"))
 
-consecutivos = {flujo: Sequence(f"consecutivo_{flujo.value}", schema="solicitudes", metadata=metadata) for flujo in Flujo}
+consecutivos = {flujo: Sequence(f"consecutivo_{flujo.value}", schema="solicitudes", metadata=metadata)
+                for flujo in Flujo}

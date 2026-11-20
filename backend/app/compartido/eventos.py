@@ -1,8 +1,5 @@
-"""Eventos de dominio y bus en memoria (ADR-0001).
-
-- suscribir: el manejador corre dentro de la operación y de su transacción; si falla, falla todo (puntos).
-- suscribir_despues: efectos hacia afuera (WhatsApp). Corren después del commit y un fallo se registra sin tumbar nada.
-"""
+"""Eventos de dominio y bus en memoria (ADR-0001). `suscribir` corre dentro de la transacción: si falla, falla todo.
+`suscribir_despues` corre después del commit (WhatsApp), y un fallo suyo se registra sin tumbar nada."""
 import logging
 from collections import defaultdict
 from collections.abc import Callable

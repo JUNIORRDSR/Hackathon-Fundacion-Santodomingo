@@ -45,7 +45,8 @@ def solicitantes(estado: directorio.EstadoSolicitante | None = None,
 
 
 @router.post("/solicitantes", status_code=201)
-def registrar_solicitante(datos: directorio.NuevoSolicitante, _: acceso.Usuario = Sesion) -> directorio.SolicitanteVista:
+def registrar_solicitante(datos: directorio.NuevoSolicitante,
+                          _: acceso.Usuario = Sesion) -> directorio.SolicitanteVista:
     """Registro asistido desde la tablet: entra habilitado."""
     return directorio.registrar_solicitante(datos, habilitado=True)
 

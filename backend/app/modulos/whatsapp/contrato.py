@@ -1,9 +1,5 @@
-"""Contrato de whatsapp (ADR-0003): los dos puertos donde entran las piezas del equipo.
-
-- Transporte (Jorge): cómo entra y sale un mensaje (Twilio o Cloud API). Por defecto, el simulador.
-- Conversador (Leonardo): el cerebro del bot (LLM). Por defecto, el menú numerado.
-El registro y la autorización de datos no pasan por el conversador: son deterministas (Ley 1581).
-"""
+"""Contrato de whatsapp (ADR-0003): los puertos Transporte (Jorge) y Conversador (Leonardo) y las Herramientas del bot.
+El registro y la autorización de datos no pasan por el conversador: son deterministas (Ley 1581)."""
 from datetime import date, time
 from typing import Protocol
 from uuid import UUID
@@ -60,11 +56,8 @@ class SolicitudResumida(BaseModel):
 
 
 class Herramientas:
-    """Lo único que el bot puede hacer. La identidad la ata el sistema, no el modelo (§9).
-
-    El LLM las usa como herramientas (tool calling) y el menú también. No hay herramienta para asignar, programar ni
-    cerrar: eso es del coordinador.
-    """
+    """Lo único que el bot puede hacer; la identidad la ata el sistema, no el modelo (§9).
+    El LLM las usa como herramientas (tool calling). No hay herramienta para asignar, programar ni cerrar."""
 
     def __init__(self, solicitante_id: UUID):
         self._id = solicitante_id
@@ -82,7 +75,8 @@ class Herramientas:
         solicitud = solicitudes.por_codigo(codigo)
         if solicitud.solicitante_id != self._id:
             raise NoEncontrado(f"No existe la solicitud {codigo}.")
-        return _resumir(solicitudes.cancelar(solicitud.id, "La canceló el solicitante por WhatsApp.", por="solicitante"))
+        cancelada = solicitudes.cancelar(solicitud.id, "La canceló el solicitante por WhatsApp.", por="solicitante")
+        return _resumir(cancelada)
 
     def mis_puntos(self) -> int:
         return puntos.saldo(self._id).saldo

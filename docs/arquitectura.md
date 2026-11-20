@@ -55,8 +55,8 @@ Jairo construye todo de punta a punta sin esperar; cada pieza del equipo entra p
 
 ## Reglas de la frontera
 
-1. Desde otro módulo solo se importa `contrato.py`. `backend/tests/test_fronteras.py` falla si alguien cruza por otro
-   lado.
+1. Desde otro módulo solo se importa `contrato.py`. `backend/tests/test_arquitectura.py` falla si alguien cruza por
+   otro lado, y también vigila tamaños, nombres y comentarios (ADR-0006).
 2. `dominio.py` no conoce FastAPI ni la base de datos.
 3. Un `contrato.py` lo cambia su dueño, avisando al grupo. El núcleo compartido (`backend/app/compartido`) solo cambia con
    acuerdo de todos.

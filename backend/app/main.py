@@ -3,7 +3,7 @@ import logging
 import os
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
@@ -19,10 +19,11 @@ from app.modulos.puntos import contrato as puntos
 from app.modulos.reportes import api as reportes_api
 from app.modulos.solicitudes import api as solicitudes_api
 from app.modulos.whatsapp import api as whatsapp_api
-from app.modulos.whatsapp import bot
+from app.modulos.whatsapp import avisos, bot
 
 logging.basicConfig(level=logging.INFO)
 SPA = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+ROUTERS = (acceso_api, solicitudes_api, directorio_api, puntos_api, contenidos_api, reportes_api, whatsapp_api)
 
 
 def crear_app() -> FastAPI:
@@ -30,25 +31,22 @@ def crear_app() -> FastAPI:
                   description="Cada etiqueta es un módulo y su contrato (docs/arquitectura.md).")
     app.add_middleware(SessionMiddleware, secret_key=os.getenv("CLAVE_SESION", "solo-para-desarrollo-local"),
                        max_age=30 * 24 * 3600, same_site="lax", https_only=os.getenv("ENTORNO") == "produccion")
-    for modulo in (acceso_api, solicitudes_api, directorio_api, puntos_api, contenidos_api, reportes_api, whatsapp_api):
+    for modulo in ROUTERS:
         app.include_router(modulo.router)
+    app.add_exception_handler(ErrorDeNegocio, lambda _, error: JSONResponse({"detail": str(error)}, status_code=409))
+    app.add_exception_handler(NoEncontrado, lambda _, error: JSONResponse({"detail": str(error)}, status_code=404))
+    _conectar_modulos()
+    _servir_spa(app)
+    return app
 
-    @app.exception_handler(ErrorDeNegocio)
-    def _negocio(_: Request, error: ErrorDeNegocio) -> JSONResponse:
-        return JSONResponse({"detail": str(error)}, status_code=409)
 
-    @app.exception_handler(NoEncontrado)
-    def _no_encontrado(_: Request, error: NoEncontrado) -> JSONResponse:
-        return JSONResponse({"detail": str(error)}, status_code=404)
-
+def _conectar_modulos() -> None:
     puntos.escuchar()
-    bot.escuchar()
+    avisos.escuchar()
     bot.configurar_desde_entorno()
     bd.crear_tablas()
     if os.getenv("SEMBRAR_DEMO", "1") == "1":
         semillas.sembrar()
-    _servir_spa(app)
-    return app
 
 
 def _servir_spa(app: FastAPI) -> None:

@@ -15,15 +15,16 @@ html:has(.eco-app) { font-size: 106.25%; }
 
 html:has(.eco-app), body:has(> #root > .eco-app) {
   margin: 0;
-  background: #e8ede8;
+  background: #f2f5f2;
   overscroll-behavior-y: none;
 }
 
 .eco-app {
-  --background: #e8ede8;
-  --surface: #f6f8f4;
+  /* Manual de identidad: fondo claro, tarjetas blancas y texto en carbón (sección 2 y variables de la sección 8). */
+  --background: #f2f5f2;
+  --surface: #ffffff;
   --surface-muted: #eaf0ea;
-  --ink: #243a31;
+  --ink: #202522;
   --muted: #515e56;
   --line: #d7dfd7;
   --control-line: #7b8b7f;
@@ -37,7 +38,10 @@ html:has(.eco-app), body:has(> #root > .eco-app) {
   --accent-ink: #8f6b00;
   --accent-on-highlight: var(--yellow);
   --error: #863d36;
-  --font-heading: Inter, Arial, sans-serif;
+  /* Verde Eco para la acción principal. El #168A2E del manual da 4,46:1 con texto blanco; este tono, 5,06:1 (AA). */
+  --accion: #14802a;
+  --accion-hover: #0f6b22;
+  --font-heading: Poppins, Arial, sans-serif;
   --font-body: Inter, Arial, sans-serif;
 
   color-scheme: light;
@@ -115,10 +119,10 @@ html:has(.eco-app), body:has(> #root > .eco-app) {
 
   & .button { display: inline-flex; gap: .45rem; align-items: center; justify-content: center; min-height: 48px; padding: .57rem .9rem; border: 1px solid transparent; border-radius: 9999px; text-align: center; text-decoration: none; font-size: .875rem; font-weight: 600; line-height: 1.25; }
   & .button svg { width: 1rem; height: 1rem; }
-  & .button-primary { background: var(--highlight); color: var(--on-highlight); box-shadow: 0 5px 10px #2d4b3f22; }
-  & .button-primary:hover:not(:disabled) { background: var(--highlight-hover); box-shadow: 0 7px 14px #2d4b3f31; }
+  & .button-primary { background: var(--accion); color: #fff; box-shadow: 0 5px 10px #2d4b3f22; }
+  & .button-primary:hover:not(:disabled) { background: var(--accion-hover); box-shadow: 0 7px 14px #2d4b3f31; }
 
-  & .button-secondary { background: var(--surface); color: var(--ink); border-color: var(--line); }
+  & .button-secondary { background: var(--surface); color: var(--highlight); border-color: var(--highlight); }
   & .button-secondary:hover:not(:disabled), & .button-quiet:hover:not(:disabled) { background: var(--surface-muted); }
   & .button-surface { --icon-stroke: var(--accent-ink); background: var(--surface); color: var(--ink); }
   & .button-surface:hover { background: var(--surface-muted); }

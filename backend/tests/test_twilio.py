@@ -1,11 +1,15 @@
 """El transporte de Twilio autentica y entrega mensajes al mismo bot que usa el simulador."""
+import asyncio
 import base64
 import hashlib
 import hmac
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import aclosing
 from io import BytesIO
+from threading import Event
 from urllib.error import HTTPError
 from urllib.parse import parse_qsl, urlencode
+from uuid import uuid4
 from xml.etree import ElementTree
 
 import pytest
@@ -13,8 +17,9 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.modulos.directorio import contrato as directorio
-from app.modulos.whatsapp import bot, monitor, transporte_twilio
-from app.modulos.whatsapp.contrato import MensajeSaliente
+from app.modulos.whatsapp import bot, contactos, monitor, transporte_twilio
+from app.modulos.whatsapp.contrato import MensajeSaliente, Perfil, Respuesta
+from app.modulos.whatsapp.eventos_monitor import GENERAL, EventosMonitor
 from app.modulos.whatsapp.transporte_twilio import TransporteTwilio
 
 RUTA = "/api/whatsapp/twilio"
@@ -27,13 +32,16 @@ TELEFONO_ALIAS = "+573000000004"
 TELEFONO_CONCURRENCIA = "+573000000005"
 TELEFONO_TWIML = "+573000000007"
 TELEFONO_AVISOS = "+573000000008"
+TELEFONO_MONITOR = "+15555550113"
+TELEFONO_REINTENTO = "+15555550114"
 ALIAS = "CO.PruebaEcoConecta"
 ALIAS_PORTAFOLIO = "CO.ENT.PruebaEcoConecta"
 
 
 @pytest.fixture
 def cliente_twilio(monkeypatch, request):
-    telefonos = (TELEFONO, TELEFONO_ALIAS, TELEFONO_CONCURRENCIA, TELEFONO_TWIML, TELEFONO_AVISOS)
+    telefonos = (TELEFONO, TELEFONO_ALIAS, TELEFONO_CONCURRENCIA, TELEFONO_TWIML, TELEFONO_AVISOS,
+                 TELEFONO_MONITOR, TELEFONO_REINTENTO)
     valores = {
         "TWILIO_ACCOUNT_SID": CUENTA,
         "TWILIO_AUTH_TOKEN": TOKEN,
@@ -115,6 +123,20 @@ def test_waid_no_autoriza_alias_desconocidos_y_el_piloto_se_respeta(cliente_twil
     assert not salidas
 
 
+def test_el_perfil_se_guarda_y_un_bsuid_ya_visto_con_su_telefono_encuentra_al_vecino(cliente_twilio):
+    """ADR-0016: si después escribe solo con su usuario de WhatsApp, sigue siendo el mismo vecino con sus puntos."""
+    cliente, _ = cliente_twilio
+    bsuid = "CO.1234567890123456"
+    perfil = [("ExternalUserId", f"whatsapp:{bsuid}"), ("Username", "vecina_luz"), ("ProfileName", " Luz  Marina ")]
+    assert _entregar(cliente, _parametros(TELEFONO, 20) + perfil).status_code == 200
+    assert contactos.perfil_de(TELEFONO) == Perfil(nombre="Luz Marina", usuario="vecina_luz", bsuid=bsuid)
+
+    solo_usuario = _parametros(bsuid, 21, "¿Siguen ahí?") + [("Username", "<b>no</b>")]
+    assert _entregar(cliente, solo_usuario).status_code == 200
+    assert any(m.texto == "¿Siguen ahí?" for m in monitor.mensajes_de(TELEFONO) if m.direccion == "entrante")
+    assert contactos.perfil_de(TELEFONO).usuario == "vecina_luz"  # un usuario inválido no pisa el bueno
+
+
 def test_entregas_concurrentes_del_mismo_sid_solo_avanzan_el_bot_una_vez(cliente_twilio):
     cliente, salidas = cliente_twilio
     parametros = _parametros(TELEFONO_CONCURRENCIA, 6)
@@ -124,6 +146,74 @@ def test_entregas_concurrentes_del_mismo_sid_solo_avanzan_el_bot_una_vez(cliente
     assert [respuesta.status_code for respuesta in respuestas] == [200, 200]
     assert len(salidas) == 1
     assert len(bot.enviados(TELEFONO_CONCURRENCIA)) == 1
+
+
+@pytest.mark.parametrize("cliente_twilio", [True], indirect=True)
+def test_el_monitor_ve_el_mensaje_antes_de_la_respuesta(cliente_twilio, monkeypatch):
+    cliente, _ = cliente_twilio
+    directorio.registrar_solicitante(directorio.NuevoSolicitante(
+        telefono=TELEFONO_MONITOR, nombre="Prueba Monitor", tipo="hogar", zona_id=directorio.zonas()[0].id,
+        direccion="Dirección ficticia", autoriza_datos=True,
+    ), habilitado=True)
+    assert cliente.post("/api/acceso/entrar", json={"usuario": "admin", "clave": "ecoconecta-demo"}).status_code == 200
+    inicio, continuar = Event(), Event()
+
+    class ConversadorEnPausa:
+        def responder(self, turno, memoria, herramientas):
+            inicio.set()
+            assert continuar.wait(15)
+            return Respuesta(textos=["Respuesta del bot"], memoria=memoria)
+
+    monkeypatch.setattr(bot, "_conversador", ConversadorEnPausa())
+    asyncio.run(_probar_publicacion(cliente, inicio, continuar))
+
+
+async def _probar_publicacion(cliente, inicio, continuar):
+    hilo = f"/api/whatsapp/conversaciones/{TELEFONO_MONITOR}/mensajes"
+    parametros = _parametros(TELEFONO_MONITOR, 23)
+    eventos = EventosMonitor()
+    try:
+        async with aclosing(eventos.flujo(uuid4())) as flujo:
+            await anext(flujo)
+            assert await asyncio.wait_for(anext(flujo), 5) == GENERAL
+            entrega = asyncio.create_task(asyncio.to_thread(_entregar, cliente, parametros))
+            try:
+                assert await asyncio.to_thread(inicio.wait, 5)
+                assert await asyncio.wait_for(anext(flujo), 5) == GENERAL
+                mensajes = await asyncio.to_thread(cliente.get, hilo)
+                assert [m["texto"] for m in mensajes.json()] == ["Hola"]
+            finally:
+                continuar.set()
+                respuesta = await entrega
+
+            assert respuesta.status_code == 200
+            assert await asyncio.wait_for(anext(flujo), 5) == GENERAL
+            mensajes = await asyncio.to_thread(cliente.get, hilo)
+            assert [(m["direccion"], m["texto"]) for m in mensajes.json()] == [
+                ("entrante", "Hola"), ("saliente", "Respuesta del bot"),
+            ]
+    finally:
+        await eventos.cerrar()
+
+
+def test_un_reintento_tras_fallar_el_turno_no_duplica_el_mensaje(cliente_twilio, monkeypatch):
+    cliente, salidas = cliente_twilio
+    parametros = _parametros(TELEFONO_REINTENTO, 24)
+
+    def fallar(telefono, memoria):
+        raise RuntimeError("Fallo durante el turno")
+
+    with monkeypatch.context() as parche:
+        parche.setattr(bot, "_guardar_memoria", fallar)
+        with pytest.raises(RuntimeError, match="Fallo durante el turno"):
+            _entregar(cliente, parametros)
+    assert [m.direccion for m in monitor.mensajes_de(TELEFONO_REINTENTO)] == ["entrante"]
+    assert not salidas
+
+    assert _entregar(cliente, parametros).status_code == 200
+    assert _entregar(cliente, parametros).status_code == 200
+    assert [m.direccion for m in monitor.mensajes_de(TELEFONO_REINTENTO)] == ["entrante", "saliente"]
+    assert len(salidas) == 1
 
 
 @pytest.mark.parametrize("cliente_twilio", [True], indirect=True)

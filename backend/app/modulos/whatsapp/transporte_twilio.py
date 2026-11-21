@@ -12,7 +12,8 @@ from starlette.datastructures import FormData
 from twilio.request_validator import RequestValidator
 from twilio.twiml.messaging_response import MessagingResponse
 
-from app.modulos.whatsapp.contrato import MensajeEntrante, MensajeSaliente
+from app.modulos.whatsapp import contactos
+from app.modulos.whatsapp.contrato import MensajeEntrante, MensajeSaliente, Perfil
 
 MENSAJES = "https://api.twilio.com/2010-04-01/Accounts/{cuenta}/Messages.json"
 RUTA_WEBHOOK = "/api/whatsapp/twilio"
@@ -22,6 +23,7 @@ FIRMA = re.compile(r"[A-Za-z0-9+/]{27}=")
 TELEFONO = re.compile(r"\+[1-9][0-9]{7,14}")
 BSUID = re.compile(r"[A-Z]{2}\.(?:ENT\.)?[A-Za-z0-9]{1,128}")
 SID_MENSAJE = re.compile(r"(?:SM|MM)[0-9a-fA-F]{32}")
+USUARIO = re.compile(r"[A-Za-z0-9._]{1,64}")  # usuario de WhatsApp, como ing_jorge_sol
 PREFIJO = "whatsapp:"
 
 
@@ -65,13 +67,22 @@ class TransporteTwilio:
         if not remitente.startswith(PREFIJO) or not SID_MENSAJE.fullmatch(sid):
             raise ValueError("El remitente o el identificador del mensaje es inválido.")
         identidad = remitente.removeprefix(PREFIJO)
-        telefono = identidad if TELEFONO.fullmatch(identidad) else self.alias.get(identidad)
+        telefono = self._telefono(identidad)
         if not telefono:
             raise ValueError("El remitente no tiene un teléfono asociado.")
         if self.telefonos_piloto and telefono not in self.telefonos_piloto:
             raise PermissionError("El remitente está fuera de la prueba piloto.")
         media_url = _valor(parametros, "MediaUrl0") or None
-        return MensajeEntrante(telefono=telefono, texto=_valor(parametros, "Body"), media_url=media_url), sid
+        return MensajeEntrante(telefono=telefono, texto=_valor(parametros, "Body"), media_url=media_url,
+                               perfil=_perfil(parametros, identidad)), sid
+
+    def _telefono(self, identidad: str) -> str | None:
+        """El número del remitente; si escribe con su usuario (BSUID), el alias configurado o el que ya conocemos."""
+        if TELEFONO.fullmatch(identidad):
+            return identidad
+        if identidad in self.alias:
+            return self.alias[identidad]
+        return contactos.telefono_de(identidad) if BSUID.fullmatch(identidad) else None
 
     def enviar(self, mensaje: MensajeSaliente) -> None:
         destino = next((a for a, telefono in self.alias.items() if telefono == mensaje.telefono), mensaje.telefono)
@@ -101,6 +112,15 @@ class TransporteTwilio:
             else:
                 respuesta.message(mensaje.texto)
         return str(respuesta)
+
+
+def _perfil(parametros: FormData, identidad: str) -> Perfil:
+    """ProfileName, Username y el BSUID (ExternalUserId o el remitente) que Twilio firma con el mensaje."""
+    externo = _valor(parametros, "ExternalUserId").removeprefix(PREFIJO)
+    bsuid = next((valor for valor in (externo, identidad) if BSUID.fullmatch(valor)), None)
+    usuario = _valor(parametros, "Username")
+    nombre = " ".join(_valor(parametros, "ProfileName").split())[:80] or None
+    return Perfil(nombre=nombre, usuario=usuario if USUARIO.fullmatch(usuario) else None, bsuid=bsuid)
 
 
 def _codigo_error(respuesta: HTTPError) -> int | None:

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { flushSync } from 'react-dom'
 import { urlDeAdjunto } from '../api'
@@ -13,6 +13,7 @@ import {
   MessageScrollerItem,
   MessageScrollerProvider,
   MessageScrollerViewport,
+  useMessageScrollerScrollable,
 } from '@/components/ui/message-scroller'
 import '../../shadcn.css'
 
@@ -58,6 +59,16 @@ export function Hilo({
     0,
   )
   const marcaLectura = useRef<HTMLDivElement>(null)
+  const viewport = useRef<HTMLDivElement>(null)
+  const ultimoId = mensajes.at(-1)?.id ?? 0
+  const hayMensajes = ultimoId !== 0
+
+  useEffect(() => {
+    if (!hayMensajes) return
+    // El historial inicial se coloca al final antes de animar las actualizaciones en vivo.
+    const frame = requestAnimationFrame(() => viewport.current?.setAttribute('data-seguimiento', 'true'))
+    return () => cancelAnimationFrame(frame)
+  }, [hayMensajes])
 
   useEffect(() => {
     const marca = marcaLectura.current
@@ -86,9 +97,13 @@ export function Hilo({
 
   return (
     <div className="shadcn hilo">
-      <MessageScrollerProvider autoScroll defaultScrollPosition="end" scrollEdgeThreshold={64}>
+      <MessageScrollerProvider autoScroll defaultScrollPosition="end" scrollEdgeThreshold={16}>
         <MessageScroller>
-          <MessageScrollerViewport aria-label="Mensajes de la conversación">
+          <MessageScrollerViewport
+            ref={viewport}
+            aria-label="Mensajes de la conversación"
+            className="motion-safe:data-[seguimiento=true]:scroll-smooth"
+          >
             <MessageScrollerContent className="flex flex-col gap-1.5 p-4">
               {mensajes.map((m, i) => {
                 const fecha = new Date(m.fecha)
@@ -130,15 +145,44 @@ export function Hilo({
               )}
             </MessageScrollerContent>
           </MessageScrollerViewport>
-          <MessageScrollerButton
-            aria-label="Ir al último mensaje"
-            title="Ir al último mensaje"
-            size="icon"
-            className="inset-s-auto inset-e-4 z-10 translate-x-0 rounded-full shadow-md rtl:translate-x-0"
-          />
+          <IrAlUltimoMensaje ultimoId={ultimoId} />
         </MessageScroller>
       </MessageScrollerProvider>
     </div>
+  )
+}
+
+function IrAlUltimoMensaje({ ultimoId }: { ultimoId: number }) {
+  const { end: hayMensajesDebajo } = useMessageScrollerScrollable()
+  const anterior = useRef(ultimoId)
+  const boton = useRef<HTMLButtonElement>(null)
+
+  useLayoutEffect(() => {
+    const llegoMensaje = anterior.current > 0 && ultimoId > anterior.current
+    anterior.current = ultimoId
+    if (!llegoMensaje || !hayMensajesDebajo) return
+
+    const flecha = boton.current?.querySelector('svg')
+    if (!flecha || flecha.getAnimations().length > 0) return
+    const reducirMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const fotogramas = reducirMovimiento
+      ? [{ opacity: 1 }, { opacity: 0.6 }, { opacity: 1 }]
+      : [{ transform: 'none' }, { transform: 'translateY(-4px)' }, { transform: 'none' }]
+    flecha.animate(fotogramas, { duration: 240, easing: 'cubic-bezier(0.23, 1, 0.32, 1)' })
+  }, [ultimoId, hayMensajesDebajo])
+
+  return (
+    <MessageScrollerButton
+      ref={boton}
+      behavior="auto"
+      aria-label="Ir al último mensaje"
+      title="Ir al último mensaje"
+      size="icon"
+      className={
+        'inset-s-auto inset-e-4 z-10 translate-x-0 rounded-full shadow-md' +
+        ' motion-reduce:transition-none rtl:translate-x-0'
+      }
+    />
   )
 }
 
@@ -191,7 +235,7 @@ function Adjunto({
   }
   if (esAudio) return <audio controls preload="none" src={src} style={{ maxWidth: '16rem' }} />
   return (
-    <div style={{ display: 'grid', gap: '0.5rem', padding: '0.25rem' }}>
+    <div className="hilo-adjunto">
       <Dialog open={abierta} onOpenChange={verEnGrande}>
         <DialogTrigger asChild>
           <button type="button" className="hilo-foto" aria-label="Ampliar la foto que mandó el vecino">

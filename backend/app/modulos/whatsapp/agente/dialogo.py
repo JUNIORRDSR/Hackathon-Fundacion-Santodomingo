@@ -2,7 +2,6 @@
 import re
 
 from app.compartido.tipos import Flujo, Franja
-from app.modulos.whatsapp.agente.contexto import informacion
 from app.modulos.whatsapp.agente.lenguaje import normalizar
 from app.modulos.whatsapp.agente.memoria import PASOS, registrar_actividad, retirar_borrador, vigente as memoria_vigente
 from app.modulos.whatsapp.contrato import Herramientas, Respuesta, Turno
@@ -119,7 +118,7 @@ def _consultar(intencion: str, turno: Turno, memoria: dict, herramientas: Herram
     if intencion == "estado":
         return _menu("3", turno, {}, herramientas)
     if intencion == "informacion":
-        return [informacion()]
+        return [plantilla("agente_informacion")]
     if intencion == "aprender":
         memoria["esperando_aprender"] = True
         return [plantilla("agente_aprender")]

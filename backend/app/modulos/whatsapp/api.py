@@ -4,13 +4,13 @@ import logging
 from urllib.parse import parse_qsl
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 from starlette.datastructures import FormData
 
 from app.modulos.acceso import contrato as acceso
-from app.modulos.whatsapp import adjuntos, bot, monitor
+from app.modulos.whatsapp import adjuntos, bot, carteles, monitor
 from app.modulos.whatsapp.contrato import MensajeEntrante, MensajeSaliente
 from app.modulos.whatsapp.transporte_twilio import TransporteTwilio
 
@@ -76,6 +76,15 @@ async def _formulario_twilio(request: Request) -> FormData:
         return FormData(parse_qsl(cuerpo.decode(), keep_blank_values=True, errors="strict"))
     except UnicodeError:
         raise HTTPException(400, "Formulario inválido.") from None
+
+
+@router.get("/carteles/{nombre}", include_in_schema=False)
+def cartel(nombre: str) -> FileResponse:
+    """Público: Twilio descarga el cartel para mandarlo por WhatsApp. Solo sirve los del catálogo (ADR-0016)."""
+    ruta = carteles.archivo(nombre)
+    if ruta is None:
+        raise HTTPException(404, "No existe ese cartel.")
+    return FileResponse(ruta, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @router.get("/pedidos-en-espera")
@@ -145,8 +154,9 @@ def clasificar(mensaje_id: int, _: acceso.Usuario = Sesion) -> list[str]:
 
 @router.post("/simulador")
 def simular(mensaje: MensajeEntrante, _: acceso.Usuario = Sesion) -> list[str]:
-    """Finge ser WhatsApp: sigue el mismo camino que un mensaje real y devuelve lo que respondió el bot."""
-    return bot.recibir(mensaje)
+    """Finge ser WhatsApp por el mismo camino de un mensaje real. No enlaza BSUID: eso solo lo firma Twilio."""
+    perfil = mensaje.perfil.model_copy(update={"bsuid": None}) if mensaje.perfil else None
+    return bot.recibir(mensaje.model_copy(update={"perfil": perfil}))
 
 
 @router.get("/simulador/mensajes")

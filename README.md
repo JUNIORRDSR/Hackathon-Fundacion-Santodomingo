@@ -95,11 +95,14 @@ desarrollo del canal se hacen en `backend/app/modulos/whatsapp/` y en el monitor
 
 ## Azure OpenAI para WhatsApp
 
-El conversador opcional entiende frases como «quiero que recojan mis orgánicos» o «cuántos puntos tengo»
-y guarda el paso pendiente para seguir por WhatsApp. El backend aplica las reglas del negocio. Consulta la
-[guía del diálogo, el conocimiento y Foundry](docs/azure-openai-whatsapp.md).
+Con `CONVERSADOR=llm` responde un agente: conversa con lo que escribe el vecino y su historial reciente. Con sus
+herramientas cuenta el estado, los kilos y los puntos de cada recolección, el saldo, los premios y en qué va un
+canje. También pide o cancela recolecciones, canjea, cambia el nombre con el que llamamos al vecino y manda carteles
+ilustrados. El backend ata cada herramienta al vecino que escribe y exige confirmación para canjear o cancelar.
+Consulta la [guía del agente, el conocimiento y Foundry](docs/azure-openai-whatsapp.md) y el
+[ADR-0016](docs/adr/0016-agente-conversacional-con-herramientas.md).
 
-Para editar textos en ejecución, apunta `WHATSAPP_REPLIES_FILE` a un JSON UTF-8 editable con claves del
+Para editar los avisos y las respuestas del diálogo local en ejecución, apunta `WHATSAPP_REPLIES_FILE` a un JSON UTF-8 editable con claves del
 [catálogo de WhatsApp](backend/app/modulos/whatsapp/respuestas.json). Puedes sobrescribir una parte del catálogo
 conservando sus marcadores. Un cambio válido se aplica sin reiniciar. En Docker, monta el directorio que contiene
 el archivo y usa la ruta del contenedor.
@@ -109,7 +112,7 @@ el archivo y usa la ruta del contenedor.
 | Pieza | Dónde | Cómo se activa |
 |---|---|---|
 | Frontend (Daniela) | `frontend/` | Ver [frontend/README.md](frontend/README.md) |
-| Bot con LLM (Leonardo) | `backend/app/modulos/whatsapp/conversador_llm.py`: clase `ConversadorLLM` que cumple `Conversador` y expone `desde_entorno()` | `CONVERSADOR=llm` |
+| Agente con LLM | `backend/app/modulos/whatsapp/agente/conversador.py`: clase `ConversadorAgente` que cumple `Conversador` y expone `desde_entorno()` ([ADR-0016](docs/adr/0016-agente-conversacional-con-herramientas.md)) | `CONVERSADOR=llm` |
 | API de WhatsApp (Jorge) | `backend/app/modulos/whatsapp/transporte_twilio.py`: clase `TransporteTwilio` que cumple `Transporte` y expone `desde_entorno()`, y un webhook que llama a `bot.recibir` | `TRANSPORTE=twilio` |
 | Despliegue (Leonardo) | `deploy/azure.sh` | Ver [ADR-0005](docs/adr/0005-despliegue-en-azure.md) |
 

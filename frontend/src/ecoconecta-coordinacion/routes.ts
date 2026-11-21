@@ -18,7 +18,7 @@ export interface EcoLocation {
   page: EcoPage
   filter?: string
   requestId?: string
-  collectionView?: 'rutas'
+  collectionView?: 'rutas' | 'cronograma'
   collectorId?: string
   recordsView?: RecordsView
 }
@@ -45,7 +45,7 @@ export function readHash(hash: string): EcoLocation {
     page,
     filter: params.get('estado') ?? undefined,
     requestId: params.get('solicitud') ?? undefined,
-    collectionView: view === 'rutas' ? view : undefined,
+    collectionView: view === 'rutas' || view === 'cronograma' ? view : undefined,
     collectorId: params.get('encargado') ?? undefined,
     recordsView: page === 'habilitar' && (view === 'vecinos' || view === 'lugares') ? view : undefined,
   }

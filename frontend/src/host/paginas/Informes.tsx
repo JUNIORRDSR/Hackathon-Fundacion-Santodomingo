@@ -7,6 +7,7 @@ import { useSubmission } from '../../ecoconecta-coordinacion/components/ui/useSu
 import { descargarExcel } from '../../ecoconecta-coordinacion/services/exportarExcel'
 import { api } from '../api'
 import { mesActual, moverMes, nombreMes, periodo } from './meses'
+import { Tablero } from './informes/Tablero'
 
 type Por = 'conjunto' | 'zona' | 'encargado' | 'vecino'
 interface Fila {
@@ -50,7 +51,6 @@ export function Informes({ grupo }: { grupo: 'organico' | 'reciclable' }) {
     return () => control.abort()
   }, [consulta])
   const titulo = nombreMes.format(new Date(desde + 'T00:00:00Z'))
-  const suma = (campo: (f: Fila) => number) => (filas ?? []).reduce((total, f) => total + campo(f), 0)
 
   function exportar() {
     const columnas = [
@@ -68,7 +68,7 @@ export function Informes({ grupo }: { grupo: 'organico' | 'reciclable' }) {
     <>
       <PageHeader
         title="Informes"
-        description="Cuánto se pidió, se recolectó y se pesó cada mes, para la coordinación y la fundación."
+        description="Métricas del mes para decidir: cuánto se recoge, dónde rinde la ruta y qué tan bien se separa."
         action={
           <button
             type="button"
@@ -101,60 +101,70 @@ export function Informes({ grupo }: { grupo: 'organico' | 'reciclable' }) {
             <Icon name="chevron" />
           </button>
         </div>
-        <MotionPills className="pills" label="Agrupar el informe" active={por}>
-          {(Object.keys(POR) as Por[]).map((p) => (
-            <button key={p} type="button" className="pill" aria-pressed={por === p} onClick={() => setPor(p)}>
-              {POR[p]}
-            </button>
-          ))}
-        </MotionPills>
       </div>
-      {error && <ErrorMessage message={error} />}
-      {descarga.error && <ErrorMessage message={descarga.error} />}
-      {!filas && !error && <p className="muted">Cargando el informe de {titulo}…</p>}
-      {filas?.length === 0 && (
-        <div className="card">
-          <EmptyState title={`En ${titulo} no hay solicitudes`}>Elige otro mes.</EmptyState>
+      <Tablero mes={mes} colectivo={colectivo} />
+      <section className="card informe-desglose" aria-labelledby="desglose-titulo">
+        <div className="informe-desglose-cabeza">
+          <div className="tablero-cabeza">
+            <h2 id="desglose-titulo">Desglose de {titulo}</h2>
+            <p>Lo pedido, recolectado y pesado, para exportar a Excel</p>
+          </div>
+          <MotionPills className="pills" label="Agrupar el informe" active={por}>
+            {(Object.keys(POR) as Por[]).map((p) => (
+              <button key={p} type="button" className="pill" aria-pressed={por === p} onClick={() => setPor(p)}>
+                {POR[p]}
+              </button>
+            ))}
+          </MotionPills>
         </div>
-      )}
-      {!!filas?.length && (
-        <div className="card informe">
-          <table className="informe-tabla">
-            <caption className="sr-only">
-              {POR[por]}, {titulo}
-            </caption>
-            <thead>
-              <tr>
-                <th scope="col">{COLUMNA[por]}</th>
-                <th scope="col">Solicitudes</th>
-                <th scope="col">Recolecciones</th>
-                <th scope="col">Kilos</th>
-                <th scope="col">Puntos</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filas.map((f) => (
-                <tr key={f.nombre}>
-                  <th scope="row">{f.nombre}</th>
-                  <td>{f.solicitudes}</td>
-                  <td>{f.recolecciones}</td>
-                  <td>{kilos.format(Number(f.kg))}</td>
-                  <td>{f.puntos}</td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr>
-                <th scope="row">Total</th>
-                <td>{suma((f) => f.solicitudes)}</td>
-                <td>{suma((f) => f.recolecciones)}</td>
-                <td>{kilos.format(suma((f) => Number(f.kg)))}</td>
-                <td>{suma((f) => f.puntos)}</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      )}
+        {error && <ErrorMessage message={error} />}
+        {descarga.error && <ErrorMessage message={descarga.error} />}
+        {!filas && !error && <p className="muted">Cargando el informe de {titulo}…</p>}
+        {filas?.length === 0 && <EmptyState title={`En ${titulo} no hay solicitudes`}>Elige otro mes.</EmptyState>}
+        {!!filas?.length && <Tabla filas={filas} por={por} titulo={titulo} />}
+      </section>
     </>
+  )
+}
+
+function Tabla({ filas, por, titulo }: { filas: Fila[]; por: Por; titulo: string }) {
+  const suma = (campo: (f: Fila) => number) => filas.reduce((total, f) => total + campo(f), 0)
+  return (
+    <div className="card informe">
+      <table className="informe-tabla">
+        <caption className="sr-only">
+          {POR[por]}, {titulo}
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">{COLUMNA[por]}</th>
+            <th scope="col">Solicitudes</th>
+            <th scope="col">Recolecciones</th>
+            <th scope="col">Kilos</th>
+            <th scope="col">Puntos</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filas.map((f) => (
+            <tr key={f.nombre}>
+              <th scope="row">{f.nombre}</th>
+              <td>{f.solicitudes}</td>
+              <td>{f.recolecciones}</td>
+              <td>{kilos.format(Number(f.kg))}</td>
+              <td>{f.puntos}</td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr>
+            <th scope="row">Total</th>
+            <td>{suma((f) => f.solicitudes)}</td>
+            <td>{suma((f) => f.recolecciones)}</td>
+            <td>{kilos.format(suma((f) => Number(f.kg)))}</td>
+            <td>{suma((f) => f.puntos)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
   )
 }

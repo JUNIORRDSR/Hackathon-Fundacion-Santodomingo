@@ -33,7 +33,7 @@ export function RecoleccionesPage({
   onSave: (result: CollectionResult) => Promise<() => void>
   onOpen: (item: Request) => void
   action?: ReactNode // la entrega directa, que pone el host
-  initialView?: 'rutas'
+  initialView?: 'rutas' | 'cronograma'
   routes: ReactNode
 }) {
   // El cronograma por horas vive aquí: en Inicio solo queda la lista de hoy (PRODUCT.md).

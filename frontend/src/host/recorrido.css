@@ -1,0 +1,45 @@
+/* El recorrido guiado con el manual de identidad. El globo vive fuera de .eco-app (en body): colores literales. */
+.driver-popover.eco-recorrido {
+  max-width: min(23rem, calc(100vw - 2rem));
+  padding: 1.15rem 1.2rem 1rem;
+  border: 1px solid #d7dfd7;
+  border-radius: 1.1rem;
+  background: #ffffff;
+  color: #202522;
+  box-shadow: 0 24px 48px -20px #04291f80, 0 3px 6px #2d4b3f14;
+  font: 400 1rem/1.5 Inter, Arial, sans-serif;
+}
+.driver-popover.eco-recorrido .driver-popover-title {
+  padding-right: 1.6rem;
+  color: #063b2e;
+  font: 650 1.15rem/1.25 Poppins, Arial, sans-serif;
+  letter-spacing: -.02em;
+}
+.driver-popover.eco-recorrido .driver-popover-description { margin-top: .35rem; color: #515e56; font-size: .95rem; }
+.driver-popover.eco-recorrido .driver-popover-footer { margin-top: 1rem; align-items: center; }
+.driver-popover.eco-recorrido .driver-popover-progress-text { color: #515e56; font-size: .8125rem; font-weight: 600; }
+.driver-popover.eco-recorrido .driver-popover-navigation-btns { gap: .4rem; }
+.driver-popover.eco-recorrido .driver-popover-footer button {
+  min-height: 2.6rem;
+  padding: .45rem 1rem;
+  border: 1px solid #d7dfd7;
+  border-radius: 9999px;
+  background: #ffffff;
+  color: #202522;
+  font: 650 .9rem/1 Inter, Arial, sans-serif;
+  text-shadow: none;
+}
+.driver-popover.eco-recorrido .driver-popover-footer button:hover { background: #eaf0ea; }
+.driver-popover.eco-recorrido .driver-popover-footer .driver-popover-next-btn {
+  border-color: #14802a;
+  background: #14802a;
+  color: #ffffff;
+}
+.driver-popover.eco-recorrido .driver-popover-footer .driver-popover-next-btn:hover { background: #0f6b22; }
+.driver-popover.eco-recorrido .driver-popover-close-btn { top: .55rem; right: .55rem; width: 2rem; height: 2rem; color: #515e56; font-size: 1.3rem; }
+.driver-popover.eco-recorrido .driver-popover-close-btn:hover { color: #063b2e; }
+.driver-popover.eco-recorrido button:focus-visible { outline: 3px solid #202522; outline-offset: 2px; }
+.driver-popover.eco-recorrido .driver-popover-arrow-side-left.driver-popover-arrow { border-left-color: #ffffff; }
+.driver-popover.eco-recorrido .driver-popover-arrow-side-right.driver-popover-arrow { border-right-color: #ffffff; }
+.driver-popover.eco-recorrido .driver-popover-arrow-side-top.driver-popover-arrow { border-top-color: #ffffff; }
+.driver-popover.eco-recorrido .driver-popover-arrow-side-bottom.driver-popover-arrow { border-bottom-color: #ffffff; }

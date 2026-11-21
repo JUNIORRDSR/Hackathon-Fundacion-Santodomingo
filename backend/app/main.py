@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
-from app import semillas
+from app import semillas, semillas_historia
 from app.compartido import bd
 from app.compartido.configuracion import variable
 from app.compartido.tipos import ErrorDeNegocio, NoEncontrado
@@ -56,6 +56,8 @@ def _conectar_modulos() -> None:
     acceso.preparar_esquema()
     if os.getenv("SEMBRAR_DEMO", "1") == "1":
         semillas.sembrar()
+        if os.getenv("SEMBRAR_HISTORIA") == "1":
+            semillas_historia.sembrar()
 
 
 def _servir_spa(app: FastAPI) -> None:

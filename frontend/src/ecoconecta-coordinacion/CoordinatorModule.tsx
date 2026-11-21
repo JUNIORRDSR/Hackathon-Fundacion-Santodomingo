@@ -40,6 +40,7 @@ interface CoordinatorModuleProps {
   dashboardImpact?: ReactNode
   collectionsAction?: ReactNode
   onSignOut?: () => void
+  onTour?: () => void
 }
 
 export function CoordinatorModule({
@@ -57,6 +58,7 @@ export function CoordinatorModule({
   dashboardImpact,
   collectionsAction,
   onSignOut,
+  onTour,
 }: CoordinatorModuleProps) {
   const { page } = location
   const pages = Object.keys(extraPages) as EcoPage[]
@@ -71,6 +73,7 @@ export function CoordinatorModule({
       extraPages={pages}
       badges={badges}
       onSignOut={onSignOut}
+      onTour={onTour}
     >
       {extraPages[page] ?? (
         <CoordinatorContent

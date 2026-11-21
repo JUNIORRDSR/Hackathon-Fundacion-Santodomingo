@@ -106,6 +106,7 @@ export function Layout({
   extraPages = [],
   badges = {},
   onSignOut,
+  onTour,
   children,
 }: {
   page: EcoPage
@@ -117,6 +118,7 @@ export function Layout({
   extraPages?: EcoPage[]
   badges?: Partial<Record<EcoPage, number>>
   onSignOut?: () => void
+  onTour?: () => void
   children: ReactNode
 }) {
   const visible = navigation.filter((item) => modulePages.includes(item.page) || extraPages.includes(item.page))
@@ -220,6 +222,18 @@ export function Layout({
               </MotionPills>
               <div className="topbar-actions">
                 <CoordinatorIdentity coordinator={coordinator} choices={choices} onChange={onChange} demo={demo} />
+                {onTour && (
+                  <button
+                    type="button"
+                    className="icon-button topbar-recorrido"
+                    onClick={onTour}
+                    aria-label="Recorrido guiado"
+                    title="Recorrido guiado"
+                    data-recorrido="boton"
+                  >
+                    <Icon name="spark" />
+                  </button>
+                )}
                 {extraPages.includes('configuracion') && (
                   <a
                     className="icon-button topbar-configuracion"

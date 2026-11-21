@@ -1,9 +1,17 @@
 import type { ReactNode } from 'react'
 import type { TrainingResource } from '../types'
-import { TrainingCard, VideoCard } from '../components/capacitacion/TrainingCards'
+import { GuideGrid, VideoCard } from '../components/capacitacion/TrainingCards'
+import { ColorCode, Posters, VideoGallery } from '../components/capacitacion/Secciones'
+import { SortingGame } from '../components/capacitacion/SortingGame'
+import { canecas, carteles, videos } from '../components/capacitacion/contenido'
 import { EmptyState } from '../components/ui/Feedback'
 import { Icon } from '../components/ui/Icon'
+import { MonarchMark } from '../components/ui/MonarchMark'
 
+type Guide = TrainingResource & { tipo: 'guia' }
+type OwnVideo = TrainingResource & { tipo: 'video' }
+
+// La capacitación del barrio: el código de colores, las guías con avance, un juego, videos y los carteles del bot.
 export function CapacitacionPage({
   resources,
   sample = false,
@@ -17,44 +25,60 @@ export function CapacitacionPage({
   schedules?: ReactNode
   resourcesFeedback?: ReactNode
 }) {
+  const guides = resources.filter((item): item is Guide => item.tipo === 'guia')
+  const ownVideos = resources.filter((item): item is OwnVideo => item.tipo === 'video' && !!item.url)
+  const play = () => document.getElementById('juego-donde-va')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   return (
-    <>
-      <section className="training-hero">
-        <div>
+    <div className="capacitacion">
+      <section className="training-hero cap-hero">
+        <div className="cap-hero-texto">
           <p className="training-context">
-            <Icon name="book" /> EcoConecta · Guías de separación
+            <Icon name="book" /> EcoConecta · Escuela del barrio
           </p>
           <h1 tabIndex={-1}>Capacitación ambiental</h1>
-          <p className="muted">Aprende a separar los residuos que generas en casa o en tu negocio.</p>
+          <p className="cap-hero-lema">
+            Separar bien es el primer paso: lo orgánico vuelve a la huerta y lo aprovechable, a las manos de los
+            recicladores.
+          </p>
+          <ul className="cap-hero-cifras" aria-label="Lo que hay en esta página">
+            <li>
+              <strong>{canecas.length}</strong> canecas
+            </li>
+            <li>
+              <strong>{guides.length}</strong> guías
+            </li>
+            <li>
+              <strong>{videos.length + ownVideos.length}</strong> videos
+            </li>
+            <li>
+              <strong>{carteles.length}</strong> carteles
+            </li>
+          </ul>
+          <div className="cap-hero-acciones">
+            <button type="button" className="button cap-hero-jugar" onClick={play}>
+              <Icon name="spark" /> Jugar ¿Dónde va?
+            </button>
+            {publicHref && (
+              <a className="button cap-hero-publica" href={publicHref}>
+                Abrir vista pública
+              </a>
+            )}
+          </div>
           {sample && (
             <span className="demo-note">
               <Icon name="info" /> Contenido de ejemplo
             </span>
           )}
         </div>
-        {publicHref && (
-          <a className="button button-secondary" href={publicHref}>
-            Abrir vista pública
-          </a>
-        )}
+        <div className="cap-hero-arte" aria-hidden="true">
+          <MonarchMark className="cap-hero-monarca" />
+        </div>
       </section>
       {schedules}
+      <ColorCode />
       {resourcesFeedback ??
-        (resources.length ? (
-          <>
-            <div className="training-grid">
-              {resources
-                .filter((item) => item.tipo === 'guia')
-                .map((item) => (
-                  <TrainingCard key={item.id} resource={item} />
-                ))}
-            </div>
-            {resources
-              .filter((item) => item.tipo === 'video')
-              .map((item) => (
-                <VideoCard key={item.id} resource={item} />
-              ))}
-          </>
+        (guides.length ? (
+          <GuideGrid guides={guides} />
         ) : (
           <div className="card">
             <EmptyState title="Aún no hay guías publicadas">
@@ -62,6 +86,13 @@ export function CapacitacionPage({
             </EmptyState>
           </div>
         ))}
-    </>
+      <SortingGame />
+      <VideoGallery
+        extra={ownVideos.map((item) => (
+          <VideoCard key={item.id} resource={item} />
+        ))}
+      />
+      <Posters />
+    </div>
   )
 }

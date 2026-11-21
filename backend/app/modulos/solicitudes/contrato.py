@@ -1,5 +1,6 @@
 """Contrato público de solicitudes, el núcleo. Lo único que otros módulos y la API pueden importar (ADR-0001)."""
 from dataclasses import asdict
+from functools import cache
 from datetime import date, datetime, time
 from decimal import Decimal
 from uuid import UUID
@@ -223,8 +224,10 @@ def _operar(id: UUID, accion, evento=None) -> SolicitudVista:
 
 
 def _consultar(consulta) -> list[SolicitudVista]:
+    """Una lista lee cada vecino y cada lugar una sola vez, no una vez por fila."""
+    lectores = [cache(leer) for leer in (directorio.solicitante, directorio.zona, directorio.conjunto)]
     with transaccion() as c:
-        return [_vista(_de_fila(fila)) for fila in c.execute(consulta).all()]
+        return [_vista(_de_fila(fila), *lectores) for fila in c.execute(consulta).all()]
 
 
 def _cargar(c, id: UUID) -> Solicitud:
@@ -256,9 +259,9 @@ def _ids(s: Solicitud) -> dict:
     return {"solicitud_id": s.id, "codigo": s.codigo, "solicitante_id": s.solicitante_id, "flujo": s.flujo}
 
 
-def _vista(s: Solicitud) -> SolicitudVista:
-    solicitante = directorio.solicitante(s.solicitante_id)
+def _vista(s: Solicitud, leer_solicitante=None, leer_zona=None, leer_conjunto=None) -> SolicitudVista:
+    solicitante = (leer_solicitante or directorio.solicitante)(s.solicitante_id)
+    conjunto = (leer_conjunto or directorio.conjunto)(s.conjunto_id).nombre if s.conjunto_id else None
     return SolicitudVista(**asdict(s), colectivo=COLECTIVO_DEL_FLUJO[s.flujo], solicitante_nombre=solicitante.nombre,
                           telefono=solicitante.telefono, recibida=s.historial[0].fecha,
-                          zona=directorio.zona(s.zona_id).nombre,
-                          conjunto=directorio.conjunto(s.conjunto_id).nombre if s.conjunto_id else None)
+                          zona=(leer_zona or directorio.zona)(s.zona_id).nombre, conjunto=conjunto)

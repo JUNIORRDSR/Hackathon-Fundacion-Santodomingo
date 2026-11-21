@@ -9,6 +9,7 @@ import { useRepositoryQuery } from './ecoconecta-coordinacion/services/useCoordi
 import './host/host.css'
 import { api } from './host/api'
 import { capacitacionPublica, crearRepositorio, recursoDe } from './host/repositorio'
+import { iniciarRecorrido, recorridoPendiente } from './host/recorrido'
 import { rutasPublicas } from './host/rutas'
 import { useSesion } from './host/sesion'
 import type { Usuario } from './host/sesion'
@@ -106,6 +107,13 @@ function App() {
     }
   }, [usuario])
 
+  // La primera vez que alguien entra en este navegador, el recorrido arranca solo cuando el Inicio ya cargó.
+  useEffect(() => {
+    if (!usuario || !recorridoPendiente()) return
+    const espera = window.setTimeout(() => iniciarRecorrido(usuario.rol === 'administrador'), 1200)
+    return () => window.clearTimeout(espera)
+  }, [usuario])
+
   if (location.page === 'capacitacion' && new URLSearchParams(hash.split('?')[1]).get('publica') === '1') {
     return <Capacitacion />
   }
@@ -165,6 +173,7 @@ function App() {
       dashboardImpact={<Impacto grupo={coordinador.grupo} />}
       collectionsAction={<EntregaHuerta grupo={coordinador.grupo} />}
       onSignOut={() => void salir()}
+      onTour={() => iniciarRecorrido(esAdmin)}
     />
   )
 }

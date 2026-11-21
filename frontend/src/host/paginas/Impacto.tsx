@@ -19,7 +19,7 @@ const entero = new Intl.NumberFormat('es-CO')
 const etiqueta = (fecha: string) => diaCorto.format(new Date(fecha + 'T00:00:00Z'))
 
 // Eje y con números redondos (1, 2 o 5 por potencia de 10) y tres o cuatro marcas.
-function escala(maximo: number) {
+export function escala(maximo: number) {
   const bruto = maximo / 3
   const potencia = 10 ** Math.floor(Math.log10(bruto))
   const paso = [1, 2, 5, 10].map((m) => m * potencia).find((p) => p >= bruto) ?? potencia * 10

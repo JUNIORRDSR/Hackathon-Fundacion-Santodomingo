@@ -3,6 +3,7 @@ import './styles/dashboard.css'
 import './styles/motion.css'
 import './styles/pickers.css'
 import './styles/rutas.css'
+import './styles/capacitacion.css'
 
 export { CoordinatorModule } from './CoordinatorModule'
 export { PublicTrainingModule } from './pages/PublicTrainingModule'

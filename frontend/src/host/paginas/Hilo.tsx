@@ -140,7 +140,8 @@ export function Hilo({
   )
 }
 
-// La foto o el audio del vecino. Con el control tomado, la coordinación decide: responde ella o pide la revisión de la IA.
+// La foto o el audio del vecino. Con el control tomado, la coordinación decide:
+// responde ella o pide la revisión de la IA.
 function Adjunto({
   mensaje,
   conControl,
@@ -173,7 +174,12 @@ function Adjunto({
         style={{ display: 'block', maxWidth: '16rem', maxHeight: '20rem', borderRadius: '0.75rem' }}
       />
       {conControl && mensaje.direccion === 'entrante' && alClasificar && (
-        <button type="button" className="button button-secondary" disabled={clasificando} onClick={() => void clasificar()}>
+        <button
+          type="button"
+          className="button button-secondary"
+          disabled={clasificando}
+          onClick={() => void clasificar()}
+        >
           {clasificando ? 'Clasificando…' : 'Clasificar con IA'}
         </button>
       )}

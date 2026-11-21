@@ -9,7 +9,6 @@ from pydantic import BaseModel
 
 from app.compartido.formato import dia_local
 from app.compartido.tipos import Colectivo, Flujo
-from app.modulos.directorio import contrato as directorio
 from app.modulos.puntos import contrato as puntos
 from app.modulos.solicitudes import contrato as solicitudes
 
@@ -57,13 +56,13 @@ def resumen(desde: date, hasta: date, colectivo: Colectivo | None = None) -> Res
 
 
 def csv_de_solicitudes(desde: date, hasta: date, colectivo: Colectivo | None = None) -> str:
-    """Una fila por solicitud, sin nombre, teléfono ni dirección. Con «;» y coma decimal: Excel en español."""
+    """Una fila por solicitud, sin nombre, teléfono ni dirección; el conjunto sirve para la tarifa multiusuario."""
     salida = io.StringIO("﻿")
     salida.seek(0, io.SEEK_END)
     escritor = csv.writer(salida, delimiter=";")
-    escritor.writerow(["codigo", "flujo", "estado", "zona", "canal", "recibida", "dia", "kg"])
+    escritor.writerow(["codigo", "flujo", "estado", "zona", "conjunto", "canal", "recibida", "dia", "kg"])
     for s in _en_periodo(desde, hasta, colectivo):
-        escritor.writerow([s.codigo, s.flujo, s.estado, directorio.zona(s.zona_id).nombre, s.canal,
+        escritor.writerow([s.codigo, s.flujo, s.estado, s.zona, s.conjunto or "", s.canal,
                            dia_local(s.recibida), s.dia or "", str(s.kg or "").replace(".", ",")])
     return salida.getvalue()
 

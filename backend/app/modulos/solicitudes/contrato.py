@@ -48,6 +48,8 @@ class SolicitudVista(BaseModel):
     telefono: str
     zona_id: UUID
     zona: str
+    conjunto_id: UUID | None = None
+    conjunto: str | None = None
     direccion: str
     preferencia: Franja
     observaciones: str
@@ -106,7 +108,8 @@ def registrar(nueva: NuevaSolicitud, por: str = "solicitante") -> SolicitudVista
             raise ErrorDeNegocio(f"Ya hay una solicitud abierta de {NOMBRE_FLUJO[nueva.flujo]}: {abierta}.")
         numero = c.execute(select(consecutivos[nueva.flujo].next_value())).scalar_one()
         solicitud = Solicitud.recibir(por, codigo=f"{PREFIJO[nueva.flujo]}-{numero:04d}", zona_id=solicitante.zona_id,
-                                      direccion=solicitante.direccion, **nueva.model_dump())
+                                      conjunto_id=solicitante.conjunto_id, direccion=solicitante.direccion,
+                                      **nueva.model_dump())
         _guardar(c, solicitud)
         publicar(SolicitudRecibida(**_ids(solicitud)))
         return _vista(solicitud)
@@ -216,4 +219,5 @@ def _vista(s: Solicitud) -> SolicitudVista:
     solicitante = directorio.solicitante(s.solicitante_id)
     return SolicitudVista(**asdict(s), colectivo=COLECTIVO_DEL_FLUJO[s.flujo], solicitante_nombre=solicitante.nombre,
                           telefono=solicitante.telefono, recibida=s.historial[0].fecha,
-                          zona=directorio.zona(s.zona_id).nombre)
+                          zona=directorio.zona(s.zona_id).nombre,
+                          conjunto=directorio.conjunto(s.conjunto_id).nombre if s.conjunto_id else None)

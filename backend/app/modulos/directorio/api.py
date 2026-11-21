@@ -1,9 +1,7 @@
-"""API de directorio: zonas, encargados y solicitantes (alta asistida y habilitación, RN-08)."""
+"""API de directorio: zonas y conjuntos, encargados y solicitantes (alta asistida y habilitación, RN-08)."""
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel, Field
-
 from app.compartido.tipos import Colectivo
 from app.modulos.acceso import contrato as acceso
 from app.modulos.directorio import contrato as directorio
@@ -12,19 +10,31 @@ router = APIRouter(prefix="/api/directorio", tags=["directorio"])
 Sesion = Depends(acceso.usuario_actual)
 
 
-class NuevaZona(BaseModel):
-    nombre: str = Field(min_length=2, max_length=60)
-
-
 @router.get("/zonas")
 def zonas(_: acceso.Usuario = Sesion) -> list[directorio.ZonaVista]:
+    """Las zonas con sus conjuntos. Coordinación y administrador los mantienen (ADR-0014)."""
     return directorio.zonas()
 
 
 @router.post("/zonas", status_code=201)
-def crear_zona(datos: NuevaZona, u: acceso.Usuario = Sesion) -> directorio.ZonaVista:
-    acceso.exigir_administrador(u)
+def crear_zona(datos: directorio.NuevoLugar, _: acceso.Usuario = Sesion) -> directorio.ZonaVista:
     return directorio.crear_zona(datos.nombre)
+
+
+@router.patch("/zonas/{id}")
+def cambiar_zona(id: UUID, datos: directorio.CambioLugar, _: acceso.Usuario = Sesion) -> directorio.ZonaVista:
+    return directorio.cambiar_zona(id, datos)
+
+
+@router.post("/zonas/{id}/conjuntos", status_code=201)
+def crear_conjunto(id: UUID, datos: directorio.NuevoLugar, _: acceso.Usuario = Sesion) -> directorio.ConjuntoVista:
+    return directorio.crear_conjunto(id, datos.nombre)
+
+
+@router.patch("/conjuntos/{id}")
+def cambiar_conjunto(id: UUID, datos: directorio.CambioLugar,
+                     _: acceso.Usuario = Sesion) -> directorio.ConjuntoVista:
+    return directorio.cambiar_conjunto(id, datos)
 
 
 @router.get("/encargados")
@@ -53,9 +63,9 @@ def solicitantes(estado: directorio.EstadoSolicitante | None = None,
 
 @router.post("/solicitantes", status_code=201)
 def registrar_solicitante(datos: directorio.NuevoSolicitante,
-                          _: acceso.Usuario = Sesion) -> directorio.SolicitanteVista:
-    """Registro asistido desde la tablet: entra habilitado."""
-    return directorio.registrar_solicitante(datos, habilitado=True)
+                          u: acceso.Usuario = Sesion) -> directorio.SolicitanteVista:
+    """Registro asistido desde la tableta: entra habilitado y la autorización queda firmada por quien registra."""
+    return directorio.registrar_solicitante(datos, habilitado=True, registrado_por=u.nombre)
 
 
 @router.get("/solicitantes/{id}")

@@ -45,7 +45,7 @@ def _whatsapp(cliente: TestClient, texto: str) -> list[str]:
 
 def _registrar_por_whatsapp_y_habilitar(admin: TestClient) -> dict:
     """Una unidad productiva se registra por WhatsApp con su primer pedido y queda pendiente hasta que la habilitan."""
-    for texto in ("Hola", "1", "2", "2", "Restaurante La Esquina, local 3", "La Esquina", "1"):
+    for texto in ("Hola", "1", "2", "1", "Local 3", "La Esquina", "1"):  # 1 = Corredor comercial (ADR-0014)
         _whatsapp(admin, texto)
     assert "te enviamos el código para tu bolsa" in _whatsapp(admin, "3")[0]
     solicitudes = admin.get("/api/solicitudes").json()

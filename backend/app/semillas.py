@@ -1,4 +1,4 @@
-"""Datos de demostración, todos ficticios (Ley 1581). Las zonas salen de docs/reto/contexto-barrio.md."""
+"""Datos de demostración, todos ficticios (Ley 1581). Los lugares salen de docs/reto/contexto-barrio.md."""
 from app.compartido.configuracion import variable
 from app.compartido.tipos import Colectivo, Flujo
 from app.modulos.acceso import contrato as acceso
@@ -15,21 +15,37 @@ def sembrar() -> None:
             puntos.guardar_premio(puntos.NuevoPremio(nombre=nombre, costo=costo), ejemplo=True)
     if directorio.zonas():
         return
-    _zonas_y_encargados()
+    _lugares_y_encargados()
     _usuarios(variable("CLAVE_DEMO", "ecoconecta-demo"))
     for pieza in PIEZAS:
         contenidos.crear(pieza)
 
 
-def _zonas_y_encargados() -> None:
-    brisas, corredor, etapa1, etapa2 = (directorio.crear_zona(nombre) for nombre in
-                                        ("Brisas de San Pablo", "Corredor comercial", "Etapa 1", "Etapa 2"))
-    for nombre, colectivo, zonas in (("Huertero Uno", Colectivo.HUERTEROS, (corredor, brisas)),
-                                     ("Huertera Dos", Colectivo.HUERTEROS, (etapa1, etapa2)),
-                                     ("Reciclador Uno", Colectivo.RECICLADORES, (brisas,)),
-                                     ("Recicladora Dos", Colectivo.RECICLADORES, (corredor, etapa1, etapa2))):
-        directorio.registrar_encargado(directorio.NuevoEncargado(nombre=nombre, colectivo=colectivo,
-                                                                 zonas=[z.id for z in zonas]))
+# Zonas y sus conjuntos o sectores (ADR-0014); el Corredor comercial no tiene conjuntos.
+LUGARES = {
+    "Corredor comercial": (),
+    "Etapa 1": ("Sector Salón Comunal", "Sector Sede"),
+    "Etapa 2": ("Manzana 13", "Manzana 14", "Manzana 15", "Manzana 16", "Manzana 19"),
+    "Etapa 3": ("Álamos", "Parques de Bolívar 1", "Parques de Bolívar 2"),
+    "Etapa 4": ("Brisas de San Pablo", "Mirasol", "Portobelo", "Aurora"),
+}
+ENCARGADOS = (("Huertero Uno", Colectivo.HUERTEROS, ("Corredor comercial", "Brisas de San Pablo")),
+              ("Huertera Dos", Colectivo.HUERTEROS, ("Etapa 1", "Etapa 2")),
+              ("Reciclador Uno", Colectivo.RECICLADORES, ("Brisas de San Pablo",)),
+              ("Recicladora Dos", Colectivo.RECICLADORES, ("Corredor comercial", "Etapa 1", "Etapa 2")))
+
+
+def _lugares_y_encargados() -> None:
+    """Un encargado que cubre una zona cubre todos sus conjuntos (o la zona misma, si no tiene)."""
+    ids = {}
+    for nombre_zona, nombres in LUGARES.items():
+        zona = directorio.crear_zona(nombre_zona)
+        conjuntos = [directorio.crear_conjunto(zona.id, nombre) for nombre in nombres]
+        ids[nombre_zona] = [c.id for c in conjuntos] or [zona.id]
+        ids.update({c.nombre: [c.id] for c in conjuntos})
+    for nombre, colectivo, lugares in ENCARGADOS:
+        directorio.registrar_encargado(directorio.NuevoEncargado(
+            nombre=nombre, colectivo=colectivo, lugares=[id_lugar for lugar in lugares for id_lugar in ids[lugar]]))
 
 
 def _usuarios(clave: str) -> None:

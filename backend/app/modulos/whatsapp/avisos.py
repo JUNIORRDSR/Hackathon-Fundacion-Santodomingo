@@ -80,6 +80,10 @@ def _al_cancelar(e: solicitudes.SolicitudCancelada) -> None:
 
 def _al_habilitar(e: directorio.SolicitanteHabilitado) -> None:
     """Si dejó su primer pedido al registrarse, entra ahora: el aviso de «recibida» le da el código de la bolsa."""
+    if e.asistido:  # lo registró la coordinación: bienvenida con el aviso de privacidad (ADR-0014)
+        nombre = directorio.solicitante(e.solicitante_id).nombre
+        _avisar(e.solicitante_id, plantilla("aviso_registro_asistido", nombre=nombre, comando="MENÚ"))
+        return
     pedido = bot.tomar_pedido_en_espera(directorio.solicitante(e.solicitante_id).telefono)
     if pedido is None:
         _avisar(e.solicitante_id, plantilla("aviso_solicitante_habilitado", comando="MENÚ"))

@@ -42,6 +42,7 @@ class Solicitud:
     preferencia: Franja
     observaciones: str
     canal: Canal
+    conjunto_id: UUID | None = None  # el del vecino al pedir: el historial no cambia si se muda
     id: UUID = field(default_factory=uuid4)
     estado: Estado = Estado.RECIBIDA
     encargado_id: UUID | None = None

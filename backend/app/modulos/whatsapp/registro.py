@@ -32,14 +32,17 @@ def _tipo(texto: str, telefono: str, memoria: dict) -> list[str]:
         return [plantilla("registro_tipo_invalido", hogar="1", negocio="2")]
     tipo = TipoGenerador.HOGAR if texto == "1" else TipoGenerador.UNIDAD_PRODUCTIVA
     memoria.update(paso="zona", tipo=tipo.value)
-    return [_menu_zonas()]
+    return [_menu_lugares(directorio.lugares_para_elegir())]
 
 
 def _zona(texto: str, telefono: str, memoria: dict) -> list[str]:
-    zonas = directorio.zonas()
-    if not texto.isdigit() or not 1 <= int(texto) <= len(zonas):
-        return [_menu_zonas()]
-    memoria.update(paso="direccion", zona_id=str(zonas[int(texto) - 1].id))
+    """Una sola pregunta por el lugar: el conjunto o sector, o la zona si no tiene conjuntos (ADR-0014)."""
+    lugares = directorio.lugares_para_elegir()
+    if not texto.isdigit() or not 1 <= int(texto) <= len(lugares):
+        return [_menu_lugares(lugares)]
+    lugar = lugares[int(texto) - 1]
+    memoria.update(paso="direccion", zona_id=str(lugar.zona_id),
+                   conjunto_id=str(lugar.conjunto_id) if lugar.conjunto_id else None)
     return [plantilla("registro_direccion")]
 
 
@@ -75,15 +78,17 @@ def _primera_franja(texto: str, telefono: str, memoria: dict) -> list[str]:
         return [plantilla("registro_franja_invalida")]
     directorio.registrar_solicitante(directorio.NuevoSolicitante(
         telefono=telefono, nombre=memoria["nombre"], tipo=memoria["tipo"], zona_id=memoria["zona_id"],
-        direccion=memoria["direccion"], autoriza_datos=True), habilitado=False)
+        conjunto_id=memoria.get("conjunto_id"), direccion=memoria["direccion"], autoriza_datos=True),
+        habilitado=False)
     nombre, flujo, franja = memoria["nombre"], Flujo(memoria["flujo"]), FRANJAS[texto]
     memoria.clear()
     memoria["pedido_en_espera"] = {"flujo": flujo.value, "preferencia": franja.value}
     return [plantilla("registro_recibido", nombre=nombre, flujo=NOMBRE_FLUJO[flujo], franja=NOMBRE_FRANJA[franja])]
 
 
-def _menu_zonas() -> str:
-    opciones = (f"{i} {zona.nombre}" for i, zona in enumerate(directorio.zonas(), start=1))
+def _menu_lugares(lugares: list) -> str:
+    opciones = (f"{i} {lugar.nombre}" + (f" ({lugar.zona})" if lugar.conjunto_id else "")
+                for i, lugar in enumerate(lugares, start=1))
     return plantilla("registro_zona", opciones="\n".join(opciones))
 
 

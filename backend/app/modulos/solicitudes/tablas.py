@@ -12,6 +12,7 @@ solicitudes = Table(
     Column("solicitante_id", Uuid, nullable=False, index=True),  # directorio
     Column("flujo", String(12), nullable=False),
     Column("zona_id", Uuid, nullable=False),  # directorio
+    Column("conjunto_id", Uuid),  # directorio; vacío si la zona no tiene conjuntos
     Column("direccion", String(120), nullable=False),
     Column("preferencia", String(10), nullable=False),
     Column("observaciones", Text, nullable=False),

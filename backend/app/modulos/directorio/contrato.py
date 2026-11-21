@@ -1,4 +1,4 @@
-"""Contrato público de directorio: solicitantes, encargados y zonas."""
+"""Contrato público de directorio: solicitantes, encargados y lugares (zonas y conjuntos, ADR-0014)."""
 from datetime import datetime, timezone
 from enum import StrEnum
 from uuid import UUID, uuid4
@@ -10,6 +10,9 @@ from app.compartido.bd import transaccion
 from app.compartido.eventos import Evento, publicar
 from app.compartido.tipos import Colectivo, ErrorDeNegocio, NoEncontrado, TipoGenerador
 from app.modulos.directorio import tablas as t
+from app.modulos.directorio.lugares import (  # noqa: F401  los lugares son parte del contrato público (ADR-0014)
+    CambioLugar, ConjuntoVista, Lugar, NuevoLugar, ZonaVista, cambiar_conjunto, cambiar_zona, conjunto, crear_conjunto,
+    crear_zona, existe_lugar, lugares_para_elegir, validar_lugar, zona, zonas)
 
 TELEFONO = r"^\+\d{8,15}$"  # E.164, como lo entrega WhatsApp
 
@@ -26,7 +29,8 @@ class NuevoSolicitante(BaseModel):
     nombre: str = Field(min_length=2, max_length=60)  # nombre o alias
     tipo: TipoGenerador
     zona_id: UUID
-    direccion: str = Field(min_length=3, max_length=120)  # torre y apartamento, o nombre y dirección del negocio
+    conjunto_id: UUID | None = None  # obligatorio si la zona tiene conjuntos (ADR-0014)
+    direccion: str = Field(min_length=3, max_length=120)  # torre y apartamento, casa o local
     autoriza_datos: bool  # Ley 1581: sin autorización no se registra
 
 
@@ -36,20 +40,17 @@ class SolicitanteVista(BaseModel):
     nombre: str
     tipo: TipoGenerador
     zona_id: UUID
+    conjunto_id: UUID | None = None
     direccion: str
     estado: EstadoSolicitante
     autorizo_en: datetime
-
-
-class ZonaVista(BaseModel):
-    id: UUID
-    nombre: str
+    registrado_por: str | None = None  # quien firmó la autorización desde la tableta
 
 
 class NuevoEncargado(BaseModel):
     nombre: str = Field(min_length=2, max_length=60)
     colectivo: Colectivo
-    zonas: list[UUID] = []
+    lugares: list[UUID] = []  # conjuntos, o zonas sin conjuntos
 
 
 class EncargadoVista(NuevoEncargado):
@@ -61,29 +62,34 @@ class CambioEncargado(BaseModel):
     """Edición desde la tablet: un encargado inactivo sale de las sugerencias y conserva su historial."""
 
     nombre: str = Field(min_length=2, max_length=60)
-    zonas: list[UUID] = []
+    lugares: list[UUID] = []
     activo: bool = True
 
 
 class SolicitanteHabilitado(Evento):
     solicitante_id: UUID
+    asistido: bool = False  # lo registró la coordinación: le llega la bienvenida con el aviso de privacidad
 
 
-def registrar_solicitante(nuevo: NuevoSolicitante, habilitado: bool) -> SolicitanteVista:
+def registrar_solicitante(nuevo: NuevoSolicitante, habilitado: bool,
+                          registrado_por: str | None = None) -> SolicitanteVista:
     """Por WhatsApp entra PENDIENTE; por registro asistido o lista piloto de la fundación, habilitado (RN-08)."""
     if not nuevo.autoriza_datos:
         raise ErrorDeNegocio("Sin autorización de datos no se puede registrar (Ley 1581).")
     with transaccion() as c:
         if solicitante_por_telefono(nuevo.telefono):
             raise ErrorDeNegocio("Ese número ya está registrado.")
-        zona(nuevo.zona_id)
+        validar_lugar(nuevo.zona_id, nuevo.conjunto_id)
         solicitante_nuevo = SolicitanteVista(
             id=uuid4(),
+            registrado_por=registrado_por,
             estado=EstadoSolicitante.HABILITADO if habilitado else EstadoSolicitante.PENDIENTE,
             autorizo_en=datetime.now(timezone.utc),
             **nuevo.model_dump(exclude={"autoriza_datos"}),
         )
         c.execute(insert(t.solicitantes).values(solicitante_nuevo.model_dump()))
+        if habilitado and registrado_por:
+            publicar(SolicitanteHabilitado(solicitante_id=solicitante_nuevo.id, asistido=True))
         return solicitante_nuevo
 
 
@@ -114,39 +120,22 @@ def solicitantes(estado: EstadoSolicitante | None = None) -> list[SolicitanteVis
     return _todos(consulta, SolicitanteVista)
 
 
-def crear_zona(nombre: str) -> ZonaVista:
-    nueva = ZonaVista(id=uuid4(), nombre=nombre)
-    with transaccion() as c:
-        c.execute(insert(t.zonas).values(nueva.model_dump()))
-    return nueva
-
-
-def zonas() -> list[ZonaVista]:
-    return _todos(select(t.zonas).order_by(t.zonas.c.nombre), ZonaVista)
-
-
-def zona(id: UUID) -> ZonaVista:
-    return _uno(select(t.zonas).where(t.zonas.c.id == id), ZonaVista) or _no_existe("la zona", id)
-
-
 def registrar_encargado(nuevo: NuevoEncargado) -> EncargadoVista:
-    for id_zona in nuevo.zonas:
-        zona(id_zona)
+    _exigir_lugares(nuevo.lugares)
     encargado_nuevo = EncargadoVista(id=uuid4(), **nuevo.model_dump())
     with transaccion() as c:
         c.execute(insert(t.encargados).values({**encargado_nuevo.model_dump(),
-                                               "zonas": [str(z) for z in encargado_nuevo.zonas]}))
+                                               "lugares": [str(z) for z in encargado_nuevo.lugares]}))
     return encargado_nuevo
 
 
 def actualizar_encargado(id: UUID, cambio: CambioEncargado) -> EncargadoVista:
     actual = encargado(id)
-    for id_zona in cambio.zonas:
-        zona(id_zona)
+    _exigir_lugares(cambio.lugares)
     nuevo = actual.model_copy(update=cambio.model_dump())
     with transaccion() as c:
         c.execute(update(t.encargados).where(t.encargados.c.id == id).values(
-            nombre=nuevo.nombre, zonas=[str(z) for z in nuevo.zonas], activo=nuevo.activo))
+            nombre=nuevo.nombre, lugares=[str(z) for z in nuevo.lugares], activo=nuevo.activo))
     return nuevo
 
 
@@ -161,9 +150,15 @@ def encargados(colectivo: Colectivo | None = None) -> list[EncargadoVista]:
     return _todos(consulta, EncargadoVista)
 
 
-def sugerir_encargados(colectivo: Colectivo, zona_id: UUID) -> list[EncargadoVista]:
-    """Solo sugiere: asigna el coordinador (§9). Primero quienes cubren la zona."""
-    return sorted((e for e in encargados(colectivo) if e.activo), key=lambda e: zona_id not in e.zonas)
+def sugerir_encargados(colectivo: Colectivo, lugar_id: UUID) -> list[EncargadoVista]:
+    """Solo sugiere: asigna el coordinador (§9). Primero quienes cubren el conjunto (o la zona) del vecino."""
+    return sorted((e for e in encargados(colectivo) if e.activo), key=lambda e: lugar_id not in e.lugares)
+
+
+def _exigir_lugares(ids: list[UUID]) -> None:
+    for id_lugar in ids:
+        if not existe_lugar(id_lugar):
+            raise NoEncontrado(f"No existe el lugar {id_lugar}.")
 
 
 def _uno(consulta, modelo):

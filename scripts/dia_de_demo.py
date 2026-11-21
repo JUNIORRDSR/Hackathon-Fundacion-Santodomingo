@@ -17,7 +17,9 @@ CLAVE = os.getenv("CLAVE_DEMO", "ecoconecta-demo")
 HOY = datetime.now(ZoneInfo("America/Bogota")).date().isoformat()
 abridor = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
 
-# (teléfono ficticio, nombre, tipo, zona, dirección, flujo, franja, qué pasa hoy)
+# Lugares de los vecinos de abajo, por su número (ADR-0014): conjunto o sector, o la zona sin conjuntos.
+LUGARES = ("Brisas de San Pablo", "Corredor comercial", "Sector Salón Comunal", "Manzana 15")
+# (teléfono ficticio, nombre, tipo, lugar, dirección, flujo, franja, qué pasa hoy)
 # qué pasa hoy: pendiente · asignada · HH:MM (programada) · HH:MM+kg (recolectada) · rechazo
 VECINOS = [
     ("+573000000020", "Marta Salcedo", "hogar", 0, "Torre 3 apto 201", "organico", "manana", "07:30+4.5"),
@@ -57,10 +59,21 @@ def llamar(ruta, cuerpo=None, metodo=None):
     return json.loads(texto) if texto else None
 
 
-def vecino(telefono, nombre, tipo, zona, direccion, existentes):
+def lugares_por_nombre():
+    """Nombre del conjunto (o de la zona sin conjuntos) → (zona_id, conjunto_id)."""
+    lugares = {}
+    for zona in llamar("/directorio/zonas"):
+        lugares[zona["nombre"]] = (zona["id"], None)
+        lugares.update({c["nombre"]: (zona["id"], c["id"]) for c in zona["conjuntos"]})
+    return lugares
+
+
+def vecino(telefono, nombre, tipo, lugar, direccion, existentes):
     if telefono in existentes:
         return existentes[telefono]
-    return llamar("/directorio/solicitantes", {"telefono": telefono, "nombre": nombre, "tipo": tipo, "zona_id": zona,
+    zona_id, conjunto_id = lugar
+    return llamar("/directorio/solicitantes", {"telefono": telefono, "nombre": nombre, "tipo": tipo,
+                                              "zona_id": zona_id, "conjunto_id": conjunto_id,
                                               "direccion": direccion, "autoriza_datos": True})["id"]
 
 
@@ -79,12 +92,12 @@ def llevar_el_dia(solicitud, plan, encargado):
 
 def main():
     llamar("/acceso/entrar", {"usuario": "admin", "clave": CLAVE})
-    zonas = [z["id"] for z in llamar("/directorio/zonas")]
+    lugares = lugares_por_nombre()
     existentes = {s["telefono"]: s["id"] for s in llamar("/directorio/solicitantes")}
     abiertas = {(s["solicitante_id"], s["colectivo"]) for s in llamar("/solicitudes")}
     encargados = {c: [e["id"] for e in llamar(f"/directorio/encargados?colectivo={c}")] for c in COLECTIVO.values()}
-    for i, (telefono, nombre, tipo, zona, direccion, flujo, franja, plan) in enumerate(VECINOS):
-        solicitante = vecino(telefono, nombre, tipo, zonas[zona % len(zonas)], direccion, existentes)
+    for i, (telefono, nombre, tipo, lugar, direccion, flujo, franja, plan) in enumerate(VECINOS):
+        solicitante = vecino(telefono, nombre, tipo, lugares[LUGARES[lugar % len(LUGARES)]], direccion, existentes)
         if (solicitante, COLECTIVO[flujo]) in abiertas:
             continue
         solicitud = llamar("/solicitudes", {"solicitante_id": solicitante, "flujo": flujo, "preferencia": franja})

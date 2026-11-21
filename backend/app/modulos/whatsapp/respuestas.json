@@ -20,7 +20,7 @@
   "registro_no_autorizado": "Sin tu autorización no podemos registrarte. Si cambias de opinión, escribe HOLA.",
   "registro_tipo": "¿Eres\n{opciones}?",
   "registro_tipo_invalido": "Responde {hogar} si eres un hogar o {negocio} si eres un negocio.",
-  "registro_zona": "¿En qué zona estás?\n{opciones}",
+  "registro_zona": "¿En qué conjunto o sector vives? Responde con el número.\n{opciones}",
   "registro_direccion": "Escribe tu dirección: torre y apartamento, o el nombre y la dirección del negocio.",
   "registro_direccion_invalida": "Escribe la dirección completa, por favor.",
   "registro_nombre": "¿Cómo te llamamos?",
@@ -40,5 +40,6 @@
   "aviso_solicitud_rechazada": "No pudimos recibir {codigo}: {motivo}.",
   "aviso_solicitud_cancelada": "Cancelamos la solicitud {codigo}.",
   "aviso_solicitante_habilitado": "¡Listo! Ya puedes pedir recolecciones. Escribe {comando} para empezar.",
-  "aviso_bienvenida_con_pedido": "¡Bienvenido a EcoConecta! La coordinación aprobó tu registro y ya entra tu primer pedido."
+  "aviso_bienvenida_con_pedido": "¡Bienvenido a EcoConecta! La coordinación aprobó tu registro y ya entra tu primer pedido.",
+  "aviso_registro_asistido": "¡Hola, {nombre}! La coordinación de EcoConecta, de la Fundación Santo Domingo, te registró con tu autorización. Guardamos tu número, tu nombre, tu conjunto y tu dirección, y solo los usamos para coordinar tus recolecciones. Escribe {comando} para pedir una. Si no autorizaste este registro, respóndenos por aquí."
 }

@@ -64,9 +64,9 @@ def detalle(id: UUID, u: acceso.Usuario = Sesion) -> solicitudes.SolicitudVista:
 
 @router.get("/{id}/sugerencias")
 def sugerencias(id: UUID, u: acceso.Usuario = Sesion) -> list[directorio.EncargadoVista]:
-    """Encargados del colectivo; primero los que cubren la zona. Solo sugiere: asigna el coordinador (§9)."""
+    """Encargados del colectivo; primero los que cubren su conjunto (o su zona). Solo sugiere (§9)."""
     solicitud = _visible(id, u)
-    return directorio.sugerir_encargados(solicitud.colectivo, solicitud.zona_id)
+    return directorio.sugerir_encargados(solicitud.colectivo, solicitud.conjunto_id or solicitud.zona_id)
 
 
 @router.post("/{id}/asignacion")

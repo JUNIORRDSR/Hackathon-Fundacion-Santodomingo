@@ -1,7 +1,8 @@
-# EcoConecta por WhatsApp
+# Prototipo histórico de EcoConecta por WhatsApp
 
-Este prototipo tiene su propio servidor de demostración. El flujo integrado del equipo se ejecuta en el
-[backend FastAPI](../../README.md#whatsapp-real-con-el-sandbox-de-twilio).
+Este prototipo documenta la primera implementación del canal. La demo, las pruebas del equipo y los próximos
+cambios usan el [backend FastAPI y el monitor de WhatsApp](../../README.md#probar-el-bot-sin-whatsapp).
+Los comandos de esta página corresponden al prototipo histórico.
 
 Módulo TypeScript para que hogares y unidades productivas de Villas de San Pablo soliciten una recolección por WhatsApp. El módulo indica al backend qué coordinación recibe la solicitud: huerteros para orgánicos y recicladores para reciclables. El backend registra la solicitud y devuelve su identificador.
 

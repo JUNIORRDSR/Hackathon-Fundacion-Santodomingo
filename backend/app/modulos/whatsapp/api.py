@@ -3,6 +3,7 @@ pide sesión."""
 from urllib.parse import parse_qsl
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 from starlette.datastructures import FormData
@@ -19,6 +20,10 @@ FORMULARIO_MAXIMO = 32 * 1024
 
 class Texto(BaseModel):
     texto: str = Field(min_length=1, max_length=1000)
+
+
+class Lectura(BaseModel):
+    hasta_id: int = Field(strict=True, gt=0, le=2_147_483_647)
 
 
 @router.post("/twilio", include_in_schema=False)
@@ -70,13 +75,25 @@ def pedidos_en_espera(_: acceso.Usuario = Depends(acceso.usuario_actual)) -> dic
 
 
 @router.get("/conversaciones")
-def conversaciones(_: acceso.Usuario = Sesion) -> list[monitor.ConversacionVista]:
-    return monitor.conversaciones()
+def conversaciones(u: acceso.Usuario = Sesion) -> list[monitor.ConversacionVista]:
+    return monitor.conversaciones(u.id)
+
+
+@router.get("/eventos")
+async def eventos(request: Request, u: acceso.Usuario = Sesion) -> StreamingResponse:
+    flujo = request.app.state.eventos_whatsapp.flujo(u.id)
+    return StreamingResponse(flujo, media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"})
 
 
 @router.get("/conversaciones/{telefono}/mensajes")
 def mensajes(telefono: str, _: acceso.Usuario = Sesion) -> list[monitor.MensajeVista]:
     return monitor.mensajes_de(telefono)
+
+
+@router.post("/conversaciones/{telefono}/lectura", status_code=204)
+def marcar_leido(telefono: str, datos: Lectura, u: acceso.Usuario = Sesion) -> None:
+    monitor.marcar_leido(telefono, u.id, datos.hasta_id)
 
 
 @router.post("/conversaciones/{telefono}/control", status_code=204)
@@ -92,7 +109,8 @@ def devolver_al_bot(telefono: str, _: acceso.Usuario = Sesion) -> None:
 
 @router.post("/conversaciones/{telefono}/mensajes", status_code=204)
 def responder(telefono: str, datos: Texto, _: acceso.Usuario = Sesion) -> None:
-    monitor.responder(telefono, datos.texto)
+    if not monitor.responder(telefono, datos.texto):
+        raise HTTPException(502, "No se pudo confirmar el envío por WhatsApp. Revisa el estado en la conversación.")
 
 
 @router.post("/simulador")

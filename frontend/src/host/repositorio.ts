@@ -7,7 +7,7 @@ import type {
   WasteType,
   Zone,
 } from '../ecoconecta-coordinacion'
-import { api } from './api'
+import { api, urlDeAdjunto } from './api'
 
 // El CoordinatorRepository de Daniela contra la API real (ADR-0007): traduce la vista del backend a sus tipos.
 interface SolicitudVista {
@@ -66,7 +66,7 @@ export function solicitudDe(v: SolicitudVista): Request {
     ubicacion: v.zona + ' · ' + v.direccion,
     tipo: v.flujo,
     fecha: fechaLocal.format(new Date(v.recibida)),
-    fotoUrl: v.foto_url ?? undefined,
+    fotoUrl: v.foto_url ? urlDeAdjunto(v.foto_url) : undefined,
     detalle: v.observaciones || undefined,
     horario: { manana: 'Mañana', tarde: 'Tarde', noche: 'Noche' }[v.preferencia],
     motivo: v.motivo || undefined,

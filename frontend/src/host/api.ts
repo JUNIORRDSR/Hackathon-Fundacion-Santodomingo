@@ -26,6 +26,10 @@ export async function api<T>(ruta: string, metodo = 'GET', cuerpo?: unknown, sig
   return (respuesta.status === 204 ? undefined : await respuesta.json()) as T
 }
 
+// La foto o el audio de un vecino: Twilio pide la credencial, así que la tablet lo ve a través del backend (ADR-0014).
+export const urlDeAdjunto = (url: string) =>
+  url.startsWith('data:') ? url : '/api/whatsapp/adjunto?url=' + encodeURIComponent(url)
+
 async function mensajeDe(respuesta: Response): Promise<string> {
   if (respuesta.status === 401) return 'Tu sesión terminó. Vuelve a entrar.'
   const { detail } = await respuesta.json().catch(() => ({ detail: undefined }))

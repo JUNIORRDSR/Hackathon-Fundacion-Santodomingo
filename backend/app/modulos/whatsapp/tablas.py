@@ -1,5 +1,5 @@
 """Tablas de whatsapp, en su propio esquema (ADR-0001)."""
-from sqlalchemy import Column, DateTime, Integer, String, Table, Text, func
+from sqlalchemy import Column, DateTime, Integer, String, Table, Text, Uuid, func
 from sqlalchemy.dialects.postgresql import JSONB
 
 from app.compartido.bd import metadata
@@ -11,6 +11,15 @@ conversaciones = Table(
     Column("memoria", JSONB, nullable=False),
     Column("control", String(80)),  # vacío: responde el bot
     Column("actualizada", DateTime(timezone=True), nullable=False),
+    schema="whatsapp",
+)
+
+# El último mensaje entrante visto por cada usuario de coordinación en un hilo.
+lecturas = Table(
+    "lecturas", metadata,
+    Column("usuario_id", Uuid, primary_key=True),
+    Column("telefono", String(16), primary_key=True),
+    Column("hasta_id", Integer, nullable=False),
     schema="whatsapp",
 )
 

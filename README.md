@@ -16,8 +16,9 @@ una tablet, y cada recolección suma puntos.
 docker compose up --build
 ```
 
-Abre http://localhost:8000/docs: cada etiqueta es un módulo y su contrato. Los usuarios de demostración son ficticios:
-`huerteros`, `recicladores` y `admin`, con la clave `ecoconecta-demo`.
+Abre [EcoConecta](http://localhost:8000) para usar el frontend integrado. Los contratos están en
+[/docs](http://localhost:8000/docs). Los usuarios de demostración `huerteros`, `recicladores` y `admin`
+usan la clave `ecoconecta-demo`.
 
 ## Backend sin Docker
 
@@ -42,14 +43,45 @@ una rechazada y dos canjes pedidos por WhatsApp. Se puede correr varias veces si
 
 ## Probar el bot sin WhatsApp
 
+Para repetir pruebas sin enviar mensajes a Twilio, arranca la app con `TRANSPORTE=simulado` en el `.env` de la raíz.
+Con `CONVERSADOR=menu` también puedes probar el flujo numerado sin consumir cuota de Azure.
+
 Entra a la app (usuario `admin`, clave `ecoconecta-demo`) y abre **WhatsApp**: a la izquierda las conversaciones, a la
 derecha el hilo. En **Simular un vecino** escribes como si fueras un celular (`+573000000009`, «Hola»). Con **Tomar el
 control** el bot calla y respondes como coordinación; **Devolver al bot** lo reactiva (ADR-0007).
+
+El monitor usa una conexión de eventos (`GET /api/whatsapp/eventos`) por pestaña. Cuando el webhook o el
+simulador guardan un mensaje, el backend avisa al navegador y este actualiza la conversación.
 
 Por API: `POST /api/whatsapp/simulador` con `{"telefono": "+573000000001", "texto": "Hola"}`, y
 `GET /api/whatsapp/conversaciones/{telefono}/mensajes` para el hilo, avisos incluidos.
 
 ## WhatsApp real con el sandbox de Twilio
+
+### Webhook local con Docker en Windows
+
+```powershell
+pwsh -File scripts/whatsapp-local.ps1 -Compilar
+```
+
+El script reutiliza el túnel activo o inicia uno temporal, sincroniza `TWILIO_WEBHOOK_URL` en el `.env` local
+y comprueba que una solicitud firmada llega a FastAPI. El proxy solo publica el webhook. El monitor sigue en
+`http://localhost:8000/#/whatsapp`. Guarda la URL que imprime el script en **Sandbox settings → When a message
+comes in**, con método **POST**. Cloudflare asigna otra URL cuando se reinicia un túnel temporal.
+
+Para conservar la URL tras reiniciar Docker, configura un túnel de Cloudflare dedicado a EcoConecta con un
+dominio público fijo y el servicio HTTP `http://whatsapp-webhook:8080`. Guarda su token en
+`CLOUDFLARE_TUNNEL_TOKEN` en el `.env` local y ejecuta:
+
+```powershell
+pwsh -File scripts/whatsapp-local.ps1 -UrlFija https://whatsapp.example.com/api/whatsapp/twilio -Compilar
+```
+
+Guarda esa URL en Twilio una vez. En los siguientes cambios puedes volver a compilar y levantar la app
+sin repetir `-UrlFija` ni cambiar la dirección del webhook. Usa el mismo script sin `-Compilar` para
+comprobar la conexión.
+
+### Configuración manual
 
 1. En la consola de Twilio, abre el sandbox de WhatsApp y anota el número y la palabra para unirse.
 2. Arranca la app con `TRANSPORTE=twilio`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` y
@@ -67,8 +99,12 @@ En el Sandbox clásico, `TWILIO_RESPUESTA_TWIML=1` devuelve las respuestas inmed
 incluidos los avisos generados por ese turno para el remitente. Los avisos posteriores del coordinador usan
 la API de Twilio.
 
-El [prototipo TypeScript](modules/whatsapp-recoleccion/README.md) conserva su propia demo. El webhook integrado
-en el monolito usa el registro, las solicitudes y los avisos del backend común.
+El monitor envía el texto de coordinación en el momento a través de la API de Twilio. La cuenta Trial
+puede exigir una plantilla y rechazar ese envío. Para enviar texto libre desde el monitor, configura un
+remitente de WhatsApp habilitado para ello y prueba dentro de la ventana de atención de 24 horas.
+
+El [prototipo TypeScript](modules/whatsapp-recoleccion/README.md) queda como referencia histórica. Las pruebas y el
+desarrollo del canal se hacen en `backend/app/modulos/whatsapp/` y en el monitor del frontend.
 
 ## Azure OpenAI para WhatsApp
 

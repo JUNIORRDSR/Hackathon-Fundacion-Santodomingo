@@ -15,8 +15,10 @@ from app.modulos.directorio import contrato as directorio
 from app.modulos.whatsapp import adjuntos, registro
 from app.modulos.whatsapp import tablas as t
 from app.modulos.whatsapp.contrato import Conversador, Herramientas, MensajeEntrante, MensajeSaliente, Transporte, Turno
+from app.modulos.whatsapp.eventos_monitor import notificar
 from app.modulos.whatsapp.menu import ConversadorMenu
 from app.modulos.whatsapp.respuestas import texto as plantilla
+from app.modulos.whatsapp.transporte_twilio import ErrorEnvioTwilio
 
 log = logging.getLogger("whatsapp")
 
@@ -92,19 +94,22 @@ def recibir_para_twiml(mensaje: MensajeEntrante, sid: str) -> list[MensajeSalien
     return [salida for salida, _ in respuesta.mensajes]
 
 
-def enviar(mensaje: MensajeSaliente, autor: str = "aviso") -> None:
+def enviar(mensaje: MensajeSaliente, autor: str = "aviso") -> str:
     """Envía por el transporte, o lo suma al TwiML del webhook activo, y deja constancia para el monitor."""
     respuesta = _respuesta_webhook.get()
     if respuesta is not None and respuesta.telefono == mensaje.telefono:
         respuesta.mensajes.append((mensaje, autor))
-        return
+        return "emitido"
+    estado = "fallido"
     try:
         _transporte.enviar(mensaje)
         estado = "enviado"
+    except ErrorEnvioTwilio as error:
+        log.warning("Twilio rechazó un mensaje de WhatsApp (HTTP %s, código %s)", error.http, error.codigo)
     except Exception as error:
         log.warning("No se pudo enviar un mensaje de WhatsApp (%s)", type(error).__name__)
-        estado = "fallido"
     _registrar(mensaje, "saliente", autor, estado)
+    return estado
 
 
 def enviados(telefono: str | None = None) -> list[MensajeSaliente]:
@@ -141,6 +146,7 @@ def _registrar(mensaje: MensajeEntrante | MensajeSaliente, direccion: str, autor
         c.execute(insert(t.mensajes).values(telefono=mensaje.telefono, texto=mensaje.texto, media_url=mensaje.media_url,
                                             direccion=direccion, autor=autor, estado=estado,
                                             enviado_en=datetime.now(timezone.utc)))
+        notificar(c)
 
 
 def _conversacion(telefono: str) -> tuple[dict, str | None]:

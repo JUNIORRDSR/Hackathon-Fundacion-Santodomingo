@@ -22,6 +22,7 @@ from app.modulos.reportes import api as reportes_api
 from app.modulos.solicitudes import api as solicitudes_api
 from app.modulos.whatsapp import api as whatsapp_api
 from app.modulos.whatsapp import avisos, bot
+from app.modulos.whatsapp.eventos_monitor import ciclo_eventos
 
 logging.basicConfig(level=logging.INFO)
 SPA = Path(__file__).resolve().parents[2] / "frontend" / "dist"
@@ -30,7 +31,7 @@ ROUTERS = (acceso_api, solicitudes_api, directorio_api, puntos_api, contenidos_a
 
 
 def crear_app() -> FastAPI:
-    app = FastAPI(title="EcoConecta", version="0.1.0",
+    app = FastAPI(title="EcoConecta", version="0.1.0", lifespan=ciclo_eventos,
                   description="Cada etiqueta es un módulo y su contrato (docs/arquitectura.md).")
     app.add_middleware(SessionMiddleware, secret_key=variable("CLAVE_SESION", "solo-para-desarrollo-local"),
                        max_age=30 * 24 * 3600, same_site="lax", https_only=os.getenv("ENTORNO") == "produccion")

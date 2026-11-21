@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { EmptyState, ErrorMessage } from '../../ecoconecta-coordinacion/components/ui/Feedback'
 import { Icon } from '../../ecoconecta-coordinacion/components/ui/Icon'
@@ -18,28 +18,57 @@ export const iniciales = (nombre: string | null) =>
 
 export function Conversacion({
   conversacion,
+  revision,
   alCambiar,
   alSimular,
 }: {
   conversacion?: ConversacionVista
-  alCambiar: () => void
+  revision: number
+  alCambiar: (soloLista?: boolean) => void
   alSimular: (telefono: string) => void
 }) {
   const telefono = conversacion?.telefono
   const [mensajes, setMensajes] = useState<MensajeVista[]>([])
+  const solicitud = useRef<AbortController | null>(null)
+  const ultimaLectura = useRef(0)
+  const lecturaPendiente = useRef(0)
   const cargar = useCallback(() => {
-    if (telefono) void api<MensajeVista[]>(ruta(telefono) + '/mensajes').then(setMensajes)
+    if (!telefono) return
+    solicitud.current?.abort()
+    const actual = new AbortController()
+    solicitud.current = actual
+    void api<MensajeVista[]>(ruta(telefono) + '/mensajes', 'GET', undefined, actual.signal)
+      .then((datos) => {
+        if (!actual.signal.aborted) setMensajes(datos)
+      })
+      .catch(() => {
+        // El siguiente aviso del servidor o la reconexión vuelve a cargar el hilo.
+      })
   }, [telefono])
+  const marcarLeido = useCallback(
+    async (hastaId: number) => {
+      if (!telefono || hastaId <= Math.max(ultimaLectura.current, lecturaPendiente.current)) return
+      lecturaPendiente.current = hastaId
+      try {
+        await api(ruta(telefono) + '/lectura', 'POST', { hasta_id: hastaId })
+        ultimaLectura.current = Math.max(ultimaLectura.current, hastaId)
+        alCambiar(true)
+      } catch {
+        // La lectura se reintenta si el mensaje sigue visible al refrescar.
+      } finally {
+        if (lecturaPendiente.current === hastaId) lecturaPendiente.current = 0
+      }
+    },
+    [telefono, alCambiar],
+  )
   useEffect(() => {
     cargar()
-    const intervalo = window.setInterval(cargar, 3000)
-    return () => window.clearInterval(intervalo)
-  }, [cargar])
-  const refrescar = () => (cargar(), alCambiar())
+    return () => solicitud.current?.abort()
+  }, [cargar, revision])
   const control = async (tomar: boolean) => {
     if (!telefono) return
     await api(ruta(telefono) + '/control', tomar ? 'POST' : 'DELETE')
-    refrescar()
+    alCambiar()
   }
 
   return (
@@ -72,8 +101,8 @@ export function Conversacion({
           </EmptyState>
         </div>
       )}
-      {conversacion && <Hilo mensajes={mensajes} control={!!conversacion.control} />}
-      <Redactar telefono={telefono} conControl={!!conversacion?.control} alEnviar={refrescar} alSimular={alSimular} />
+      {conversacion && <Hilo mensajes={mensajes} control={!!conversacion.control} alLeer={marcarLeido} />}
+      <Redactar telefono={telefono} conControl={!!conversacion?.control} alEnviar={alCambiar} alSimular={alSimular} />
     </section>
   )
 }
@@ -93,12 +122,15 @@ function Redactar({
   const [texto, setTexto] = useState('')
   const [vecino, setVecino] = useState(telefono ?? '+573000000009')
   const [error, setError] = useState('')
+  const [enviando, setEnviando] = useState(false)
   const responder = modo === 'responder'
   const bloqueado = responder && !conControl
   useEffect(() => setModo(conControl ? 'responder' : 'simular'), [conControl])
 
   async function enviar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (enviando) return
+    setEnviando(true)
     setError('')
     try {
       if (responder) await api(ruta(telefono ?? '') + '/mensajes', 'POST', { texto })
@@ -108,6 +140,9 @@ function Redactar({
       alEnviar()
     } catch (e) {
       setError((e as Error).message)
+      if (responder) alEnviar()
+    } finally {
+      setEnviando(false)
     }
   }
 
@@ -133,11 +168,16 @@ function Redactar({
         <input
           aria-label="Mensaje"
           value={texto}
-          disabled={bloqueado}
+          disabled={bloqueado || enviando}
           placeholder={bloqueado ? 'Toma el control para responder' : 'Escribe un mensaje'}
           onChange={(e) => setTexto(e.target.value)}
         />
-        <button type="submit" className="monitor-enviar" aria-label="Enviar" disabled={!texto.trim() || bloqueado}>
+        <button
+          type="submit"
+          className="monitor-enviar"
+          aria-label="Enviar"
+          disabled={!texto.trim() || bloqueado || enviando}
+        >
           <Icon name="send" />
         </button>
       </div>

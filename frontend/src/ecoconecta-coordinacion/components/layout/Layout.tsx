@@ -17,14 +17,15 @@ const navigation: { page: EcoPage; label: string; icon: IconName }[] = [
   { page: 'inicio', label: 'Inicio', icon: 'dashboard' },
   { page: 'solicitudes', label: 'Solicitudes', icon: 'clipboard' },
   { page: 'recolecciones', label: 'Recolecciones', icon: 'truck' },
+  { page: 'escanear', label: 'Escanear', icon: 'qr' },
   { page: 'recolectores', label: 'Recolectores', icon: 'users' },
   { page: 'capacitacion', label: 'Capacitación', icon: 'book' },
   { page: 'habilitar', label: 'Registros', icon: 'user' },
   { page: 'canjes', label: 'Canjes', icon: 'gift' },
 ]
 const modulePages: EcoPage[] = ['inicio', 'solicitudes', 'recolecciones', 'recolectores', 'capacitacion']
-// Las cuatro del flujo quedan a la vista; el resto, en «Más», para que la barra quepa en una línea.
-const mainPages: EcoPage[] = ['inicio', 'solicitudes', 'recolecciones', 'canjes']
+// Las del flujo, escanear incluido, quedan a la vista; el resto, en «Más», para que la barra quepa en una línea.
+const mainPages: EcoPage[] = ['inicio', 'solicitudes', 'recolecciones', 'escanear', 'canjes']
 
 export function PageHeader({ title, description, action }: { title: string; description: string; action?: ReactNode }) {
   return (

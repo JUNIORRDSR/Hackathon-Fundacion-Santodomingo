@@ -1,4 +1,5 @@
 import json
+from types import SimpleNamespace
 
 import pytest
 
@@ -36,6 +37,19 @@ def test_el_menu_actualiza_el_texto_y_mantiene_las_opciones(monkeypatch, tmp_pat
     pedido = menu.responder(Turno(nombre="Ana", texto="1"), {}, None)
     assert pedido.memoria == {"pidiendo": "organico"}
     assert pedido.textos == ["¿A qué hora te queda mejor?\n1 Mañana\n2 Tarde\n3 Noche"]
+
+
+def _piezas(*textos):
+    piezas = [SimpleNamespace(titulo=f"Guía {i}", texto_corto=t, pasos=[], url=None) for i, t in enumerate(textos)]
+    return SimpleNamespace(aprender=lambda flujo=None: piezas)
+
+
+def test_aprender_a_separar_llega_en_un_solo_mensaje_si_cabe():
+    turno = Turno(nombre="Ana", texto="5")
+    unidas = ConversadorMenu().responder(turno, {}, _piezas("Cáscaras.", "Cartón.", "Escribe HOLA.")).textos
+    assert unidas == ["*Guía 0*\nCáscaras.\n\n*Guía 1*\nCartón.\n\n*Guía 2*\nEscribe HOLA."]
+    largas = ConversadorMenu().responder(turno, {}, _piezas("a" * 900, "b" * 900)).textos
+    assert len(largas) == 2  # WhatsApp corta el cuerpo en 1600 caracteres
 
 
 @pytest.mark.parametrize("contenido", [

@@ -25,6 +25,15 @@
   & .informe-tabla tbody th { font-weight: 600; }
   & .informe-tabla tfoot :is(th, td) { border-bottom: 0; color: var(--highlight); font-weight: 700; }
 
+  /* Entrega directa en la huerta (RF-05): buscar al vecino y elegirlo con un toque. */
+  & .entrega-coincidencias { display: grid; gap: .35rem; margin: .4rem 0 0; padding: 0; list-style: none; }
+  & .entrega-coincidencias button { display: flex; flex-wrap: wrap; gap: .2rem .5rem; width: 100%; min-height: 48px; padding: .55rem .8rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface); color: var(--muted); text-align: left; }
+  & .entrega-coincidencias button:hover { background: var(--surface-muted); }
+  & .entrega-coincidencias strong, & .entrega-vecino strong { color: var(--ink); }
+  & .entrega-vecino { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .6rem; color: var(--muted); }
+  & .entrega-vecino .button { margin-left: auto; }
+  & .field-label { font-weight: 600; }
+
   /* Regla de puntos: una tarjeta por residuo, con etiquetas visibles y un ejemplo calculado. */
   & .regla { display: grid; gap: 1rem; margin-top: 1rem; }
   & .regla-cabeza h2 { font-size: 1.25rem; }

@@ -39,6 +39,8 @@ interface CoordinatorModuleProps {
   badges?: Partial<Record<EcoPage, number>>
   // El impacto del barrio en el Inicio: lo arma el host con los reportes.
   dashboardImpact?: ReactNode
+  // La entrega directa en la huerta, junto a la agenda de Recolecciones.
+  collectionsAction?: ReactNode
   onSignOut?: () => void
 }
 
@@ -55,6 +57,7 @@ export function CoordinatorModule({
   extraPages = {},
   badges,
   dashboardImpact,
+  collectionsAction,
   onSignOut,
 }: CoordinatorModuleProps) {
   const { page } = location
@@ -82,6 +85,7 @@ export function CoordinatorModule({
           pages={pages}
           counts={{ canjes: badges?.canjes, habilitar: badges?.habilitar }}
           impact={dashboardImpact}
+          collectionsAction={collectionsAction}
           training={
             <CapacitacionPage
               resources={trainingResources ?? sampleTraining}
@@ -119,6 +123,7 @@ function CoordinatorContent({
   pages,
   counts,
   impact,
+  collectionsAction,
   training,
 }: {
   coordinator: Coordinator
@@ -129,6 +134,7 @@ function CoordinatorContent({
   pages: EcoPage[]
   counts: DashboardCounts
   impact?: ReactNode
+  collectionsAction?: ReactNode
   training: ReactNode
 }) {
   const page = location.page as OperationalPage | 'capacitacion'
@@ -240,6 +246,7 @@ function CoordinatorContent({
           group={coordinator.grupo}
           onSave={saveResult}
           onOpen={open}
+          action={collectionsAction}
         />
       )
       break

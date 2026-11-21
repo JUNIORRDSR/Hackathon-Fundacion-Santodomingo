@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 from app.compartido.bd import transaccion
 from app.compartido.eventos import Evento, publicar
-from app.compartido.formato import NOMBRE_FLUJO
+from app.compartido.formato import HORA_COLOMBIA, NOMBRE_FLUJO
 from app.compartido.tipos import COLECTIVO_DEL_FLUJO, Canal, Colectivo, ErrorDeNegocio, Flujo, Franja, NoEncontrado
 from app.modulos.directorio import contrato as directorio
 from app.modulos.solicitudes.dominio import ABIERTOS, PREFIJO, Cambio, Estado, Solicitud
@@ -113,6 +113,42 @@ def registrar(nueva: NuevaSolicitud, por: str = "solicitante") -> SolicitudVista
         _guardar(c, solicitud)
         publicar(SolicitudRecibida(**_ids(solicitud)))
         return _vista(solicitud)
+
+
+class NuevaEntrega(BaseModel):
+    """El vecino lleva sus residuos a la huerta o al punto de acopio y ahí se pesan (RF-05, RF-11)."""
+
+    solicitante_id: UUID
+    flujo: Flujo
+    kg: Decimal = Field(gt=0, le=500)
+    encargado_id: UUID  # quien la recibió
+
+
+def registrar_entrega(nueva: NuevaEntrega, por: UUID) -> SolicitudVista:
+    """Nace cerrada: recibida, asignada a quien la recibió y recolectada. Solo avisa los puntos (RN-05)."""
+    with transaccion() as c:
+        solicitante = directorio.solicitante(nueva.solicitante_id)
+        if solicitante.estado != directorio.EstadoSolicitante.HABILITADO:
+            raise ErrorDeNegocio("El vecino todavía no está habilitado en el piloto (RN-08).")
+        if directorio.encargado(nueva.encargado_id).colectivo != COLECTIVO_DEL_FLUJO[nueva.flujo]:
+            raise ErrorDeNegocio("Ese encargado no es del colectivo del residuo (RN-01).")
+        numero = c.execute(select(consecutivos[nueva.flujo].next_value())).scalar_one()
+        solicitud = _entrega_cerrada(nueva, solicitante, f"{PREFIJO[nueva.flujo]}-{numero:04d}", por)
+        _guardar(c, solicitud)
+        publicar(RecoleccionRegistrada(**_ids(solicitud), kg=nueva.kg))
+        return _vista(solicitud)
+
+
+def _entrega_cerrada(nueva: NuevaEntrega, solicitante, codigo: str, por: UUID) -> Solicitud:
+    ahora = datetime.now(HORA_COLOMBIA)
+    franja = Franja.MANANA if ahora.hour < 12 else Franja.TARDE if ahora.hour < 18 else Franja.NOCHE
+    solicitud = Solicitud.recibir(str(por), codigo=codigo, solicitante_id=nueva.solicitante_id, flujo=nueva.flujo,
+                                  zona_id=solicitante.zona_id, conjunto_id=solicitante.conjunto_id,
+                                  direccion=solicitante.direccion, preferencia=franja,
+                                  observaciones="Entrega directa", canal=Canal.HUERTA)
+    solicitud.asignar(nueva.encargado_id, ahora.date(), ahora.time().replace(second=0, microsecond=0, tzinfo=None), por)
+    solicitud.registrar_recoleccion(nueva.kg, por)
+    return solicitud
 
 
 def asignar(id: UUID, encargado_id: UUID, dia: date, hora: time | None, por: UUID) -> SolicitudVista:

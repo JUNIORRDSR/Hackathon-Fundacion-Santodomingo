@@ -41,7 +41,17 @@ function useRepositoryQuery<T>(load: Loader<T>, enabled: boolean) {
     )
   }
 
-  return { state, reload, update }
+  // Vuelve a traer los datos sin pasar por «cargando»: la pantalla conserva su pestaña y su scroll.
+  async function refresh() {
+    try {
+      const data = await load(new AbortController().signal)
+      setEntry({ load, state: { status: 'ready', data } })
+    } catch {
+      // Si falla, quedan los datos de antes; la próxima acción vuelve a intentar.
+    }
+  }
+
+  return { state, reload, update, refresh }
 }
 
 export function useCoordinatorData(coordinator: Coordinator, repository: CoordinatorRepository, mode: QueryMode) {
@@ -80,6 +90,14 @@ export function useCoordinatorData(coordinator: Coordinator, repository: Coordin
       },
     }
   }
+
+  // El host avisa con «solicitudes-cambiaron» cuando crea una por fuera del módulo, como una entrega directa.
+  const refreshRequests = requests.refresh
+  useEffect(() => {
+    const listen = () => void refreshRequests()
+    window.addEventListener('solicitudes-cambiaron', listen)
+    return () => window.removeEventListener('solicitudes-cambiaron', listen)
+  }, [refreshRequests])
 
   function reload() {
     if (collectorState?.status === 'error') collectors.reload()

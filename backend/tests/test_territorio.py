@@ -29,6 +29,7 @@ def test_registro_asistido_con_su_conjunto_y_encargado_por_conjunto():
         "solicitante_id": vecino["id"], "flujo": "organico", "preferencia": "manana"}).json()
     assert solicitud["conjunto"] == "Torre de Prueba"
     assert huerteros.get(f"/api/solicitudes/{solicitud['id']}/sugerencias").json()[0]["id"] == encargado["id"]
+    _entregar_en_la_huerta(huerteros, vecino, encargado)
     _desactivar(huerteros, conjunto)
 
 
@@ -54,6 +55,21 @@ def _registrar_desde_la_tableta(cliente: TestClient, zona: str, conjunto: str) -
     vecino = respuesta.json()
     assert vecino["estado"] == "habilitado" and vecino["registrado_por"] == "Coordinación de huerteros"
     return vecino
+
+
+def _entregar_en_la_huerta(cliente: TestClient, vecino: dict, encargado: dict) -> None:
+    """RF-05: la entrega directa nace recolectada, suma puntos y le avisa al vecino, aunque tenga otra abierta."""
+    respuesta = cliente.post("/api/solicitudes/entregas", json={
+        "solicitante_id": vecino["id"], "flujo": "organico", "kg": 6.5, "encargado_id": encargado["id"]})
+    assert respuesta.status_code == 201, respuesta.text
+    entrega = respuesta.json()
+    assert entrega["estado"] == "recolectada" and entrega["canal"] == "huerta" and float(entrega["kg"]) == 6.5
+    assert cliente.get("/api/puntos/por-codigo").json()[entrega["codigo"]] > 0
+    mensajes = cliente.get("/api/whatsapp/simulador/mensajes", params={"telefono": TELEFONO}).json()
+    assert any(entrega["codigo"] in m["texto"] and "Ganaste" in m["texto"] for m in mensajes)
+    reciclable = cliente.post("/api/solicitudes/entregas", json={
+        "solicitante_id": vecino["id"], "flujo": "reciclable", "kg": 2, "encargado_id": encargado["id"]})
+    assert reciclable.status_code == 403  # los huerteros no reciben reciclables (RN-01)
 
 
 def _desactivar(cliente: TestClient, conjunto: str) -> None:

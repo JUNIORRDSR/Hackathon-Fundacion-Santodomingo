@@ -62,6 +62,13 @@ def detalle(id: UUID, u: acceso.Usuario = Sesion) -> solicitudes.SolicitudVista:
     return _visible(id, u)
 
 
+@router.post("/entregas", status_code=201)
+def registrar_entrega(datos: solicitudes.NuevaEntrega, u: acceso.Usuario = Sesion) -> solicitudes.SolicitudVista:
+    """Entrega directa en la huerta o el punto de acopio: nace recolectada y suma puntos (RF-05, RF-11)."""
+    acceso.exigir_colectivo(u, solicitudes.COLECTIVO_DEL_FLUJO[datos.flujo])
+    return solicitudes.registrar_entrega(datos, por=u.id)
+
+
 @router.get("/{id}/sugerencias")
 def sugerencias(id: UUID, u: acceso.Usuario = Sesion) -> list[directorio.EncargadoVista]:
     """Encargados del colectivo; primero los que cubren su conjunto (o su zona). Solo sugiere (§9)."""

@@ -38,6 +38,7 @@ class Canal(StrEnum):
     WHATSAPP = "whatsapp"
     ASISTIDO = "asistido"
     SIMULADOR = "simulador"
+    HUERTA = "huerta"  # entrega directa en la huerta o el punto de acopio (RF-05)
 
 
 class ErrorDeNegocio(Exception):

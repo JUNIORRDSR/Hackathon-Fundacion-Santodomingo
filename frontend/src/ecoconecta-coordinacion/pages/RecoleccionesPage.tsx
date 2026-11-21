@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
 import { compareAssignments, formatDate, formatWeight, localDate, localTime, wasteLabels } from '../labels'
 import type { CollectionResult, Collector, Request, WasteType } from '../types'
 import { PageHeader } from '../components/layout/Layout'
@@ -21,6 +22,7 @@ export function RecoleccionesPage({
   group,
   onSave,
   onOpen,
+  action,
 }: {
   requests: Request[]
   collectors: Collector[]
@@ -28,6 +30,7 @@ export function RecoleccionesPage({
   group: WasteType
   onSave: (result: CollectionResult) => Promise<() => void>
   onOpen: (item: Request) => void
+  action?: ReactNode // la entrega directa, que pone el host
 }) {
   // El cronograma por horas vive aquí: en Inicio solo queda la lista de hoy (PRODUCT.md).
   const [view, setView] = useState<'programadas' | 'resultados' | 'cronograma'>('programadas')
@@ -70,6 +73,7 @@ export function RecoleccionesPage({
       <PageHeader
         title="Recolecciones"
         description={'Consulta tu agenda y registra los resultados de ' + wasteLabels[group].toLowerCase() + '.'}
+        action={action}
       />
       <div className="filter-bar">
         <MotionPills className="pills collection-filters" label="Filtrar recolecciones" active={view}>

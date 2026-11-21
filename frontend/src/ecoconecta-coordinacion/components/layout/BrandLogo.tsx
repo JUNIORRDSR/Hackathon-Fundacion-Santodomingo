@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import logo from '../../../../identidad-visual/Logo EcoConecta - Verde bosque.png'
+import logo from '../../../../identidad-visual/Logo EcoConecta.png'
 
 const width = 2172
 const height = 724

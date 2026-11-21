@@ -71,15 +71,20 @@ def _buscar_por_el_codigo_de_la_bolsa(huerteros: TestClient, recicladores: TestC
 
 def _escanear_la_etiqueta_de_la_bolsa(huerteros: TestClient, recicladores: TestClient, solicitante: dict,
                                       solicitud: dict) -> None:
-    """O escanea el QR del hogar (ADR-0015): trae su solicitud abierta, solo al colectivo que la atiende."""
+    """O escanea el QR del hogar, o escribe su código si no tiene sticker (ADR-0015): trae su solicitud abierta,
+    solo al colectivo que la atiende."""
     etiqueta = next(e for e in huerteros.get("/api/etiquetas").json() if e["solicitante_id"] == solicitante["id"])
     assert etiqueta["contenido"] == f"EC1:{solicitante['id']}" and "telefono" not in etiqueta
     lectura = huerteros.get("/api/etiquetas/lectura", params={"contenido": etiqueta["contenido"]}).json()
     assert [s["id"] for s in lectura["solicitudes"]] == [solicitud["id"]]
     lectura = recicladores.get("/api/etiquetas/lectura", params={"contenido": etiqueta["contenido"]}).json()
     assert lectura["etiqueta"]["nombre"] == "La Esquina" and lectura["solicitudes"] == []
-    ajeno = huerteros.get("/api/etiquetas/lectura", params={"contenido": "https://otra.cosa"})
-    assert ajeno.status_code == 404 and "no es una etiqueta" in ajeno.json()["detail"]
+    escrito = huerteros.get("/api/etiquetas/lectura", params={"contenido": etiqueta["codigo"]}).json()
+    assert [s["id"] for s in escrito["solicitudes"]] == [solicitud["id"]]
+    mal_copiado = etiqueta["codigo"][:-1] + str((int(etiqueta["codigo"][-1]) + 1) % 10)
+    for ajeno in ("https://otra.cosa", mal_copiado):
+        respuesta = huerteros.get("/api/etiquetas/lectura", params={"contenido": ajeno})
+        assert respuesta.status_code == 404 and "no es de EcoConecta" in respuesta.json()["detail"]
 
 
 def _asignar_programar_y_recoger(huerteros: TestClient, solicitud: dict) -> None:

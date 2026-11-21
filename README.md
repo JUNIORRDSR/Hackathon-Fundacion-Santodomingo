@@ -44,8 +44,9 @@ una rechazada y dos canjes pedidos por WhatsApp. Se puede correr varias veces si
 ## Escanear bolsas
 
 En **Escanear**, la coordinación apunta la cámara al sticker QR de la bolsa, registra los kilos o el rechazo y sigue con
-la siguiente. En **Etiquetas** imprime los stickers de los hogares habilitados. La cámara del navegador necesita HTTPS o
-`localhost`; sin ella se escribe el código de la bolsa ([ADR-0015](docs/adr/0015-etiqueta-qr-por-hogar.md)).
+la siguiente. En **Etiquetas** imprime los stickers de los hogares habilitados, cada uno con su código (1008). Si no hay
+stickers, el hogar escribe ese código en un papel pegado a la bolsa y la coordinación lo teclea. La cámara del navegador
+necesita HTTPS o `localhost` ([ADR-0015](docs/adr/0015-etiqueta-qr-por-hogar.md)).
 
 ## Probar el bot sin WhatsApp
 

@@ -12,6 +12,7 @@ export interface EtiquetaVista {
   zona: string
   habilitado: boolean
   contenido: string
+  codigo: string
 }
 type Fabrica = typeof import('qrcode-generator')
 
@@ -62,7 +63,7 @@ export function Etiquetas() {
   }
   if (!etiquetas || !fabrica) return <LoadingState />
   const termino = normalizeSearch(busqueda)
-  const visibles = etiquetas.filter((e) => normalizeSearch(e.nombre + ' ' + e.zona).includes(termino))
+  const visibles = etiquetas.filter((e) => normalizeSearch(`${e.nombre} ${e.zona} ${e.codigo}`).includes(termino))
 
   return (
     <>
@@ -70,12 +71,12 @@ export function Etiquetas() {
         <div className="search-field">
           <Icon name="search" />
           <label htmlFor="eco-etiquetas-buscar" className="sr-only">
-            Buscar por nombre o zona
+            Buscar por nombre, zona o código
           </label>
           <input
             id="eco-etiquetas-buscar"
             type="search"
-            placeholder="Buscar hogar o zona"
+            placeholder="Buscar hogar, zona o código"
             value={busqueda}
             onChange={(event) => setBusqueda(event.target.value)}
           />
@@ -91,6 +92,9 @@ export function Etiquetas() {
         >
           <Icon name="printer" /> Imprimir
         </button>
+        <p className="muted etiquetas-nota">
+          ¿Sin papel adhesivo? Imprime en hoja normal, o que cada hogar escriba su código en un papel pegado a la bolsa.
+        </p>
       </div>
       {visibles.length ? (
         <ul className="etiquetas-hoja" aria-label="Stickers para imprimir">
@@ -100,6 +104,9 @@ export function Etiquetas() {
               <div>
                 <strong>{etiqueta.nombre}</strong>
                 <span>{etiqueta.zona}</span>
+                <span className="etiqueta-codigo">
+                  Código <b>{etiqueta.codigo}</b>
+                </span>
                 <span className="etiqueta-marca">
                   <img src={monarca} alt="" width="48" height="36" />
                   EcoConecta · Villas de San Pablo

@@ -19,11 +19,11 @@ type Paso =
   | { tipo: 'lista'; solicitud: Request }
   | { tipo: 'error'; mensaje: string }
 
-const CODIGO_DE_BOLSA = /^(org|rec)-\d{1,6}$/i
+const CODIGO_DE_SOLICITUD = /^(org|rec)-\d{1,6}$/i
 
-// El QR trae el hogar (ADR-0015); el código escrito a mano, la solicitud directa, como en Recolecciones.
+// El QR y el código del hogar escrito en un papel traen el hogar (ADR-0015); el de la solicitud, esa solicitud.
 async function buscar(texto: string): Promise<Hogar> {
-  if (CODIGO_DE_BOLSA.test(texto)) {
+  if (CODIGO_DE_SOLICITUD.test(texto)) {
     const vista = await api<SolicitudVista>('/solicitudes/codigo/' + encodeURIComponent(texto))
     const solicitud = solicitudDe(vista)
     if (solicitud.estado !== 'pendiente' && solicitud.estado !== 'asignada') {
@@ -34,8 +34,8 @@ async function buscar(texto: string): Promise<Hogar> {
   const lectura = await api<{ etiqueta: EtiquetaVista; solicitudes: SolicitudVista[] }>(
     '/etiquetas/lectura?contenido=' + encodeURIComponent(texto),
   )
-  const { nombre, zona, habilitado } = lectura.etiqueta
-  return { nombre, zona, habilitado, solicitudes: lectura.solicitudes.map(solicitudDe) }
+  const { nombre, zona, habilitado, codigo } = lectura.etiqueta
+  return { nombre, zona, habilitado, codigo, solicitudes: lectura.solicitudes.map(solicitudDe) }
 }
 
 export function Lector() {
@@ -140,7 +140,7 @@ function Espera({ bolsas, kg }: { bolsas: number; kg: number }) {
       <p>
         {bolsas
           ? `${formatWeight(kg)} registrados. Apunta a la siguiente.`
-          : 'Apunta la cámara al sticker de la bolsa: aquí aparece el hogar con su solicitud.'}
+          : 'Apunta la cámara al sticker de la bolsa o escribe el código que trae en un papel.'}
       </p>
       <ol className="escaneo-pasos">
         <li>Escanea el sticker</li>
@@ -177,11 +177,11 @@ function PorCodigo({ onBuscar, ocupado }: { onBuscar: (codigo: string) => void; 
         if (codigo.trim()) onBuscar(codigo)
       }}
     >
-      <label htmlFor={id}>¿No lee el QR? Escribe el código de la bolsa</label>
+      <label htmlFor={id}>¿Sin QR? Escribe el código del hogar o el de la solicitud</label>
       <div className="visor-manual-campo field">
         <input
           id={id}
-          placeholder="ORG-0042 o REC-0017"
+          placeholder="1008 o REC-0017"
           autoCapitalize="characters"
           autoComplete="off"
           value={codigo}

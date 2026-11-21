@@ -15,6 +15,7 @@ export interface Hogar {
   nombre: string
   zona: string
   habilitado: boolean
+  codigo?: string // el del papel en la bolsa; por código de solicitud no llega
   solicitudes: Request[]
 }
 type Lista = Request & { estado: 'asignada' }
@@ -37,6 +38,7 @@ export function Bolsa({
           <strong>{hogar.nombre}</strong>
           <p>{hogar.zona}</p>
         </div>
+        {hogar.codigo && <span className="status-badge">Código {hogar.codigo}</span>}
       </div>
       {hogar.solicitudes.map((solicitud) => (
         <Abierta key={solicitud.id} solicitud={solicitud} onRegistrada={onRegistrada} />
@@ -62,7 +64,7 @@ function Abierta({ solicitud, onRegistrada }: { solicitud: Request; onRegistrada
     <section className="bolsa-solicitud" aria-label={'Solicitud ' + solicitud.codigo}>
       <dl className="detail-data">
         <div>
-          <dt>Código en la bolsa</dt>
+          <dt>Solicitud</dt>
           <dd className="detail-codigo">{solicitud.codigo}</dd>
         </div>
         <div>

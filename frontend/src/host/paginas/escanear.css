@@ -53,6 +53,7 @@
   /* Hoja de stickers */
   & .etiquetas-barra { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin-bottom: 1rem; }
   & .etiquetas-barra .button-primary { margin-left: auto; }
+  & .etiquetas-nota { flex-basis: 100%; margin: 0; font-size: .875rem; }
   & .etiquetas-hoja { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: .75rem; margin: 0; padding: 0; list-style: none; }
   & .etiqueta { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); align-items: center; gap: .8rem; padding: .75rem; border: 1px solid var(--line); border-radius: 1rem; background: #ffffff; }
   & .etiqueta-qr { width: 100%; height: auto; fill: #000000; stroke: none; shape-rendering: crispEdges; }
@@ -60,6 +61,8 @@
   & .etiqueta > div > span { display: block; color: var(--muted); font-size: .8125rem; }
   & .etiqueta > div > .etiqueta-marca { display: flex; align-items: center; gap: .3rem; margin-top: .55rem; color: var(--highlight); font-size: .7rem; font-weight: 650; }
   & .etiqueta-marca img { width: 1.5rem; height: auto; }
+  & .etiqueta > div > .etiqueta-codigo { margin-top: .3rem; }
+  & .etiqueta-codigo b { color: var(--ink); font: 750 1.3rem/1 var(--font-heading); letter-spacing: .05em; font-variant-numeric: tabular-nums; }
 
   @media (max-width: 860px) {
     & .escaneo { grid-template-columns: minmax(0, 1fr); }

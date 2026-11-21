@@ -41,7 +41,6 @@ class TransporteTwilio:
     alias: dict[str, str] = field(default_factory=dict)
     telefonos_piloto: frozenset[str] = frozenset()
     respuesta_twiml: bool = False
-    coordinacion_en_webhook: bool = False
 
     @classmethod
     def desde_entorno(cls) -> "TransporteTwilio":
@@ -50,12 +49,8 @@ class TransporteTwilio:
             raise RuntimeError("TWILIO_ACCOUNT_SID debe contener el SID de la cuenta de Twilio.")
         if not remitente.startswith(PREFIJO) or not TELEFONO.fullmatch(remitente.removeprefix(PREFIJO)):
             raise RuntimeError("TWILIO_WHATSAPP_FROM debe contener whatsapp: seguido del teléfono en formato E.164.")
-        twiml = os.getenv("TWILIO_RESPUESTA_TWIML", "").strip() == "1"
-        coordinacion_en_webhook = os.getenv("TWILIO_COORDINACION_EN_WEBHOOK", "").strip() == "1"
-        if coordinacion_en_webhook and not twiml:
-            raise RuntimeError("TWILIO_COORDINACION_EN_WEBHOOK requiere TWILIO_RESPUESTA_TWIML=1.")
         return cls(cuenta, token, remitente, _url_publica(url), _alias_configurados(), _telefonos_piloto(),
-                   respuesta_twiml=twiml, coordinacion_en_webhook=coordinacion_en_webhook)
+                   respuesta_twiml=os.getenv("TWILIO_RESPUESTA_TWIML", "").strip() == "1")
 
     def firma_valida(self, parametros: FormData, firma: str) -> bool:
         if not FIRMA.fullmatch(firma):

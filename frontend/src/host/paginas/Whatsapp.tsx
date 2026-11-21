@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { PageHeader } from '../../ecoconecta-coordinacion/components/layout/Layout'
 import { EmptyState } from '../../ecoconecta-coordinacion/components/ui/Feedback'
+import { Icon } from '../../ecoconecta-coordinacion/components/ui/Icon'
 import { api } from '../api'
 import { Conversacion, iniciales } from './Conversacion'
 
@@ -14,12 +15,24 @@ export interface ConversacionVista {
 }
 
 // El monitor reemplaza al simulador: se ve lo que hace el bot y se puede tomar el control (ADR-0007).
-const REFRESCO_MS = 3000
 const hora = new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit' })
+const normalizar = (texto: string) => texto.trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')
+
+function soloLista({ data }: MessageEvent<string>) {
+  try {
+    return JSON.parse(data)?.solo_lista === true
+  } catch {
+    return false
+  }
+}
 
 export function Whatsapp() {
   const [conversaciones, setConversaciones] = useState<ConversacionVista[]>([])
   const [elegido, setElegido] = useState<string>()
+  const [busqueda, setBusqueda] = useState('')
+  const [revisionHilo, setRevisionHilo] = useState(0)
+  const [estadoConexion, setEstadoConexion] = useState('')
+  const eventos = useRef<EventSource | null>(null)
   const solicitud = useRef<AbortController | null>(null)
   const cargar = useCallback(() => {
     solicitud.current?.abort()
@@ -30,18 +43,48 @@ export function Whatsapp() {
         if (!actual.signal.aborted) setConversaciones(datos)
       })
       .catch(() => {
-        // El siguiente refresco vuelve a intentar la carga.
+        // El siguiente aviso del servidor o la reconexión vuelve a cargar la lista.
       })
   }, [])
+  const actualizar = useCallback(
+    (soloLista = false) => {
+      cargar()
+      if (!soloLista) setRevisionHilo((revision) => revision + 1)
+    },
+    [cargar],
+  )
+  const alCambiar = useCallback(
+    (soloLista?: boolean) => {
+      if (eventos.current?.readyState !== EventSource.OPEN) actualizar(soloLista)
+    },
+    [actualizar],
+  )
   useEffect(() => {
     cargar()
-    const intervalo = window.setInterval(cargar, REFRESCO_MS)
+    const fuente = new EventSource('/api/whatsapp/eventos')
+    eventos.current = fuente
+    fuente.onopen = () => {
+      setEstadoConexion('')
+      actualizar()
+    }
+    fuente.onerror = () => {
+      setEstadoConexion(
+        fuente.readyState === EventSource.CLOSED ? 'Actualización en vivo no disponible' : 'Reconectando…',
+      )
+    }
+    fuente.addEventListener('cambio', (evento) => actualizar(soloLista(evento)))
     return () => {
-      window.clearInterval(intervalo)
+      fuente.close()
+      eventos.current = null
       solicitud.current?.abort()
     }
-  }, [cargar])
+  }, [actualizar, cargar])
   const actual = conversaciones.find((c) => c.telefono === elegido)
+  const termino = normalizar(busqueda)
+  const numero = /^[+\d\s().-]+$/.test(termino) ? termino.replace(/\D/g, '') : ''
+  const visibles = conversaciones.filter((c) =>
+    normalizar(c.nombre ?? 'Sin registrar').includes(termino) || (numero && c.telefono.includes(numero)),
+  )
 
   return (
     <>
@@ -52,15 +95,26 @@ export function Whatsapp() {
       <div className="monitor">
         <section className="card monitor-lista" aria-label="Conversaciones">
           <h2>
-            Conversaciones <span className="monitor-cuenta">{conversaciones.length}</span>
+            Conversaciones <span className="monitor-cuenta">{visibles.length}</span>
           </h2>
-          {conversaciones.length === 0 ? (
-            <EmptyState title="Todavía no hay conversaciones" icon="chat">
-              Escribe como un vecino desde la conversación.
+          <div className="search-field">
+            <Icon name="search" />
+            <input
+              type="search"
+              aria-label="Buscar chats por nombre o teléfono"
+              placeholder="Nombre o teléfono"
+              value={busqueda}
+              onChange={(event) => setBusqueda(event.target.value)}
+            />
+          </div>
+          {estadoConexion && <p className="field-help monitor-conexion" role="status">{estadoConexion}</p>}
+          {visibles.length === 0 ? (
+            <EmptyState title={termino ? 'No hay chats con esa búsqueda' : 'Todavía no hay conversaciones'} icon="chat">
+              {termino ? 'Prueba con otro nombre o teléfono.' : 'Escribe como un vecino desde la conversación.'}
             </EmptyState>
           ) : (
             <ul>
-              {conversaciones.map((c) => (
+              {visibles.map((c) => (
                 <li key={c.telefono}>
                   <button
                     type="button"
@@ -98,7 +152,8 @@ export function Whatsapp() {
         <Conversacion
           key={actual?.telefono ?? 'nueva'}
           conversacion={actual}
-          alCambiar={cargar}
+          revision={revisionHilo}
+          alCambiar={alCambiar}
           alSimular={setElegido}
         />
       </div>

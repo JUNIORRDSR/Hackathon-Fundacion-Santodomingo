@@ -3,6 +3,7 @@ pide sesión."""
 from urllib.parse import parse_qsl
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 from starlette.datastructures import FormData
@@ -76,6 +77,13 @@ def pedidos_en_espera(_: acceso.Usuario = Depends(acceso.usuario_actual)) -> dic
 @router.get("/conversaciones")
 def conversaciones(u: acceso.Usuario = Sesion) -> list[monitor.ConversacionVista]:
     return monitor.conversaciones(u.id)
+
+
+@router.get("/eventos")
+async def eventos(request: Request, u: acceso.Usuario = Sesion) -> StreamingResponse:
+    flujo = request.app.state.eventos_whatsapp.flujo(u.id)
+    return StreamingResponse(flujo, media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"})
 
 
 @router.get("/conversaciones/{telefono}/mensajes")

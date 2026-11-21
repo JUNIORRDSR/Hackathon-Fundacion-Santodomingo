@@ -1,6 +1,7 @@
 # ADR-0011 · Revisión orientativa de fotos de residuos
 
 - **Estado:** aceptada · 2026-11-20
+- **Modificada por:** [ADR-0016](0016-agente-conversacional-con-herramientas.md)
 
 ## Contexto
 

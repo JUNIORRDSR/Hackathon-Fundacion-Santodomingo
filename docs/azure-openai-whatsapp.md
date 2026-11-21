@@ -26,45 +26,52 @@ OPENAI_API_KEY=
 CONVERSADOR_MODELO=
 ```
 
-Para un despliegue de GPT-5 o GPT-5 mini, añade `CONVERSADOR_RAZONAMIENTO=minimal`. El bot usa hasta 128 tokens
-de salida y espera hasta 3 segundos en la conexión con Azure. Para GPT-4.1 mini deja esa variable vacía.
+Para un despliegue de GPT-5 o GPT-5 mini, añade `CONVERSADOR_RAZONAMIENTO=minimal`: el agente pide razonamiento
+mínimo y recibe el razonamiento cifrado para la siguiente ronda (`store: false`). Para GPT-4.1 mini deja esa variable
+vacía. Cada turno tiene hasta 12,5 s, el plazo de Twilio, y cada llamada a Azure hasta 8 s.
 
 Ejecuta `docker compose up --build` y usa el [simulador](../README.md#probar-el-bot-sin-whatsapp). Completa el
-registro y habilita al solicitante desde la coordinación antes de probar una frase como «quiero que recojan
-mis orgánicos». El bot debe preguntar en qué franja prefieres la recolección. Para desactivar Azure,
-cambia `CONVERSADOR=menu` y vuelve a arrancar el backend. En Azure Container Apps, usa un secreto
-referenciado por la variable `OPENAI_API_KEY`. [Secretos de Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/manage-secrets)
+registro y habilita al solicitante desde la coordinación antes de probar frases como «¿cuántos puntos llevo?»,
+«recojan mis reciclables por la tarde» o «¿en qué va mi premio?». Para desactivar Azure, cambia `CONVERSADOR=menu` y
+vuelve a arrancar el backend. En Azure Container Apps, usa un secreto referenciado por la variable `OPENAI_API_KEY`.
+[Secretos de Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/manage-secrets)
 
-## Conversación, memoria y conocimiento
+## El agente: conversación, memoria, conocimiento y herramientas
 
-Con `CONVERSADOR=llm`, el vecino puede saludar, pedir una recolección con sus palabras, indicar una franja como
-«por la tarde» o preguntar por su saldo. El diálogo pide el dato pendiente y usa los contratos del backend para consultar
-solicitudes, puntos y contenidos. La coordinación conserva la asignación, la programación y el cierre.
+Con `CONVERSADOR=llm` responde un agente ([ADR-0016](adr/0016-agente-conversacional-con-herramientas.md)): el modelo
+lee la conversación y escribe la respuesta, y actúa con herramientas que el backend ata al vecino que escribe. Puede
+contar el estado, los kilos y los puntos de cada recolección, el saldo y los premios, el estado de un canje, pedir o
+cancelar una recolección, canjear, cambiar el nombre con el que llamamos al vecino y mandar un cartel ilustrado. La
+coordinación conserva la asignación, la programación y el cierre.
 
-| Archivo | Qué puedes ajustar |
+| Lo que ofrece Foundry | Cómo se resuelve aquí |
 |---|---|
-| [`agente/politica.md`](../backend/app/modulos/whatsapp/agente/politica.md) | Criterios y ejemplos que guían la interpretación del mensaje |
-| [`agente/conocimiento.json`](../backend/app/modulos/whatsapp/agente/conocimiento.json) | Información aprobada sobre EcoConecta y su funcionamiento |
-| [`respuestas.json`](../backend/app/modulos/whatsapp/respuestas.json) | Las frases y preguntas que recibe el vecino |
-| [`agente/dialogo.py`](../backend/app/modulos/whatsapp/agente/dialogo.py) | Las transiciones, las confirmaciones y las acciones permitidas |
+| Instrucciones del agente | [`agente/instrucciones.md`](../backend/app/modulos/whatsapp/agente/instrucciones.md): tono, formato, alcance y límites |
+| Knowledge | [`agente/conocimiento.md`](../backend/app/modulos/whatsapp/agente/conocimiento.md) y las guías publicadas en **Contenidos** (PostgreSQL) |
+| Memoria corta | Los 14 mensajes más recientes del chat (24 h), de `whatsapp.mensajes`, y el paso pendiente en `whatsapp.conversaciones` |
+| Herramientas | [`agente/herramientas.py`](../backend/app/modulos/whatsapp/agente/herramientas.py): un catálogo cerrado con esquemas estrictos |
+| Guardarraíles | La política `ecoconecta-salvaguardas` (Prompt Shields) y los controles del código descritos abajo |
 
-Puedes montar archivos UTF-8 y apuntar `WHATSAPP_AGENT_PROMPT_FILE`, `WHATSAPP_AGENT_KNOWLEDGE_FILE` y
-`WHATSAPP_REPLIES_FILE` a sus rutas dentro del contenedor. El backend aplica ediciones válidas sin reiniciar. Publica las
-guías de separación desde el módulo **Contenidos** para que el agente lea el catálogo vigente en PostgreSQL.
+Monta archivos UTF-8 y apunta `WHATSAPP_AGENT_PROMPT_FILE` y `WHATSAPP_AGENT_KNOWLEDGE_FILE` a sus rutas dentro del
+contenedor para cambiar las instrucciones o el conocimiento sin publicar una imagen: el backend aplica una edición
+válida sin reiniciar y conserva la anterior si la nueva está vacía o pasa de 32 KB. Los avisos (recibida,
+programada, puntos, rechazo) siguen en [`respuestas.json`](../backend/app/modulos/whatsapp/respuestas.json), igual que
+las respuestas del diálogo local que contesta cuando Azure tarda o falla.
 
-El backend conserva el paso pendiente de cada chat en `whatsapp.conversaciones.memoria` durante 30 minutos de inactividad.
-El registro solicita autorización y admite respuestas como «sí, autorizo», «hogar» o «por la tarde». Usa los contratos existentes
-para consultar datos vigentes del vecino autenticado por el canal. Azure recibe una versión filtrada del mensaje actual
-y devuelve una etiqueta de un esquema cerrado. La llamada usa `store: false` y un tiempo de espera corto. El diálogo
-local puede resolver pasos comunes cuando Azure tarda o falla. [Azure OpenAI Responses](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/responses)
-
-Foundry Memory es una opción en vista previa para recordar información entre sesiones. Foundry IQ permite indexar guías
-aprobadas con Azure AI Search cuando el volumen de documentos lo justifique. Para este MVP, la memoria operativa, los
-contenidos y los datos de negocio viven en el backend y PostgreSQL. [Foundry Memory](https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/what-is-memory) · [Foundry IQ](https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/what-is-foundry-iq)
+Foundry Agent Service permite definir un *prompt agent* en el portal y llamarlo por la misma API Responses. Se
+descartó por ahora porque pide el endpoint del proyecto con Entra ID y suma latencia frente al plazo de Twilio. Foundry
+IQ (Azure AI Search) tiene sentido cuando haya muchas guías para indexar.
+[Llamada a funciones en Foundry](https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/tools/function-calling)
 
 ## Salvaguardas
 
-El despliegue de texto tiene aplicada `ecoconecta-salvaguardas`. El código reduce los datos enviados al modelo, rechaza
-intentos explícitos de cambiar instrucciones y valida su etiqueta. La sesión del vecino y las operaciones sobre
-solicitudes y puntos se validan en el backend. Las políticas de Azure son una capa adicional a esas autorizaciones.
+El despliegue de texto tiene aplicada `ecoconecta-salvaguardas`. Si Prompt Shields frena un mensaje, el vecino recibe
+una respuesta fija. En el código:
+
+- La identidad del vecino la pone el backend y las herramientas no devuelven teléfonos ni direcciones.
+- Los números largos y los correos se enmascaran antes de salir.
+- Canjear y cancelar exigen que el vecino confirme en un mensaje posterior.
+- El nombre editable solo admite letras.
+- Cada turno tiene tope de rondas, de tiempo y de largo.
+
 [Política del proyecto](adr/0013-voz-y-salvaguardas.md) · [Prompt Shields de Microsoft Foundry](https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/content-filter-prompt-shields)

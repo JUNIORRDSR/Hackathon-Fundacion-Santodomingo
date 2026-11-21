@@ -3,11 +3,13 @@ import { PageHeader } from '../../ecoconecta-coordinacion/components/layout/Layo
 import { EmptyState } from '../../ecoconecta-coordinacion/components/ui/Feedback'
 import { Icon } from '../../ecoconecta-coordinacion/components/ui/Icon'
 import { api } from '../api'
-import { Conversacion, iniciales } from './Conversacion'
+import { Conversacion, iniciales, nombreVisible } from './Conversacion'
 
 export interface ConversacionVista {
   telefono: string
   nombre: string | null
+  perfil: string | null
+  usuario: string | null
   control: string | null
   ultimo: string
   fecha: string
@@ -83,7 +85,7 @@ export function Whatsapp() {
   const termino = normalizar(busqueda)
   const numero = /^[+\d\s().-]+$/.test(termino) ? termino.replace(/\D/g, '') : ''
   const visibles = conversaciones.filter((c) =>
-    normalizar(c.nombre ?? 'Sin registrar').includes(termino) || (numero && c.telefono.includes(numero)),
+    normalizar(nombreVisible(c)).includes(termino) || (numero && c.telefono.includes(numero)),
   )
 
   return (
@@ -123,11 +125,11 @@ export function Whatsapp() {
                     onClick={() => setElegido(c.telefono)}
                   >
                     <span className="monitor-avatar" aria-hidden="true">
-                      {iniciales(c.nombre)}
+                      {iniciales(c.nombre ?? c.perfil)}
                     </span>
                     <span className="monitor-resumen">
                       <span className="monitor-nombre">
-                        <strong>{c.nombre ?? 'Sin registrar'}</strong>
+                        <strong>{nombreVisible(c)}</strong>
                         <time dateTime={c.fecha}>{hora.format(new Date(c.fecha))}</time>
                       </span>
                       <span className="monitor-previa">

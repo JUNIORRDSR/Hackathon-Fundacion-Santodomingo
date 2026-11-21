@@ -13,8 +13,8 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.modulos.directorio import contrato as directorio
-from app.modulos.whatsapp import bot, monitor, transporte_twilio
-from app.modulos.whatsapp.contrato import MensajeSaliente
+from app.modulos.whatsapp import bot, contactos, monitor, transporte_twilio
+from app.modulos.whatsapp.contrato import MensajeSaliente, Perfil
 from app.modulos.whatsapp.transporte_twilio import TransporteTwilio
 
 RUTA = "/api/whatsapp/twilio"
@@ -113,6 +113,20 @@ def test_waid_no_autoriza_alias_desconocidos_y_el_piloto_se_respeta(cliente_twil
     assert "WaId" not in respuesta.text and TELEFONO_ALIAS not in respuesta.text
     assert _entregar(cliente, _parametros("+573000000006", 5)).status_code == 403
     assert not salidas
+
+
+def test_el_perfil_se_guarda_y_un_bsuid_ya_visto_con_su_telefono_encuentra_al_vecino(cliente_twilio):
+    """ADR-0016: si después escribe solo con su usuario de WhatsApp, sigue siendo el mismo vecino con sus puntos."""
+    cliente, _ = cliente_twilio
+    bsuid = "CO.1234567890123456"
+    perfil = [("ExternalUserId", f"whatsapp:{bsuid}"), ("Username", "vecina_luz"), ("ProfileName", " Luz  Marina ")]
+    assert _entregar(cliente, _parametros(TELEFONO, 20) + perfil).status_code == 200
+    assert contactos.perfil_de(TELEFONO) == Perfil(nombre="Luz Marina", usuario="vecina_luz", bsuid=bsuid)
+
+    solo_usuario = _parametros(bsuid, 21, "¿Siguen ahí?") + [("Username", "<b>no</b>")]
+    assert _entregar(cliente, solo_usuario).status_code == 200
+    assert any(m.texto == "¿Siguen ahí?" for m in monitor.mensajes_de(TELEFONO) if m.direccion == "entrante")
+    assert contactos.perfil_de(TELEFONO).usuario == "vecina_luz"  # un usuario inválido no pisa el bueno
 
 
 def test_entregas_concurrentes_del_mismo_sid_solo_avanzan_el_bot_una_vez(cliente_twilio):

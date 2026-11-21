@@ -31,25 +31,38 @@ class Adjunto(NamedTuple):
     tipo: str
 
 
-def atender(mensaje: MensajeEntrante, memoria: dict) -> tuple[list[str], MensajeEntrante | None]:
-    """Devuelve los textos para enviar y el mensaje que sigue al conversador (None: ya se respondió)."""
+class Atencion(NamedTuple):
+    textos: list[str]  # lo que sale ya
+    mensaje: MensajeEntrante | None  # lo que sigue al conversador; None: ya se respondió
+    revision: list[str] = []  # la revisión de la foto, para que el agente la cuente a su manera (ADR-0016)
+
+
+def atender(mensaje: MensajeEntrante, memoria: dict, para_el_agente: bool = False) -> Atencion:
     if not mensaje.media_url or not (clasificacion.activa() or voz.activa()):
-        return [], mensaje
-    if _excede_el_limite(mensaje.telefono):
-        return [ESPERA], None
+        return Atencion([], mensaje)
+    if excede_el_limite(mensaje.telefono, LIMITE_POR_VENTANA):
+        return Atencion([ESPERA], None)
     try:
         adjunto = descargar(mensaje.media_url)
     except Exception:
         log.warning("No se pudo descargar un adjunto", exc_info=True)
-        return [NO_SE_PUDO_ABRIR], None
+        return Atencion([NO_SE_PUDO_ABRIR], None)
     if adjunto.tipo.startswith("audio/") and voz.activa():
-        return voz.responder(adjunto.contenido, adjunto.tipo, mensaje)
+        return Atencion(*voz.responder(adjunto.contenido, adjunto.tipo, mensaje))
     if adjunto.tipo.startswith("image/") and clasificacion.activa():
-        memoria["foto"] = mensaje.media_url  # la revisión orienta; la foto igual queda para el pedido
-        if os.getenv("CONVERSADOR") == "llm":
-            registrar_actividad(memoria)
-        return fotos.responder(clasificacion.Foto(contenido=adjunto.contenido, tipo=adjunto.tipo), memoria), None
-    return [], mensaje
+        return _revisar(clasificacion.Foto(contenido=adjunto.contenido, tipo=adjunto.tipo), mensaje, memoria,
+                        para_el_agente)
+    return Atencion([], mensaje)
+
+
+def _revisar(foto: clasificacion.Foto, mensaje: MensajeEntrante, memoria: dict, para_el_agente: bool) -> Atencion:
+    """La revisión orienta y la foto igual queda para el pedido. Con el agente, su texto fijo es el respaldo."""
+    memoria["foto"] = mensaje.media_url
+    revision = fotos.responder(foto, memoria)
+    if not para_el_agente:
+        return Atencion(revision, None)
+    registrar_actividad(memoria)
+    return Atencion([], mensaje, revision)
 
 
 def descargar(media_url: str) -> Adjunto:
@@ -68,13 +81,14 @@ def descargar(media_url: str) -> Adjunto:
         return Adjunto(respuesta.read(TAMANO_MAXIMO + 1), respuesta.headers.get_content_type())
 
 
-def _excede_el_limite(telefono: str) -> bool:
+def excede_el_limite(clave: str, limite: int) -> bool:
+    """Cuenta un uso de la clave (un número, o el agente de un número) en la ventana de 10 minutos."""
     ahora = time.monotonic()
     with _candado:
-        marcas = _recientes[telefono]
+        marcas = _recientes[clave]
         while marcas and ahora - marcas[0] > VENTANA:
             marcas.popleft()
-        if len(marcas) >= LIMITE_POR_VENTANA:
+        if len(marcas) >= limite:
             return True
         marcas.append(ahora)
         return False

@@ -27,8 +27,11 @@ export async function api<T>(ruta: string, metodo = 'GET', cuerpo?: unknown, sig
 }
 
 // La foto o el audio de un vecino: Twilio pide la credencial, así que la tablet lo ve a través del backend (ADR-0014).
+// Los carteles de EcoConecta son públicos (ADR-0016); los adjuntos del vecino se traen de Twilio con la credencial.
 export const urlDeAdjunto = (url: string) =>
-  url.startsWith('data:') ? url : '/api/whatsapp/adjunto?url=' + encodeURIComponent(url)
+  url.startsWith('data:') || url.includes('/api/whatsapp/carteles/')
+    ? url
+    : '/api/whatsapp/adjunto?url=' + encodeURIComponent(url)
 
 async function mensajeDe(respuesta: Response): Promise<string> {
   if (respuesta.status === 401) return 'Tu sesión terminó. Vuelve a entrar.'

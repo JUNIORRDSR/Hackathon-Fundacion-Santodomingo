@@ -1,27 +1,32 @@
 """Entrada y salida de WhatsApp: todo queda registrado; cada mensaje va al registro, al conversador o a la coordinación.
-La pieza de Jorge entra con TRANSPORTE=twilio y la de Leonardo con CONVERSADOR=llm (ADR-0003, ADR-0007)."""
+Twilio entra con TRANSPORTE=twilio y el agente con CONVERSADOR=llm (ADR-0003, ADR-0007, ADR-0016)."""
 import importlib
 import logging
 import os
+import time
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import Connection, func, insert, select
+from sqlalchemy import Connection, func, insert, or_, select
 from sqlalchemy.dialects.postgresql import insert as insertar_o_actualizar
 
 from app.compartido.bd import transaccion
 from app.modulos.directorio import contrato as directorio
-from app.modulos.whatsapp import adjuntos, registro
+from app.modulos.whatsapp import adjuntos, contactos, registro
 from app.modulos.whatsapp import tablas as t
 from app.modulos.whatsapp.agente.memoria import vigente as memoria_vigente
-from app.modulos.whatsapp.contrato import Conversador, Herramientas, MensajeEntrante, MensajeSaliente, Transporte, Turno
+from app.modulos.whatsapp.contrato import (Conversador, Herramientas, Linea, MensajeEntrante, MensajeSaliente,
+                                           Respuesta, Transporte, Turno)
 from app.modulos.whatsapp.eventos_monitor import notificar
 from app.modulos.whatsapp.menu import ConversadorMenu
 from app.modulos.whatsapp.respuestas import texto as plantilla
 from app.modulos.whatsapp.transporte_twilio import ErrorEnvioTwilio
 
 log = logging.getLogger("whatsapp")
+PLAZO = 12.5  # segundos para responder: Twilio espera 15 el TwiML del webhook
+HISTORIAL = 14  # mensajes recientes que el agente lee para seguir la conversación
+TURNOS_DEL_AGENTE = 20  # por número cada 10 minutos; pasado el tope responde el diálogo local, sin costo de Azure
 
 
 @dataclass
@@ -56,14 +61,18 @@ def transporte() -> Transporte:
 
 
 def configurar_desde_entorno() -> None:
-    """TRANSPORTE=twilio carga transporte_twilio.TransporteTwilio (Jorge); CONVERSADOR=llm carga
-    conversador_llm.ConversadorLLM (Leonardo). Cada clase expone desde_entorno()."""
+    """TRANSPORTE=twilio carga transporte_twilio.TransporteTwilio; CONVERSADOR=llm carga el agente
+    (agente/conversador.py, ADR-0016). Cada clase expone desde_entorno()."""
     if os.getenv("TRANSPORTE", "simulado") == "twilio":
         modulo = importlib.import_module("app.modulos.whatsapp.transporte_twilio")
         configurar(transporte=modulo.TransporteTwilio.desde_entorno())
-    if os.getenv("CONVERSADOR", "menu") == "llm":
-        modulo = importlib.import_module("app.modulos.whatsapp.conversador_llm")
-        configurar(conversador=modulo.ConversadorLLM.desde_entorno())
+    if con_agente():
+        modulo = importlib.import_module("app.modulos.whatsapp.agente.conversador")
+        configurar(conversador=modulo.ConversadorAgente.desde_entorno())
+
+
+def con_agente() -> bool:
+    return os.getenv("CONVERSADOR", "menu") == "llm"
 
 
 def recibir(mensaje: MensajeEntrante, sid: str | None = None) -> list[str]:
@@ -73,13 +82,26 @@ def recibir(mensaje: MensajeEntrante, sid: str | None = None) -> list[str]:
         c.execute(select(func.pg_advisory_xact_lock(func.hashtextextended(mensaje.telefono, 0))))
         if sid is not None and not _registrar_entrega(c, sid):
             return []
+        if mensaje.perfil:
+            contactos.recordar(mensaje.telefono, mensaje.perfil)
+        historial = _historial(mensaje.telefono)
         _registrar(mensaje, "entrante", "vecino")
         memoria, control = _conversacion(mensaje.telefono)
-        textos, memoria = ([], memoria) if control else _responder(mensaje, memoria)
-        _guardar_memoria(mensaje.telefono, memoria)
-    for texto in textos:
-        enviar(MensajeSaliente(telefono=mensaje.telefono, texto=texto), autor="bot")
-    return textos
+        respuesta = Respuesta(textos=[], memoria=memoria) if control else _responder(mensaje, memoria, historial)
+        _guardar_memoria(mensaje.telefono, respuesta.memoria)
+    for salida in _salidas(mensaje.telefono, respuesta):
+        enviar(salida, autor="bot")
+    return respuesta.textos
+
+
+def _salidas(telefono: str, respuesta: Respuesta) -> list[MensajeSaliente]:
+    """Un mensaje por texto; el cartel va con el último para no gastar otro mensaje del cupo de Twilio."""
+    salidas = [MensajeSaliente(telefono=telefono, texto=texto) for texto in respuesta.textos]
+    if respuesta.media_url and salidas:
+        salidas[-1].media_url = respuesta.media_url
+    elif respuesta.media_url:
+        salidas.append(MensajeSaliente(telefono=telefono, texto="", media_url=respuesta.media_url))
+    return salidas
 
 
 def recibir_para_twiml(mensaje: MensajeEntrante, sid: str) -> list[MensajeSaliente]:
@@ -122,25 +144,46 @@ def enviados(telefono: str | None = None) -> list[MensajeSaliente]:
         return [MensajeSaliente.model_validate(dict(fila._mapping)) for fila in c.execute(consulta).all()]
 
 
-def _responder(mensaje: MensajeEntrante, memoria: dict) -> tuple[list[str], dict]:
+def _responder(mensaje: MensajeEntrante, memoria: dict, historial: list[Linea]) -> Respuesta:
+    limite = time.monotonic() + PLAZO
     solicitante = directorio.solicitante_por_telefono(mensaje.telefono)
     if solicitante is None:
-        return registro.responder(mensaje.texto, mensaje.telefono, memoria), memoria
+        return Respuesta(textos=registro.responder(mensaje.texto, mensaje.telefono, memoria), memoria=memoria)
     if solicitante.estado != directorio.EstadoSolicitante.HABILITADO:
-        return [plantilla("registro_en_revision")], memoria
-    if mensaje.media_url and os.getenv("CONVERSADOR") == "llm":
+        return Respuesta(textos=[plantilla("registro_en_revision")], memoria=memoria)
+    if mensaje.media_url and con_agente():
         memoria = memoria_vigente(memoria)
-    textos, mensaje = adjuntos.atender(mensaje, memoria)
-    if mensaje is None:
-        return textos, memoria
-    turno = Turno(nombre=solicitante.nombre, texto=mensaje.texto, media_url=mensaje.media_url)
-    herramientas = Herramientas(solicitante.id)
+    atencion = adjuntos.atender(mensaje, memoria, para_el_agente=con_agente())
+    if atencion.mensaje is None:
+        return Respuesta(textos=atencion.textos, memoria=memoria)
+    agotado = con_agente() and adjuntos.excede_el_limite(f"agente:{mensaje.telefono}", TURNOS_DEL_AGENTE)
+    turno = Turno(nombre=solicitante.nombre, texto=atencion.mensaje.texto, media_url=atencion.mensaje.media_url,
+                  historial=historial, revision=atencion.revision, segundos=0 if agotado else limite - time.monotonic())
+    respuesta = _conversar(turno, memoria, Herramientas(solicitante.id))
+    return respuesta.model_copy(update={"textos": atencion.textos + respuesta.textos})
+
+
+def _conversar(turno: Turno, memoria: dict, herramientas: Herramientas) -> Respuesta:
     try:
-        respuesta = _conversador.responder(turno, memoria, herramientas)
+        return _conversador.responder(turno, memoria, herramientas)
     except Exception:
         log.exception("El conversador falló; responde el menú")
-        respuesta = ConversadorMenu().responder(turno, {}, herramientas)
-    return textos + respuesta.textos, respuesta.memoria
+        return ConversadorMenu().responder(turno, {}, herramientas)
+
+
+def _historial(telefono: str) -> list[Linea]:
+    """Lo que se habló en las últimas 24 horas, sin los envíos fallidos ni el registro: la dirección que escribió
+    al registrarse no viaja al modelo (ADR-0016)."""
+    m, solicitante = t.mensajes.c, directorio.solicitante_por_telefono(telefono)
+    desde = datetime.now(timezone.utc) - timedelta(hours=24)
+    desde = max(desde, solicitante.autorizo_en) if solicitante else desde
+    consulta = (select(m.autor, m.texto, m.media_url)
+                .where(m.telefono == telefono, m.enviado_en >= desde, or_(m.estado.is_(None), m.estado != "fallido"))
+                .order_by(m.id.desc()).limit(HISTORIAL))
+    with transaccion() as c:
+        filas = c.execute(consulta).all()
+    return [Linea(autor=f.autor, texto=" ".join(filter(None, (f.texto, "[adjunto]" if f.media_url else None))))
+            for f in reversed(filas)]
 
 
 def _registrar(mensaje: MensajeEntrante | MensajeSaliente, direccion: str, autor: str,

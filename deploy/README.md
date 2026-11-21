@@ -27,7 +27,7 @@ de la raíz o usa los valores por defecto de un checkout nuevo. Desde la raíz e
 docker compose -f docker-compose.yml -f deploy/whatsapp-local.compose.yml up -d --build
 ```
 
-Entra a [EcoConecta local](http://localhost:8000/#/whatsapp) con `admin` y `ecoconecta-demo` si usas la clave por
+Entra a [EcoConecta local](http://localhost:8000/#/whatsapp) con `fundacion` y `ecoconecta-demo` si usas la clave por
 defecto. En **Como vecino (prueba)** escribe `Hola`. Cada instalación conserva su PostgreSQL en el volumen `datos`.
 
 ## WhatsApp real contra Docker con URL fija

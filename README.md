@@ -17,7 +17,7 @@ docker compose up --build
 ```
 
 Abre [EcoConecta](http://localhost:8000) para usar el frontend integrado. Los contratos están en
-[/docs](http://localhost:8000/docs). Los usuarios de demostración `huerteros`, `recicladores` y `admin`
+[/docs](http://localhost:8000/docs). Los usuarios de demostración `rosa` (huerteros), `carlos` (recicladores) y `fundacion` (administración)
 usan la clave `ecoconecta-demo`.
 
 ## Backend sin Docker
@@ -53,7 +53,7 @@ necesita HTTPS o `localhost` ([ADR-0015](docs/adr/0015-etiqueta-qr-por-hogar.md)
 Para repetir pruebas sin enviar mensajes a Twilio, arranca la app con `TRANSPORTE=simulado` en el `.env` de la raíz.
 Con `CONVERSADOR=menu` también puedes probar el flujo numerado sin consumir cuota de Azure.
 
-Entra a la app (usuario `admin`, clave `ecoconecta-demo`) y abre **WhatsApp**: a la izquierda las conversaciones, a la
+Entra a la app (usuario `fundacion`, clave `ecoconecta-demo`) y abre **WhatsApp**: a la izquierda las conversaciones, a la
 derecha el hilo. En **Simular un vecino** escribes como si fueras un celular (`+573000000009`, «Hola»). Con **Tomar el
 control** el bot calla y respondes como coordinación; **Devolver al bot** lo reactiva (ADR-0007).
 

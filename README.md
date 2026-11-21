@@ -58,6 +58,31 @@ Por API: `POST /api/whatsapp/simulador` con `{"telefono": "+573000000001", "text
 
 ## WhatsApp real con el sandbox de Twilio
 
+### Webhook local con Docker en Windows
+
+```powershell
+pwsh -File scripts/whatsapp-local.ps1 -Compilar
+```
+
+El script reutiliza el túnel activo o inicia uno temporal, sincroniza `TWILIO_WEBHOOK_URL` en el `.env` local
+y comprueba que una solicitud firmada llega a FastAPI. El proxy solo publica el webhook. El monitor sigue en
+`http://localhost:8000/#/whatsapp`. Guarda la URL que imprime el script en **Sandbox settings → When a message
+comes in**, con método **POST**. Cloudflare asigna otra URL cuando se reinicia un túnel temporal.
+
+Para conservar la URL tras reiniciar Docker, configura un túnel de Cloudflare dedicado a EcoConecta con un
+dominio público fijo y el servicio HTTP `http://whatsapp-webhook:8080`. Guarda su token en
+`CLOUDFLARE_TUNNEL_TOKEN` en el `.env` local y ejecuta:
+
+```powershell
+pwsh -File scripts/whatsapp-local.ps1 -UrlFija https://whatsapp.example.com/api/whatsapp/twilio -Compilar
+```
+
+Guarda esa URL en Twilio una vez. En los siguientes cambios puedes volver a compilar y levantar la app
+sin repetir `-UrlFija` ni cambiar la dirección del webhook. Usa el mismo script sin `-Compilar` para
+comprobar la conexión.
+
+### Configuración manual
+
 1. En la consola de Twilio, abre el sandbox de WhatsApp y anota el número y la palabra para unirse.
 2. Arranca la app con `TRANSPORTE=twilio`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` y
    `TWILIO_WHATSAPP_FROM=whatsapp:+14155238886` (o el número del sandbox). En `TWILIO_WEBHOOK_URL` configura

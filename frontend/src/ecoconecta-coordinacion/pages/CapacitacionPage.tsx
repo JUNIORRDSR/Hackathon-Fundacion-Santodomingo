@@ -50,7 +50,7 @@ export function CapacitacionPage({
         </>
       ) : (
         <div className="card">
-          <EmptyState title="Aún no hay guías publicadas" icon="book">
+          <EmptyState title="Aún no hay guías publicadas">
             Vuelve más adelante para consultar los materiales.
           </EmptyState>
         </div>

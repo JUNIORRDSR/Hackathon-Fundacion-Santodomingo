@@ -250,7 +250,7 @@ export function ScheduleTimeline({
       </div>
       <div className="view-content" key={JSON.stringify([view, date, collectorId])}>
         {visible.length === 0 ? (
-          <EmptyState title="Sin recolecciones para este día" icon="calendar">
+          <EmptyState title="Sin recolecciones para este día">
             Elige otra fecha o cambia el filtro de recolector.
           </EmptyState>
         ) : view === 'agenda' ? (

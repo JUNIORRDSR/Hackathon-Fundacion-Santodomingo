@@ -43,9 +43,7 @@ export function Lugares({ nuevo }: { nuevo: number }) {
       {error && <ErrorMessage message={error} retry={cargar} />}
       {zonas?.length === 0 && (
         <div className="card">
-          <EmptyState title="Todavía no hay zonas" icon="pin">
-            Agrega la primera zona del barrio.
-          </EmptyState>
+          <EmptyState title="Todavía no hay zonas">Agrega la primera zona del barrio.</EmptyState>
         </div>
       )}
       <ul className="lugares-grid">

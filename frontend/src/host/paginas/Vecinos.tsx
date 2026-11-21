@@ -107,9 +107,7 @@ export function Vecinos({ nuevo }: { nuevo: number }) {
       )}
       {vecinos && visibles.length === 0 ? (
         <div className="card">
-          <EmptyState title="No hay vecinos con estos filtros" icon="users">
-            Cambia los filtros o registra uno nuevo.
-          </EmptyState>
+          <EmptyState title="No hay vecinos con estos filtros">Cambia los filtros o registra uno nuevo.</EmptyState>
         </div>
       ) : (
         <DataTable

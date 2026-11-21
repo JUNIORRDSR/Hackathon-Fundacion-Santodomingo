@@ -87,7 +87,7 @@ export function SolicitudesPage({
           <RequestList requests={visible} onSelect={onSelect} />
         ) : (
           <div className="card">
-            <EmptyState title="No encontramos solicitudes" icon={query ? 'search' : 'inbox'}>
+            <EmptyState title="No encontramos solicitudes">
               <p>
                 {query ? 'Prueba con otro nombre, ubicación o código.' : 'Elige otro estado para ver más solicitudes.'}
               </p>

@@ -16,7 +16,12 @@ export interface ConversacionVista {
 
 // El monitor reemplaza al simulador: se ve lo que hace el bot y se puede tomar el control (ADR-0007).
 const hora = new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit' })
-const normalizar = (texto: string) => texto.trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')
+const normalizar = (texto: string) =>
+  texto
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
 
 function soloLista({ data }: MessageEvent<string>) {
   try {
@@ -82,8 +87,8 @@ export function Whatsapp() {
   const actual = conversaciones.find((c) => c.telefono === elegido)
   const termino = normalizar(busqueda)
   const numero = /^[+\d\s().-]+$/.test(termino) ? termino.replace(/\D/g, '') : ''
-  const visibles = conversaciones.filter((c) =>
-    normalizar(c.nombre ?? 'Sin registrar').includes(termino) || (numero && c.telefono.includes(numero)),
+  const visibles = conversaciones.filter(
+    (c) => normalizar(c.nombre ?? 'Sin registrar').includes(termino) || (numero && c.telefono.includes(numero)),
   )
 
   return (
@@ -107,9 +112,13 @@ export function Whatsapp() {
               onChange={(event) => setBusqueda(event.target.value)}
             />
           </div>
-          {estadoConexion && <p className="field-help monitor-conexion" role="status">{estadoConexion}</p>}
+          {estadoConexion && (
+            <p className="field-help monitor-conexion" role="status">
+              {estadoConexion}
+            </p>
+          )}
           {visibles.length === 0 ? (
-            <EmptyState title={termino ? 'No hay chats con esa búsqueda' : 'Todavía no hay conversaciones'} icon="chat">
+            <EmptyState title={termino ? 'No hay chats con esa búsqueda' : 'Todavía no hay conversaciones'}>
               {termino ? 'Prueba con otro nombre o teléfono.' : 'Escribe como un vecino desde la conversación.'}
             </EmptyState>
           ) : (

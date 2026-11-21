@@ -117,10 +117,7 @@ export function Etiquetas() {
         </ul>
       ) : (
         <div className="card">
-          <EmptyState
-            title={busqueda ? 'No hay etiquetas con esa búsqueda' : 'Aún no hay hogares habilitados'}
-            icon="qr"
-          >
+          <EmptyState title={busqueda ? 'No hay etiquetas con esa búsqueda' : 'Aún no hay hogares habilitados'}>
             Cada hogar o negocio aceptado en Registros tiene su sticker.
           </EmptyState>
         </div>

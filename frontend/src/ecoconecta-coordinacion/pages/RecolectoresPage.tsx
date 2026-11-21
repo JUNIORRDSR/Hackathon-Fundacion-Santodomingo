@@ -64,7 +64,7 @@ export function RecolectoresPage({
         </ul>
       ) : (
         <div className="card">
-          <EmptyState title="Aún no hay recolectores" icon="users">
+          <EmptyState title="Aún no hay recolectores">
             Agrega a un integrante para poder asignarle solicitudes.
           </EmptyState>
         </div>

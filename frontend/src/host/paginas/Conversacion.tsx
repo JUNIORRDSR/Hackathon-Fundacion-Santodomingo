@@ -104,7 +104,7 @@ export function Conversacion({
         </header>
       ) : (
         <div className="monitor-vacio">
-          <EmptyState title="Elige una conversación" icon="chat">
+          <EmptyState title="Elige una conversación">
             O escribe abajo como si fueras un vecino para probar el bot.
           </EmptyState>
         </div>

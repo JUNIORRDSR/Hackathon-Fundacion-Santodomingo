@@ -119,7 +119,7 @@ function Pedidos() {
       {error && <ErrorMessage message={error} retry={cargar} />}
       {todos && visibles.length === 0 ? (
         <div className="card">
-          <EmptyState title={texto ? 'No hay canjes con esa búsqueda' : 'No hay canjes aquí'} icon="gift">
+          <EmptyState title={texto ? 'No hay canjes con esa búsqueda' : 'No hay canjes aquí'}>
             Los vecinos piden su canje por WhatsApp con la opción 4.
           </EmptyState>
         </div>

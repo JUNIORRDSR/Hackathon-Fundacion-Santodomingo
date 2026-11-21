@@ -51,7 +51,7 @@ export function PorHabilitar() {
       {error && <ErrorMessage message={error} retry={cargar} />}
       {pendientes?.length === 0 ? (
         <div className="card">
-          <EmptyState title="No hay registros pendientes" icon="monarch">
+          <EmptyState title="No hay registros pendientes">
             Cuando alguien se registre por WhatsApp aparecerá aquí.
           </EmptyState>
         </div>

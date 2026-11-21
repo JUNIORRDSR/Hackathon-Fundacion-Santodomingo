@@ -146,7 +146,7 @@ export function RecoleccionesPage({
             />
           ) : (
             <div className="card">
-              <EmptyState title="No hay recolecciones programadas" icon="calendar">
+              <EmptyState title="No hay recolecciones programadas">
                 Asigna una solicitud para incluirla en tu agenda.
               </EmptyState>
             </div>
@@ -176,9 +176,7 @@ export function RecoleccionesPage({
           />
         ) : (
           <div className="card">
-            <EmptyState title="Aún no hay resultados" icon="scale">
-              Valida una recolección desde la pestaña Programadas.
-            </EmptyState>
+            <EmptyState title="Aún no hay resultados">Valida una recolección desde la pestaña Programadas.</EmptyState>
           </div>
         )}
       </div>

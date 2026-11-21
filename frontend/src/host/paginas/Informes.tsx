@@ -107,9 +107,7 @@ export function Informes({ grupo }: { grupo: 'organico' | 'reciclable' }) {
       {!filas && !error && <p className="muted">Cargando el informe de {titulo}…</p>}
       {filas?.length === 0 && (
         <div className="card">
-          <EmptyState title={`En ${titulo} no hay solicitudes`} icon="inbox">
-            Elige otro mes.
-          </EmptyState>
+          <EmptyState title={`En ${titulo} no hay solicitudes`}>Elige otro mes.</EmptyState>
         </div>
       )}
       {!!filas?.length && (

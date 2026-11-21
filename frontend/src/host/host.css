@@ -97,6 +97,8 @@
   & .hilo [data-autor="bot"] > [data-slot="bubble-content"] { background: #d9e8dd; color: var(--ink); border-bottom-right-radius: .35rem; }
   & .hilo [data-autor="coordinacion"] > [data-slot="bubble-content"] { background: var(--highlight); color: var(--on-highlight); border-bottom-right-radius: .35rem; }
   & .hilo [data-autor="aviso"] > [data-slot="bubble-content"] { background: #fbf3d4; color: var(--ink); border: 1px solid #ecd98f; border-bottom-right-radius: .35rem; }
+  & .hilo-adjunto { display: grid; gap: .5rem; padding: .25rem; }
+  & [data-slot="bubble"][data-align="end"] > .hilo-adjunto { justify-items: end; padding-inline-end: 0; }
   /* La foto ocupa una caja fija: el hilo no salta cuando llega y entra con un fundido corto, no de golpe. */
   & .hilo-foto {
     display: block; width: min(16rem, 100%); aspect-ratio: 1; padding: 0; border: 0; border-radius: .75rem;

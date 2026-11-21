@@ -235,7 +235,7 @@ function Adjunto({
   }
   if (esAudio) return <audio controls preload="none" src={src} style={{ maxWidth: '16rem' }} />
   return (
-    <div style={{ display: 'grid', gap: '0.5rem', padding: '0.25rem' }}>
+    <div className="hilo-adjunto">
       <Dialog open={abierta} onOpenChange={verEnGrande}>
         <DialogTrigger asChild>
           <button type="button" className="hilo-foto" aria-label="Ampliar la foto que mandó el vecino">

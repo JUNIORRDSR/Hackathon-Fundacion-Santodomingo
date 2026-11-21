@@ -10,10 +10,10 @@ from app.compartido.bd import transaccion
 from app.compartido.tipos import ErrorDeNegocio, NoEncontrado
 from app.modulos.clasificacion import contrato as clasificacion
 from app.modulos.directorio import contrato as directorio
-from app.modulos.whatsapp import adjuntos, fotos
+from app.modulos.whatsapp import adjuntos, contactos, fotos
 from app.modulos.whatsapp import tablas as t
 from app.modulos.whatsapp.bot import enviar
-from app.modulos.whatsapp.contrato import MensajeSaliente
+from app.modulos.whatsapp.contrato import MensajeSaliente, Perfil
 from app.modulos.whatsapp.eventos_monitor import notificar
 
 
@@ -30,6 +30,8 @@ class MensajeVista(BaseModel):
 class ConversacionVista(BaseModel):
     telefono: str
     nombre: str | None  # None: todavía no se registró
+    perfil: str | None = None  # el nombre que puso en WhatsApp, según Twilio (ADR-0016)
+    usuario: str | None = None  # su usuario de WhatsApp, si lo tiene
     control: str | None  # quién de la coordinación la atiende; None: el bot
     ultimo: str
     fecha: datetime
@@ -115,8 +117,10 @@ def clasificar(mensaje_id: int) -> list[str]:
 
 def _resumen(fila, control: str | None, sin_leer: int) -> ConversacionVista:
     solicitante = directorio.solicitante_por_telefono(fila.telefono)
+    perfil = contactos.perfil_de(fila.telefono) or Perfil()
     return ConversacionVista(telefono=fila.telefono, nombre=solicitante.nombre if solicitante else None,
-                             control=control, ultimo=fila.texto, fecha=fila.enviado_en, sin_leer=sin_leer)
+                             perfil=perfil.nombre, usuario=perfil.usuario, control=control, ultimo=fila.texto,
+                             fecha=fila.enviado_en, sin_leer=sin_leer)
 
 
 def _cambiar_control(telefono: str, control: str | None) -> None:

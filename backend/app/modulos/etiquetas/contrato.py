@@ -85,7 +85,7 @@ def _codigos(ids: list[UUID]) -> dict[UUID, str]:
 
 
 def _lugares() -> dict[UUID, str]:
-    """Nombre de cada zona y conjunto: la etiqueta muestra el conjunto del hogar si lo tiene (ADR-0016)."""
+    """Nombre de cada zona y conjunto: la etiqueta muestra el conjunto del hogar si lo tiene (ADR-0017)."""
     return {lugar.id: lugar.nombre for zona in directorio.zonas() for lugar in (zona, *zona.conjuntos)}
 
 

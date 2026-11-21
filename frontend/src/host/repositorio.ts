@@ -94,7 +94,7 @@ export function solicitudDe(v: SolicitudVista): Request {
   return { ...base, estado, asignacion, resultado: { solicitudId: v.id, estado, motivoRechazo: v.motivo } }
 }
 
-// El encargado cubre lugares (ADR-0016): conjuntos, o zonas sin conjuntos. El módulo los llama «zonas».
+// El encargado cubre lugares (ADR-0017): conjuntos, o zonas sin conjuntos. El módulo los llama «zonas».
 function recolectorDe(e: EncargadoVista, zonas: Zone[]): Collector {
   const lugares = zonas.flatMap((zona) => [zona, ...(zona.conjuntos ?? [])])
   const nombres = lugares.filter((lugar) => e.lugares.includes(lugar.id)).map((lugar) => lugar.nombre)

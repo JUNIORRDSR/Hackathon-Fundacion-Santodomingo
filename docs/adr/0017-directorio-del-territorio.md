@@ -1,4 +1,4 @@
-# ADR-0016 · Directorio del territorio: zonas, conjuntos y registro desde la tableta
+# ADR-0017 · Directorio del territorio: zonas, conjuntos y registro desde la tableta
 
 - **Estado:** aceptada · 2026-11-21 (diseño aprobado pieza por pieza con Jairo; falta construirla)
 

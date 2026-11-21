@@ -14,7 +14,7 @@ const DESCRIPCION: Record<Vista, string> = {
 }
 const ACCION: Partial<Record<Vista, string>> = { vecinos: 'Registrar vecino o negocio', lugares: 'Agregar zona' }
 
-// Registros (ADR-0016): personas y territorio en un solo lugar del menú, para la coordinación y el administrador.
+// Registros (ADR-0017): personas y territorio en un solo lugar del menú, para la coordinación y el administrador.
 export function Registros({ porAceptar = 0 }: { porAceptar?: number }) {
   const [vista, setVista] = useState<Vista>('aceptar')
   const [nuevo, setNuevo] = useState(0)

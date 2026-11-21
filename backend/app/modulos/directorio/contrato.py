@@ -1,4 +1,5 @@
-"""Contrato público de directorio: solicitantes, encargados y lugares (zonas y conjuntos, ADR-0016)."""
+"""Contrato público de directorio: solicitantes, encargados y lugares (zonas y conjuntos, ADR-0017)."""
+import re
 from datetime import datetime, timezone
 from enum import StrEnum
 from uuid import UUID, uuid4
@@ -10,11 +11,13 @@ from app.compartido.bd import transaccion
 from app.compartido.eventos import Evento, publicar
 from app.compartido.tipos import Colectivo, ErrorDeNegocio, NoEncontrado, TipoGenerador
 from app.modulos.directorio import tablas as t
-from app.modulos.directorio.lugares import (  # noqa: F401  los lugares son parte del contrato público (ADR-0016)
+from app.modulos.directorio.lugares import (  # noqa: F401  los lugares son parte del contrato público (ADR-0017)
     CambioLugar, ConjuntoVista, Lugar, NuevoLugar, ZonaVista, cambiar_conjunto, cambiar_zona, conjunto, crear_conjunto,
     crear_zona, existe_lugar, lugares_para_elegir, validar_lugar, zona, zonas)
 
 TELEFONO = r"^\+\d{8,15}$"  # E.164, como lo entrega WhatsApp
+# Un nombre o alias: letras de cualquier idioma, hasta seis palabras. Sin cifras ni enlaces: llega a cada prompt.
+NOMBRE = re.compile(r"[^\W\d_]+(?:[ '.-][^\W\d_]+){0,5}")
 
 
 class EstadoSolicitante(StrEnum):
@@ -29,7 +32,7 @@ class NuevoSolicitante(BaseModel):
     nombre: str = Field(min_length=2, max_length=60)  # nombre o alias
     tipo: TipoGenerador
     zona_id: UUID
-    conjunto_id: UUID | None = None  # obligatorio si la zona tiene conjuntos (ADR-0016)
+    conjunto_id: UUID | None = None  # obligatorio si la zona tiene conjuntos (ADR-0017)
     direccion: str = Field(min_length=3, max_length=120)  # torre y apartamento, casa o local
     autoriza_datos: bool  # Ley 1581: sin autorización no se registra
 
@@ -102,6 +105,23 @@ def habilitar(id: UUID) -> SolicitanteVista:
             actual.estado = EstadoSolicitante.HABILITADO
             publicar(SolicitanteHabilitado(solicitante_id=id))
         return actual
+
+
+def nombre_valido(nombre: str) -> str | None:
+    """El nombre sin espacios de más, o None si no parece un nombre o alias de 2 a 40 caracteres."""
+    limpio = " ".join(nombre.split())
+    return limpio if 2 <= len(limpio) <= 40 and NOMBRE.fullmatch(limpio) else None
+
+
+def cambiar_nombre(id: UUID, nombre: str) -> SolicitanteVista:
+    """El vecino cambia por WhatsApp cómo lo llaman; el resto de su registro lo edita la coordinación."""
+    limpio = nombre_valido(nombre)
+    if limpio is None:
+        raise ErrorDeNegocio("El nombre debe tener solo letras, entre 2 y 40 caracteres.")
+    with transaccion() as c:
+        actual = solicitante(id)
+        c.execute(update(t.solicitantes).where(t.solicitantes.c.id == id).values(nombre=limpio))
+    return actual.model_copy(update={"nombre": limpio})
 
 
 def solicitante(id: UUID) -> SolicitanteVista:

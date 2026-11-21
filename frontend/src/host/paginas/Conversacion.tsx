@@ -15,6 +15,9 @@ export const iniciales = (nombre: string | null) =>
     .slice(0, 2)
     .map((parte) => parte.charAt(0).toUpperCase())
     .join('')
+// Quien no se ha registrado se muestra con el nombre de su perfil de WhatsApp, si Twilio lo envió (ADR-0016).
+export const nombreVisible = (c: ConversacionVista) =>
+  c.nombre ?? (c.perfil ? `${c.perfil} (sin registrar)` : 'Sin registrar')
 
 export function Conversacion({
   conversacion,
@@ -84,12 +87,14 @@ export function Conversacion({
       {conversacion ? (
         <header className="monitor-cabecera">
           <span className="monitor-avatar" aria-hidden="true">
-            {iniciales(conversacion.nombre)}
+            {iniciales(conversacion.nombre ?? conversacion.perfil)}
           </span>
           <div className="monitor-quien">
-            <h2>{conversacion.nombre ?? 'Sin registrar'}</h2>
+            <h2>{nombreVisible(conversacion)}</h2>
             <span className="monitor-estado" data-control={!!conversacion.control}>
-              {conversacion.telefono} · {conversacion.control ? 'Responde la coordinación' : 'Responde el bot'}
+              {conversacion.telefono}
+              {conversacion.usuario && ` · @${conversacion.usuario}`}
+              {conversacion.control ? ' · Responde la coordinación' : ' · Responde el bot'}
             </span>
           </div>
           {conversacion.control ? (

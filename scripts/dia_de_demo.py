@@ -17,7 +17,7 @@ CLAVE = os.getenv("CLAVE_DEMO", "ecoconecta-demo")
 HOY = datetime.now(ZoneInfo("America/Bogota")).date().isoformat()
 abridor = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
 
-# Lugares de los vecinos de abajo, por su número (ADR-0016): conjunto o sector, o la zona sin conjuntos.
+# Lugares de los vecinos de abajo, por su número (ADR-0017): conjunto o sector, o la zona sin conjuntos.
 LUGARES = ("Brisas de San Pablo", "Corredor comercial", "Sector Salón Comunal", "Manzana 15")
 # (teléfono ficticio, nombre, tipo, lugar, dirección, flujo, franja, qué pasa hoy)
 # qué pasa hoy: pendiente · asignada · HH:MM (programada) · HH:MM+kg (recolectada) · rechazo

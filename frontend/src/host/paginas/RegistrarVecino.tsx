@@ -15,7 +15,7 @@ export function telefonoE164(texto: string) {
   return '+' + (digitos.length === 10 && digitos.startsWith('3') ? '57' + digitos : digitos)
 }
 
-// Registro desde la tableta (ADR-0016): datos mínimos y la autorización firmada por quien registra.
+// Registro desde la tableta (ADR-0017): datos mínimos y la autorización firmada por quien registra.
 export function RegistrarVecino({
   zonas,
   onClose,

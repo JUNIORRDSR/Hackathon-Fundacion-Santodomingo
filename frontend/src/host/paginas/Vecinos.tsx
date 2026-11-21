@@ -25,7 +25,7 @@ type Tipo = 'todos' | Vecino['tipo']
 const TIPOS: Record<Tipo, string> = { todos: 'Todos', hogar: 'Hogares', unidad_productiva: 'Negocios' }
 const fecha = new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', dateStyle: 'medium', timeStyle: 'short' })
 
-// Todos los hogares y negocios del piloto, con filtros por tipo, zona y conjunto (ADR-0016).
+// Todos los hogares y negocios del piloto, con filtros por tipo, zona y conjunto (ADR-0017).
 export function Vecinos({ nuevo }: { nuevo: number }) {
   const [vecinos, setVecinos] = useState<Vecino[]>()
   const [zonas, setZonas] = useState<Zone[]>([])

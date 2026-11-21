@@ -1,6 +1,7 @@
 # ADR-0003 · WhatsApp con dos puertos: Transporte y Conversador
 
 - **Estado:** aceptada · 2026-11-20
+- **Modificada por:** [ADR-0016](0016-agente-conversacional-con-herramientas.md)
 
 ## Contexto
 

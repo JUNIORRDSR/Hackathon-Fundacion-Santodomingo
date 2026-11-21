@@ -3,6 +3,7 @@ Los textos viven en respuestas.json (Jorge)."""
 from app.compartido.formato import NOMBRE_FLUJO
 from app.compartido.tipos import Flujo, Franja, TipoGenerador
 from app.modulos.directorio import contrato as directorio
+from app.modulos.whatsapp import contactos
 from app.modulos.whatsapp.agente.lenguaje import normalizar
 from app.modulos.whatsapp.respuestas import texto as plantilla
 
@@ -12,6 +13,7 @@ _HOGAR = frozenset(("1", "hogar", "casa", "mi hogar", "soy un hogar", "un hogar"
 _NEGOCIO = frozenset(("2", "negocio", "mi negocio", "soy un negocio", "un negocio"))
 _ORGANICOS = frozenset(("1", "organico", "organicos", "restos de comida"))
 _RECICLABLES = frozenset(("2", "reciclable", "reciclables", "reciclaje"))
+_ACEPTA = frozenset(("1", "si", "si claro", "claro", "dale", "ok", "listo", "correcto", "asi esta bien", "esta bien"))
 
 
 def responder(texto: str, telefono: str, memoria: dict) -> list[str]:
@@ -45,7 +47,7 @@ def _tipo(texto: str, telefono: str, memoria: dict) -> list[str]:
 
 
 def _zona(texto: str, telefono: str, memoria: dict) -> list[str]:
-    """Una sola pregunta por el lugar (ADR-0016): el número de la lista o el nombre del conjunto o sector."""
+    """Una sola pregunta por el lugar (ADR-0017): el número de la lista o el nombre del conjunto o sector."""
     lugares = directorio.lugares_para_elegir()
     opcion = _opcion(texto)
     if opcion.isdecimal() and 1 <= int(opcion) <= len(lugares):
@@ -64,12 +66,21 @@ def _direccion(texto: str, telefono: str, memoria: dict) -> list[str]:
     if len(texto) < 3:
         return [plantilla("registro_direccion_invalida")]
     memoria.update(paso="nombre", direccion=texto[:120])
-    return [plantilla("registro_nombre")]
+    perfil = contactos.perfil_de(telefono)
+    sugerido = directorio.nombre_valido(perfil.nombre or "") if perfil else None
+    if sugerido is None:
+        return [plantilla("registro_nombre")]
+    memoria["nombre_sugerido"] = sugerido
+    return [plantilla("registro_nombre_sugerido", nombre=sugerido)]
 
 
 def _nombre_o_alias(texto: str, telefono: str, memoria: dict) -> list[str]:
+    """Acepta el nombre de su perfil de WhatsApp con un «sí», o el que escriba."""
+    if memoria.get("nombre_sugerido") and _opcion(texto) in _ACEPTA:
+        texto = memoria["nombre_sugerido"]
     if len(texto) < 2:
         return [plantilla("registro_nombre_invalido")]
+    memoria.pop("nombre_sugerido", None)
     memoria.update(paso="primer_flujo", nombre=texto[:60])
     return [_primer_flujo_pregunta()]
 

@@ -50,7 +50,7 @@ export interface Zone {
   id: string
   nombre: string
   activo?: boolean
-  // Conjuntos o sectores de la zona (ADR-0016); una zona sin conjuntos se cubre a sí misma.
+  // Conjuntos o sectores de la zona (ADR-0017); una zona sin conjuntos se cubre a sí misma.
   conjuntos?: { id: string; nombre: string; activo?: boolean }[]
 }
 

@@ -1,4 +1,4 @@
-# ADR-0015 · Entrega directa en la huerta e informes por grupo
+# ADR-0017 · Entrega directa en la huerta e informes por grupo
 
 - **Estado:** aceptada · 2026-11-21 (lugar del botón aprobado por Jairo; el ADR se escribió después de construirla)
 

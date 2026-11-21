@@ -36,7 +36,7 @@ def _tipo(texto: str, telefono: str, memoria: dict) -> list[str]:
 
 
 def _zona(texto: str, telefono: str, memoria: dict) -> list[str]:
-    """Una sola pregunta por el lugar: el conjunto o sector, o la zona si no tiene conjuntos (ADR-0014)."""
+    """Una sola pregunta por el lugar: el conjunto o sector, o la zona si no tiene conjuntos (ADR-0016)."""
     lugares = directorio.lugares_para_elegir()
     if not texto.isdigit() or not 1 <= int(texto) <= len(lugares):
         return [_menu_lugares(lugares)]

@@ -12,7 +12,7 @@ Sesion = Depends(acceso.usuario_actual)
 
 @router.get("/zonas")
 def zonas(_: acceso.Usuario = Sesion) -> list[directorio.ZonaVista]:
-    """Las zonas con sus conjuntos. Coordinación y administrador los mantienen (ADR-0014)."""
+    """Las zonas con sus conjuntos. Coordinación y administrador los mantienen (ADR-0016)."""
     return directorio.zonas()
 
 

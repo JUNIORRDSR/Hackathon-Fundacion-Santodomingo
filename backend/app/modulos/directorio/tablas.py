@@ -1,4 +1,4 @@
-"""Tablas de directorio, en su propio esquema (ADR-0001). Lugares en dos niveles: zona y conjunto (ADR-0014)."""
+"""Tablas de directorio, en su propio esquema (ADR-0001). Lugares en dos niveles: zona y conjunto (ADR-0016)."""
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, Table, UniqueConstraint, Uuid
 from sqlalchemy.dialects.postgresql import JSONB
 

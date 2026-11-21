@@ -1,6 +1,6 @@
 /* Pantallas del host (entrar, registros, canjes, WhatsApp) con los tokens del módulo de Daniela (.eco-app). */
 .eco-app {
-  /* Registros (ADR-0014): filtros, el aviso de registro, los lugares en tarjetas y el tipo de vecino. */
+  /* Registros (ADR-0016): filtros, el aviso de registro, los lugares en tarjetas y el tipo de vecino. */
   & .filtros-registro { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-block: 1rem; }
   & .filtros-registro .select-field { min-width: min(100%, 13rem); }
   & .registro-aviso { display: flex; align-items: center; gap: .45rem; margin-bottom: 1rem; color: var(--highlight); font-weight: 600; }

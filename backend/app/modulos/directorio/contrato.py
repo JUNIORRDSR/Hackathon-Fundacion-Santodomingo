@@ -1,4 +1,4 @@
-"""Contrato público de directorio: solicitantes, encargados y lugares (zonas y conjuntos, ADR-0014)."""
+"""Contrato público de directorio: solicitantes, encargados y lugares (zonas y conjuntos, ADR-0016)."""
 from datetime import datetime, timezone
 from enum import StrEnum
 from uuid import UUID, uuid4
@@ -10,7 +10,7 @@ from app.compartido.bd import transaccion
 from app.compartido.eventos import Evento, publicar
 from app.compartido.tipos import Colectivo, ErrorDeNegocio, NoEncontrado, TipoGenerador
 from app.modulos.directorio import tablas as t
-from app.modulos.directorio.lugares import (  # noqa: F401  los lugares son parte del contrato público (ADR-0014)
+from app.modulos.directorio.lugares import (  # noqa: F401  los lugares son parte del contrato público (ADR-0016)
     CambioLugar, ConjuntoVista, Lugar, NuevoLugar, ZonaVista, cambiar_conjunto, cambiar_zona, conjunto, crear_conjunto,
     crear_zona, existe_lugar, lugares_para_elegir, validar_lugar, zona, zonas)
 
@@ -29,7 +29,7 @@ class NuevoSolicitante(BaseModel):
     nombre: str = Field(min_length=2, max_length=60)  # nombre o alias
     tipo: TipoGenerador
     zona_id: UUID
-    conjunto_id: UUID | None = None  # obligatorio si la zona tiene conjuntos (ADR-0014)
+    conjunto_id: UUID | None = None  # obligatorio si la zona tiene conjuntos (ADR-0016)
     direccion: str = Field(min_length=3, max_length=120)  # torre y apartamento, casa o local
     autoriza_datos: bool  # Ley 1581: sin autorización no se registra
 

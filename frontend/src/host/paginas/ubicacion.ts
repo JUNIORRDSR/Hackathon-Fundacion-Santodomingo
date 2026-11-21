@@ -6,7 +6,7 @@ export interface Ubicado {
   direccion: string
 }
 
-// Nombre de cada lugar (zona o conjunto) por su id, para mostrar dónde vive cada vecino (ADR-0014).
+// Nombre de cada lugar (zona o conjunto) por su id, para mostrar dónde vive cada vecino (ADR-0016).
 export function nombresDeLugares(zonas: Zone[]): Record<string, string> {
   return Object.fromEntries(
     zonas.flatMap((zona) => [[zona.id, zona.nombre], ...(zona.conjuntos ?? []).map((c) => [c.id, c.nombre])]),

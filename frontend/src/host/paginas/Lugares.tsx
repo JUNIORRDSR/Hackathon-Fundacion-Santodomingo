@@ -23,7 +23,7 @@ const editar = (titulo: string, ruta: string, lugar: { nombre: string; activo?: 
   activo: lugar.activo !== false,
 })
 
-// Las zonas del barrio y sus conjuntos (ADR-0014): se agregan y se renombran; lo que no se usa, se desactiva.
+// Las zonas del barrio y sus conjuntos (ADR-0016): se agregan y se renombran; lo que no se usa, se desactiva.
 export function Lugares({ nuevo }: { nuevo: number }) {
   const [zonas, setZonas] = useState<Zone[]>()
   const [edicion, setEdicion] = useState<Edicion>()

@@ -1,4 +1,4 @@
-"""Directorio del territorio (ADR-0014): zonas y conjuntos, registro desde la tableta y encargados por conjunto.
+"""Directorio del territorio (ADR-0016): zonas y conjuntos, registro desde la tableta y encargados por conjunto.
 Corre después de test_reiniciar_base, que vacía la base: el teléfono 9 de test_clasificacion queda libre."""
 from uuid import uuid4
 

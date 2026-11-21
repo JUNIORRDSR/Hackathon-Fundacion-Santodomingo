@@ -21,7 +21,7 @@ def sembrar() -> None:
         contenidos.crear(pieza)
 
 
-# Zonas y sus conjuntos o sectores (ADR-0014); el Corredor comercial no tiene conjuntos.
+# Zonas y sus conjuntos o sectores (ADR-0016); el Corredor comercial no tiene conjuntos.
 LUGARES = {
     "Corredor comercial": (),
     "Etapa 1": ("Sector Salón Comunal", "Sector Sede"),

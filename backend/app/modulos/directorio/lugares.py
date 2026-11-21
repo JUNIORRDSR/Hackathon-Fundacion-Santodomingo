@@ -1,4 +1,4 @@
-"""Lugares del barrio en dos niveles, zona y conjunto (ADR-0014). Nada se borra: se desactiva, por el historial."""
+"""Lugares del barrio en dos niveles, zona y conjunto (ADR-0016). Nada se borra: se desactiva, por el historial."""
 from collections import defaultdict
 from uuid import UUID, uuid4
 

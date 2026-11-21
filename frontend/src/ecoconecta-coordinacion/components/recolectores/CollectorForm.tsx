@@ -6,7 +6,7 @@ import { Modal } from '../ui/Modal'
 import type { CloseModal } from '../ui/Modal'
 import { useSubmission } from '../ui/useSubmission'
 
-// Los lugares salen del catálogo (ADR-0014): conjuntos agrupados por zona; el sistema sugiere a quien cubre
+// Los lugares salen del catálogo (ADR-0016): conjuntos agrupados por zona; el sistema sugiere a quien cubre
 // el conjunto de cada solicitud. Marcar la zona completa marca todos sus conjuntos.
 export function CollectorForm({
   collector,

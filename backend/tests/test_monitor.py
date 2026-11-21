@@ -60,6 +60,9 @@ def test_lectura_por_usuario_no_oculta_entrantes_que_llegaron_despues():
 
 def test_fallo_de_envio_de_coordinacion_queda_en_el_hilo_y_se_informa(monkeypatch):
     class TransporteNoDisponible:
+        def admite(self, telefono):
+            return True
+
         def enviar(self, mensaje):
             raise TimeoutError("detalle interno")
 

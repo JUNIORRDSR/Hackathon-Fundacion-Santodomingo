@@ -13,6 +13,8 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8000").rstrip("/") + "/api"
+# SOLO_PENDIENTES=1: cada vecino deja su pedido pendiente, sin recolecciones, kilos ni canjes de mentira.
+SOLO_PENDIENTES = os.getenv("SOLO_PENDIENTES") == "1"
 CLAVE = os.getenv("CLAVE_DEMO", "ecoconecta-demo")
 HOY = datetime.now(ZoneInfo("America/Bogota")).date().isoformat()
 abridor = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
@@ -102,8 +104,9 @@ def main():
             continue
         solicitud = llamar("/solicitudes", {"solicitante_id": solicitante, "flujo": flujo, "preferencia": franja})
         equipo = encargados[COLECTIVO[flujo]]
-        llevar_el_dia(solicitud, plan, equipo[i % len(equipo)])
-    for telefono in CANJES:
+        if not SOLO_PENDIENTES:
+            llevar_el_dia(solicitud, plan, equipo[i % len(equipo)])
+    for telefono in [] if SOLO_PENDIENTES else CANJES:
         for texto in ("4", "1"):
             llamar("/whatsapp/simulador", {"telefono": telefono, "texto": texto})
     resumen = llamar("/solicitudes")

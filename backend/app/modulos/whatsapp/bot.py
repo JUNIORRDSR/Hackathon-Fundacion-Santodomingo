@@ -45,6 +45,9 @@ class TransporteSimulado:
     def enviar(self, mensaje: MensajeSaliente) -> None:
         pass
 
+    def admite(self, telefono: str) -> bool:
+        return True
+
 
 _transporte: Transporte = TransporteSimulado()
 _conversador: Conversador = ConversadorMenu()
@@ -162,6 +165,8 @@ def enviar(mensaje: MensajeSaliente, autor: str = "aviso") -> str:
     if respuesta is not None and respuesta.telefono == mensaje.telefono:
         respuesta.mensajes.append((mensaje, autor))
         return "emitido"
+    if not _transporte.admite(mensaje.telefono):
+        return "omitido"  # fuera del piloto: sin envío ni rastro en el monitor (los ficticios de la demo)
     estado = "fallido"
     try:
         _transporte.enviar(mensaje)

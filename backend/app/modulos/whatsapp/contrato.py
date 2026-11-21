@@ -41,6 +41,8 @@ class Transporte(Protocol):
 
     def enviar(self, mensaje: MensajeSaliente) -> None: ...
 
+    def admite(self, telefono: str) -> bool: ...  # False: fuera del piloto, ni se envía ni queda en el monitor
+
 
 class Linea(BaseModel):
     """Un mensaje anterior del chat: quién lo dijo (vecino, bot, aviso o coordinación) y qué dijo."""

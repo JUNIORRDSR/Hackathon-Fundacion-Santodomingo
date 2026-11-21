@@ -84,6 +84,9 @@ class TransporteTwilio:
             return self.alias[identidad]
         return contactos.telefono_de(identidad) if BSUID.fullmatch(identidad) else None
 
+    def admite(self, telefono: str) -> bool:
+        return not self.telefonos_piloto or telefono in self.telefonos_piloto
+
     def enviar(self, mensaje: MensajeSaliente) -> None:
         destino = next((a for a, telefono in self.alias.items() if telefono == mensaje.telefono), mensaje.telefono)
         datos = {"From": self.remitente, "To": f"{PREFIJO}{destino}", "Body": mensaje.texto}

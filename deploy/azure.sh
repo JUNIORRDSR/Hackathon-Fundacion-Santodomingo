@@ -24,6 +24,13 @@ if [[ -z "${TRANSPORTE:-}" && -n "${TWILIO_AUTH_TOKEN:-}" ]]; then
   MODO_TRANSPORTE=twilio
 fi
 MODO_CONVERSADOR="${CONVERSADOR:-menu}"
+RUTA_WEBHOOK="/api/whatsapp/twilio"
+if [[ "$MODO_TRANSPORTE" == twilio || "${CARGAR_DEMO:-}" == 1 ]]; then
+  PYTHON="$(command -v python3 || command -v python)" || {
+    echo "Se requiere Python 3 para verificar el webhook o cargar la demo." >&2
+    exit 1
+  }
+fi
 if [[ "$MODO_TRANSPORTE" == twilio ]]; then
   : "${TWILIO_ACCOUNT_SID:?Define TWILIO_ACCOUNT_SID}"
   : "${TWILIO_AUTH_TOKEN:?Define TWILIO_AUTH_TOKEN}"
@@ -61,29 +68,49 @@ if [[ -z "$REGISTRO" ]]; then
   az acr create --resource-group "$GRUPO" --name "$REGISTRO" --sku Basic --location "$REGION" --output none
 fi
 az acr update --name "$REGISTRO" --admin-enabled true --output none
-IMAGEN="$REGISTRO.azurecr.io/$APP:$(git rev-parse --short HEAD)"
+# Una etiqueta distinta también aplica los cambios de secretos al volver a desplegar el mismo commit.
+SELLO="$(date -u +%Y%m%dT%H%M%SZ)"
+IMAGEN="$REGISTRO.azurecr.io/$APP:$(git rev-parse --short HEAD)-$SELLO"
 az acr login --name "$REGISTRO"
 docker build --tag "$IMAGEN" .
 docker push "$IMAGEN"
 
-# Crea o actualiza la app con HTTPS público a partir de esa imagen.
+OPCIONES_APP=(--name "$APP" --resource-group "$GRUPO")
 CLAVE_REGISTRO="$(az acr credential show --name "$REGISTRO" --query "passwords[0].value" --output tsv | tr -d '\r')"
-az containerapp up --name "$APP" --resource-group "$GRUPO" --location "$REGION" --environment "$ENTORNO_ACA" \
-  --image "$IMAGEN" --registry-server "$REGISTRO.azurecr.io" --registry-username "$REGISTRO" \
-  --registry-password "$CLAVE_REGISTRO" --ingress external --target-port 8000
+APP_EXISTENTE="$(az containerapp list --resource-group "$GRUPO" --query "[?name=='$APP'].name | [0]" --output tsv | tr -d '\r')"
+if [[ -n "$APP_EXISTENTE" ]]; then
+  INGRESO="$(az containerapp show "${OPCIONES_APP[@]}" \
+    --query 'properties.configuration.ingress.external && properties.configuration.ingress.targetPort == `8000`' \
+    --output tsv | tr -d '\r')"
+  if [[ "$INGRESO" != True && "$INGRESO" != true ]]; then
+    az containerapp ingress enable "${OPCIONES_APP[@]}" --type external --target-port 8000 --output none
+  fi
+  FQDN="$(az containerapp show "${OPCIONES_APP[@]}" \
+    --query properties.configuration.ingress.fqdn --output tsv | tr -d '\r')"
+else
+  DOMINIO_ENTORNO="$(az containerapp env list --resource-group "$GRUPO" \
+    --query "[?name=='$ENTORNO_ACA'].properties.defaultDomain | [0]" --output tsv | tr -d '\r')"
+  if [[ -z "$DOMINIO_ENTORNO" ]]; then
+    DOMINIO_ENTORNO="$(az containerapp env create --name "$ENTORNO_ACA" --resource-group "$GRUPO" \
+      --location "$REGION" --query properties.defaultDomain --output tsv | tr -d '\r')"
+  fi
+  : "${DOMINIO_ENTORNO:?Azure no devolvió el dominio del entorno}"
+  FQDN="$APP.$DOMINIO_ENTORNO"
+fi
+: "${FQDN:?Azure no devolvió el dominio público de la aplicación}"
 
 # Secretos fuera del repo; la app los lee como variables de entorno. Una réplica evita arranques en frío en la demo.
-FQDN="$(az containerapp show --name "$APP" --resource-group "$GRUPO" \
-  --query properties.configuration.ingress.fqdn --output tsv | tr -d '\r')"
 SECRETOS=("clave-sesion=$CLAVE_SESION" "clave-demo=$CLAVE_DEMO" "codigo-registro=$CODIGO_REGISTRO" "url-bd=$URL_BD")
 VARIABLES=(ENTORNO=produccion SEMBRAR_DEMO=1 CLAVE_SESION=secretref:clave-sesion CLAVE_DEMO=secretref:clave-demo
   CODIGO_REGISTRO=secretref:codigo-registro DATABASE_URL=secretref:url-bd "TRANSPORTE=$MODO_TRANSPORTE"
   "CONVERSADOR=$MODO_CONVERSADOR")
 
 if [[ "$MODO_TRANSPORTE" == twilio ]]; then
+  # La firma de Twilio usa la URL pública de la app, con independencia del túnel local o de la revisión.
+  WEBHOOK="https://$FQDN$RUTA_WEBHOOK"
   SECRETOS+=("twilio-token=$TWILIO_AUTH_TOKEN")
   VARIABLES+=("TWILIO_ACCOUNT_SID=$TWILIO_ACCOUNT_SID" "TWILIO_WHATSAPP_FROM=$TWILIO_WHATSAPP_FROM"
-    "TWILIO_WEBHOOK_URL=${TWILIO_WEBHOOK_URL:-https://$FQDN/api/whatsapp/twilio}"
+    "TWILIO_WEBHOOK_URL=$WEBHOOK"
     "TWILIO_RESPUESTA_TWIML=${TWILIO_RESPUESTA_TWIML:-0}"
     TWILIO_AUTH_TOKEN=secretref:twilio-token)
   if [[ -n "${WHATSAPP_CONTACT_ALIASES:-}" ]]; then
@@ -113,19 +140,75 @@ fi
 
 # La base se reinicia una sola vez por sello: la app lo guarda y no vuelve a borrar si se reinicia (ADR-0012).
 if [[ "${REINICIAR_BASE:-}" == 1 ]]; then
-  VARIABLES+=("REINICIAR_BASE=$(date -u +%Y%m%dT%H%M%SZ)")
+  VARIABLES+=("REINICIAR_BASE=$SELLO")
+else
+  VARIABLES+=(REINICIAR_BASE=)
 fi
 
-az containerapp secret set --name "$APP" --resource-group "$GRUPO" --secrets "${SECRETOS[@]}" --output none
-az containerapp update --name "$APP" --resource-group "$GRUPO" --min-replicas 1 --max-replicas 1 \
-  --set-env-vars "${VARIABLES[@]}" --output none
-echo "URL: https://$FQDN"
+if [[ -n "$APP_EXISTENTE" ]]; then
+  MODO_REVISION="$(az containerapp show "${OPCIONES_APP[@]}" \
+    --query properties.configuration.activeRevisionsMode --output tsv | tr -d '\r')"
+  if [[ "$MODO_REVISION" != Single ]]; then
+    az containerapp revision set-mode "${OPCIONES_APP[@]}" --mode single --output none
+  fi
+  az containerapp registry set "${OPCIONES_APP[@]}" --server "$REGISTRO.azurecr.io" --username "$REGISTRO" \
+    --password "$CLAVE_REGISTRO" --output none
+  az containerapp secret set "${OPCIONES_APP[@]}" --secrets "${SECRETOS[@]}" --output none
+  REVISION="$(az containerapp update "${OPCIONES_APP[@]}" --image "$IMAGEN" --min-replicas 1 --max-replicas 1 \
+    --set-env-vars "${VARIABLES[@]}" --query properties.latestRevisionName --output tsv | tr -d '\r')"
+else
+  REVISION="$(az containerapp create "${OPCIONES_APP[@]}" --environment "$ENTORNO_ACA" --image "$IMAGEN" \
+    --registry-server "$REGISTRO.azurecr.io" --registry-username "$REGISTRO" --registry-password "$CLAVE_REGISTRO" \
+    --ingress external --target-port 8000 --revisions-mode single --min-replicas 1 --max-replicas 1 \
+    --secrets "${SECRETOS[@]}" --env-vars "${VARIABLES[@]}" --query properties.latestRevisionName --output tsv | tr -d '\r')"
+  FQDN_ACTUAL="$(az containerapp show "${OPCIONES_APP[@]}" \
+    --query properties.configuration.ingress.fqdn --output tsv | tr -d '\r')"
+  if [[ "$FQDN_ACTUAL" != "$FQDN" ]]; then
+    echo "Azure asignó un dominio distinto al previsto. Vuelve a ejecutar el despliegue para usar el dominio asignado." >&2
+    exit 1
+  fi
+fi
+: "${REVISION:?Azure no devolvió el nombre de la revisión desplegada}"
 
-# Espera a que la versión nueva responda y, si se pidió, carga el día de demo ficticio.
-for _ in $(seq 1 36); do
-  curl --silent --fail --output /dev/null "https://$FQDN/api/contenidos/publicos" && break
+# Un 200 de la revisión anterior no confirma que la nueva esté atendiendo tráfico.
+LISTA=0
+for (( intento=0; intento<36; intento++ )); do
+  REVISION_LISTA="$(az containerapp show "${OPCIONES_APP[@]}" \
+    --query properties.latestReadyRevisionName --output tsv | tr -d '\r')"
+  if [[ "$REVISION_LISTA" == "$REVISION" ]] &&
+     curl --silent --fail --max-time 10 --output /dev/null "https://$FQDN/api/contenidos/publicos"; then
+    LISTA=1
+    break
+  fi
   sleep 5
 done
+if [[ "$LISTA" != 1 ]]; then
+  echo "La revisión $REVISION aún no responde en https://$FQDN. Revisa Revisions & replicas y los logs en Azure." >&2
+  exit 1
+fi
+echo "EcoConecta disponible en https://$FQDN"
+
+if [[ "$MODO_TRANSPORTE" == twilio ]]; then
+  # El formulario vacío comprueba la firma sin crear mensajes, escribir en la base ni contactar a Twilio.
+  FIRMA="$("$PYTHON" - "$WEBHOOK" <<'PY'
+import base64
+import hmac
+import os
+import sys
+
+firma = hmac.digest(os.environ["TWILIO_AUTH_TOKEN"].encode(), sys.argv[1].encode(), "sha1")
+sys.stdout.write(base64.b64encode(firma).decode())
+PY
+)"
+  SONDA=(--silent --show-error --max-time 15 --output /dev/null --write-out '%{http_code}' --data '')
+  SIN_FIRMA="$(curl "${SONDA[@]}" "$WEBHOOK")"
+  CON_FIRMA="$(curl "${SONDA[@]}" --header "X-Twilio-Signature: $FIRMA" "$WEBHOOK")"
+  if [[ "$SIN_FIRMA" != 403 || "$CON_FIRMA" != 400 ]]; then
+    echo "Falló la verificación de $WEBHOOK (sin firma $SIN_FIRMA, con firma $CON_FIRMA)." >&2
+    exit 1
+  fi
+  echo "Webhook verificado en $WEBHOOK. Configura esa URL con POST una vez en el remitente de Twilio."
+fi
 if [[ "${CARGAR_DEMO:-}" == 1 ]]; then
-  CLAVE_DEMO="$CLAVE_DEMO" python scripts/dia_de_demo.py "https://$FQDN"
+  CLAVE_DEMO="$CLAVE_DEMO" "$PYTHON" scripts/dia_de_demo.py "https://$FQDN"
 fi

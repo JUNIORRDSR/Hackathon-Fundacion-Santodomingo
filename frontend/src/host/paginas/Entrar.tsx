@@ -9,6 +9,7 @@ import { useSubmission } from '../../ecoconecta-coordinacion/components/ui/useSu
 import { hashLink } from '../../ecoconecta-coordinacion/routes'
 import type { NuevaCuenta } from '../sesion'
 import { Registro } from './Registro'
+import { CampoClave } from './CampoClave'
 
 type Modo = 'entrar' | 'registro'
 
@@ -89,9 +90,8 @@ function FormularioEntrar({
       </div>
       <div className="field">
         <label htmlFor={id + '-clave'}>Clave</label>
-        <input
+        <CampoClave
           id={id + '-clave'}
-          type="password"
           autoComplete="current-password"
           autoFocus={!!usuarioInicial}
           value={clave}

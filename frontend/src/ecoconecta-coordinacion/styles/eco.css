@@ -57,7 +57,8 @@ html:has(.eco-app), body:has(> #root > .eco-app) {
   & h1, & h2, & h3, & p, & ul, & ol, & dl, & dd { margin: 0; }
   & ul { list-style: none; padding: 0; }
   & h1, & h2, & h3 { font-family: var(--font-heading); color: var(--ink); line-height: 1.23; letter-spacing: -.025em; }
-  & h1 { font-size: clamp(1.875rem, 3.05vw, 2.25rem); font-weight: 650; letter-spacing: -.05em; }
+  /* H1 de 28 a 32 px, como el manual: el nombre de la pantalla manda, sin competir con nada. */
+  & h1 { font-size: clamp(1.65rem, 2.4vw, 1.875rem); font-weight: 650; letter-spacing: -.04em; }
   & h2 { font-size: 1.225rem; font-weight: 600; }
   & h3 { font-size: 1.075rem; font-weight: 600; }
   & img { display: block; max-width: 100%; }
@@ -75,9 +76,13 @@ html:has(.eco-app), body:has(> #root > .eco-app) {
   & .skip-link { position: fixed; z-index: 6; top: .65rem; left: .65rem; transform: translateY(-160%); }
   & .skip-link:focus { transform: none; padding: .65rem 1rem; background: var(--surface); border-radius: .5rem; }
 
-  & .topbar { position: sticky; top: 0; z-index: 5; background: var(--background); view-transition-name: eco-topbar; }
+  & .topbar { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); view-transition-name: eco-topbar; }
   & .topbar-actions { display: flex; align-items: center; gap: .15rem; justify-self: end; }
   & .topbar-inner { min-height: 4rem; display: grid; grid-template-columns: auto 1fr auto; align-items: center; column-gap: 1rem; }
+  /* Sin logo (con sesión) la barra es menú y usuario; el menú gris claro sobre la barra blanca. */
+  & .topbar-inner:not(:has(> .brand-mark)) { grid-template-columns: 1fr auto; }
+  & .topbar .main-nav { background: var(--background); box-shadow: none; }
+  & .workspace-heading .brand-mark { flex-shrink: 0; width: 13.5rem; }
   & .brand-link { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; border-radius: .65rem; }
   & .brand-mark { position: relative; display: block; width: 13.5rem; view-transition-name: eco-logo; }
   & .brand-mark img { width: 100%; height: auto; }
@@ -113,7 +118,7 @@ html:has(.eco-app), body:has(> #root > .eco-app) {
   & .profile-copy span { font-size: .75rem; color: var(--muted); }
   & .profile-chevron { width: .9rem; height: .9rem; }
 
-  & .main-content { padding-block: .85rem 2.5rem; flex: 1; }
+  & .main-content { padding-block: 1.6rem 2.5rem; flex: 1; } /* aire entre la barra y el título */
   & .demo-note { display: inline-flex; align-items: center; gap: .45rem; background: var(--surface-muted); padding: .3rem .65rem; border-radius: 99px; color: var(--muted); font-size: .8125rem; font-weight: 600; margin-bottom: .85rem; }
   & .demo-note svg { width: .95rem; height: .95rem; }
 
@@ -289,6 +294,10 @@ html:has(.eco-app), body:has(> #root > .eco-app) {
     & .brand-mark[data-flapping="true"] .brand-motion { visibility: visible; }
     & .brand-mark[data-flapping="true"] img { visibility: hidden; }
     & .brand-mark[data-flapping="true"] .brand-wing { animation: eco-wing-aleteo 3.2s ease-in-out infinite; }
+  }
+
+  @media (min-width: 1081px) {
+    & .topbar-inner:not(:has(> .brand-mark)) .main-nav { justify-self: start; }
   }
 
   @media (max-width: 1080px) {

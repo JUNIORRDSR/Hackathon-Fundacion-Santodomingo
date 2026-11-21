@@ -149,7 +149,7 @@ function CoordinatorContent({
   if (page === 'capacitacion') return training
 
   const isDashboard = page === 'inicio'
-  const dashboardHeader = isDashboard && <DashboardHeader coordinator={coordinator} demo={demo} />
+  const dashboardHeader = isDashboard && <DashboardHeader coordinator={coordinator} demo={demo} href={href} />
 
   if (data.state.status !== 'ready') {
     return (

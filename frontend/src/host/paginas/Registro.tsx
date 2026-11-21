@@ -4,6 +4,7 @@ import { ErrorMessage } from '../../ecoconecta-coordinacion/components/ui/Feedba
 import { Icon } from '../../ecoconecta-coordinacion/components/ui/Icon'
 import { useSubmission } from '../../ecoconecta-coordinacion/components/ui/useSubmission'
 import type { NuevaCuenta } from '../sesion'
+import { CampoClave } from './CampoClave'
 
 const VACIA: NuevaCuenta = { colectivo: 'huerteros', nombre: '', usuario: '', clave: '', codigo: '' }
 const CAMPOS: { campo: 'nombre' | 'usuario' | 'clave' | 'codigo'; etiqueta: string; ayuda?: string }[] = [
@@ -56,15 +57,20 @@ export function Registro({ onRegistrar }: { onRegistrar: (cuenta: NuevaCuenta) =
       {CAMPOS.map(({ campo, etiqueta, ayuda }) => (
         <div className="field" key={campo}>
           <label htmlFor={id + campo}>{etiqueta}</label>
-          <input
-            id={id + campo}
-            type={campo === 'clave' ? 'password' : 'text'}
-            autoComplete={campo === 'clave' ? 'new-password' : campo === 'usuario' ? 'username' : 'off'}
-            value={cuenta[campo]}
-            disabled={submit.busy}
-            aria-describedby={ayuda ? id + campo + '-ayuda' : undefined}
-            onChange={(event) => setCuenta({ ...cuenta, [campo]: event.target.value })}
-          />
+          {(() => {
+            const comunes = {
+              id: id + campo,
+              value: cuenta[campo],
+              disabled: submit.busy,
+              'aria-describedby': ayuda ? id + campo + '-ayuda' : undefined,
+              onChange: (event: { target: { value: string } }) => setCuenta({ ...cuenta, [campo]: event.target.value }),
+            }
+            return campo === 'clave' ? (
+              <CampoClave {...comunes} autoComplete="new-password" />
+            ) : (
+              <input {...comunes} autoComplete={campo === 'usuario' ? 'username' : 'off'} />
+            )
+          })()}
           {ayuda && (
             <span className="field-help" id={id + campo + '-ayuda'}>
               {ayuda}

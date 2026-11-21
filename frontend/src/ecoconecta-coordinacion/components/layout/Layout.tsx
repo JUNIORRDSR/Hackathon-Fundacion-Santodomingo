@@ -165,7 +165,8 @@ export function Layout({
       </a>
       <header className="topbar">
         <div className="site-width topbar-inner">
-          <BrandLogo href={href({ page: coordinator ? 'inicio' : 'capacitacion' })} />
+          {/* Con sesión, el logo vive en la entrada y en el Inicio: la barra queda para navegar. */}
+          {!coordinator && <BrandLogo href={href({ page: 'capacitacion' })} />}
           {coordinator && (
             <>
               <MotionPills as="nav" className="main-nav" label="Navegación principal" active={page}>

@@ -34,6 +34,12 @@
   & .entrega-vecino .button { margin-left: auto; }
   & .field-label { font-weight: 600; }
 
+  /* Clave con «Mostrar»: el botón vive dentro del campo, del alto del campo. */
+  & .campo-clave { position: relative; }
+  & .campo-clave input { padding-right: 7.5rem; }
+  & .campo-clave-ver { position: absolute; top: 1px; right: 1px; bottom: 1px; display: inline-flex; align-items: center; gap: .35rem; padding: 0 .8rem; border: 0; border-radius: 0 .55rem .55rem 0; background: transparent; color: var(--highlight); font-weight: 600; }
+  & .campo-clave-ver:hover:not(:disabled) { background: var(--surface-muted); }
+
   /* Regla de puntos: una tarjeta por residuo, con etiquetas visibles y un ejemplo calculado. */
   & .regla { display: grid; gap: 1rem; margin-top: 1rem; }
   & .regla-cabeza h2 { font-size: 1.25rem; }

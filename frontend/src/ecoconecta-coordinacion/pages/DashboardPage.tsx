@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { formatDay, groupLabels, localDate, localTime } from '../labels'
 import type { EcoLink, EcoPage } from '../routes'
 import type { Coordinator, Request } from '../types'
+import { BrandLogo } from '../components/layout/BrandLogo'
 import { getPlannedRequests } from '../components/recolecciones/timelineData'
 import { RequestList } from '../components/solicitudes/RequestList'
 import { TaskCard, todayTasks } from './inicio/tareas'
@@ -15,7 +16,16 @@ function greeting() {
   return hour < 12 ? 'Buenos días' : hour < 19 ? 'Buenas tardes' : 'Buenas noches'
 }
 
-export function DashboardHeader({ coordinator, demo }: { coordinator: Coordinator; demo: boolean }) {
+// El logo vive aquí y en la entrada: la animación de entrar aterriza junto al saludo.
+export function DashboardHeader({
+  coordinator,
+  demo,
+  href,
+}: {
+  coordinator: Coordinator
+  demo: boolean
+  href: EcoLink
+}) {
   const today = localDate()
   return (
     <div className="workspace-heading">
@@ -29,6 +39,7 @@ export function DashboardHeader({ coordinator, demo }: { coordinator: Coordinato
           {demo && <span className="workspace-demo">Datos de demostración</span>}
         </p>
       </div>
+      <BrandLogo href={href({ page: 'inicio' })} />
     </div>
   )
 }

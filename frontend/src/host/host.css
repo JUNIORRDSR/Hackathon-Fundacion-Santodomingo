@@ -5,7 +5,11 @@
   & .field-help { color: var(--muted); font-size: .8125rem; }
 
   /* Entrar y crear cuenta */
-  & .acceso { display: grid; justify-items: center; gap: 1rem; padding-block: clamp(.5rem, 5vh, 3.5rem) 1rem; }
+  & .acceso { display: grid; justify-items: center; gap: 1rem; padding-block: clamp(.5rem, 4vh, 2.5rem) 1rem; }
+  /* En la entrada el logo va grande y centrado: la barra no se muestra, así hay un solo logo con nombre eco-logo. */
+  &:has(.acceso) .topbar { display: none; }
+  & .acceso-logo { margin-bottom: .35rem; }
+  & .acceso-logo .brand-mark { width: min(23rem, 82vw); }
   & .acceso-tarjeta { width: min(100%, 31rem); padding: 1.5rem 1.6rem 1.7rem; display: grid; gap: 1.1rem; }
   & .acceso-modo { justify-self: start; }
   & .acceso-tarjeta h1 { font-size: clamp(1.6rem, 2.6vw, 2rem); }
@@ -41,9 +45,13 @@
   &:has(.fab-lane) .motion-route-stage { flex: 1; }
   /* Con nombre propio en la View Transition de Daniela, el botón queda encima del contenido que cambia. */
   & .whatsapp-fab { view-transition-name: eco-whatsapp; }
-  & .whatsapp-fab { position: absolute; right: 0; bottom: max(1.25rem, env(safe-area-inset-bottom)); pointer-events: auto; display: inline-flex; align-items: center; gap: .6rem; min-height: 54px; padding: .45rem 1.2rem .45rem .45rem; border-radius: 9999px; background: #f28c00; color: #063b2e; font-weight: 700; text-decoration: none; box-shadow: 0 12px 26px -10px #f28c00aa, 0 3px 8px #2d4b3f26; transition: transform 180ms, background-color 180ms; }
-  & .whatsapp-fab:hover { background: #f69a1f; transform: translateY(-2px); }
-  & .whatsapp-fab svg { width: 2.6rem; height: 2.6rem; padding: .6rem; border-radius: 50%; background: #ffffff; --icon-stroke: #168a2e; stroke-width: 2.4; }
+  & .whatsapp-fab { position: absolute; right: 0; bottom: max(1.25rem, env(safe-area-inset-bottom)); pointer-events: auto; display: inline-flex; align-items: center; gap: .55rem; min-height: 54px; padding: .4rem 1.15rem .4rem .4rem; border-radius: 9999px; background: #25d366; color: #05361f; font-weight: 750; text-decoration: none; box-shadow: 0 12px 26px -10px #25d36699, 0 3px 8px #2d4b3f26; transition: transform 180ms, background-color 180ms; }
+  & .whatsapp-fab:hover { background: #2ee070; transform: translateY(-2px); }
+  & .whatsapp-fab-logo { position: relative; display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border-radius: 50%; background: #1ebe5b; color: #ffffff; }
+  & .whatsapp-fab-logo svg { width: 1.6rem; height: 1.6rem; }
+  /* Latido: el logo late y un anillo se abre cada 6 s; con mensajes sin leer, cada 2,5 s. */
+  & .whatsapp-fab-logo::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2px solid #ffffff; opacity: 0; pointer-events: none; }
+  & .whatsapp-fab-cuenta { display: inline-grid; place-items: center; min-width: 1.5rem; height: 1.5rem; padding-inline: .35rem; margin-left: -.1rem; border-radius: 9999px; background: #ffffff; color: #05361f; font-size: .78rem; font-weight: 800; font-variant-numeric: tabular-nums; }
 
   /* Monitor de WhatsApp */
   & .monitor { display: grid; grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr); gap: 1rem; height: max(32rem, calc(100svh - 17rem)); }
@@ -97,8 +105,9 @@
   & .hilo [data-autor="aviso"] > [data-slot="bubble-content"] { background: #fbf3d4; color: var(--ink); border: 1px solid #ecd98f; border-bottom-right-radius: .35rem; }
 
   @media (max-width: 575px) {
-    & .whatsapp-fab span { display: none; }
-    & .whatsapp-fab { padding: .85rem; }
+    & .whatsapp-fab-texto { display: none; }
+    & .whatsapp-fab { padding: .4rem; }
+    & .whatsapp-fab:has(.whatsapp-fab-cuenta) { padding-right: .7rem; }
   }
 
   @media (max-width: 790px) {
@@ -113,3 +122,35 @@
 ::view-transition-old(eco-whatsapp) { display: none; }
 ::view-transition-new(eco-topbar),
 ::view-transition-new(eco-whatsapp) { animation: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .eco-app .whatsapp-fab-logo { animation: eco-latido 6s ease-in-out 1.5s infinite; }
+  .eco-app .whatsapp-fab-logo::after { animation: eco-anillo 6s ease-out 1.5s infinite; }
+  .eco-app .whatsapp-fab[data-sin-leer="true"] .whatsapp-fab-logo,
+  .eco-app .whatsapp-fab[data-sin-leer="true"] .whatsapp-fab-logo::after { animation-duration: 2.5s; }
+}
+
+@keyframes eco-latido {
+  0%, 12%, 100% { transform: scale(1); }
+  4% { transform: scale(1.14); }
+  8% { transform: scale(.96); }
+}
+
+@keyframes eco-anillo {
+  0% { opacity: .7; transform: scale(1); }
+  14%, 100% { opacity: 0; transform: scale(1.7); }
+}
+
+/* Al entrar o salir, el logo viaja entre el centro de la entrada y la esquina de la barra con un brillo que se apaga. */
+::view-transition-group(eco-logo) { z-index: 10; animation-duration: 850ms; animation-timing-function: cubic-bezier(.22, .78, .24, 1); }
+::view-transition-old(eco-logo),
+::view-transition-new(eco-logo) { animation-duration: 850ms; height: 100%; }
+::view-transition-new(eco-logo) { animation-name: eco-logo-llega; }
+::view-transition-old(root),
+::view-transition-new(root) { animation-duration: 450ms; }
+
+@keyframes eco-logo-llega {
+  0% { opacity: 0; filter: drop-shadow(0 0 2.2rem #f6c400aa); }
+  35% { opacity: 1; filter: drop-shadow(0 0 1.6rem #f6c40088); }
+  100% { opacity: 1; filter: drop-shadow(0 0 0 #f6c40000); }
+}

@@ -33,20 +33,24 @@ function coordinadorDe(usuario: Usuario, grupo: Coordinator['grupo']): Coordinat
   return { id: propio, nombre: usuario.nombre, grupo: propio }
 }
 
-// Los vecinos que esperan que la coordinación los acepte: el contador del menú se refresca solo.
-function usePorAceptar(activo: boolean) {
+// Contadores del menú que se refrescan solos: vecinos por aceptar y mensajes de WhatsApp sin leer.
+function useContador<T>(activo: boolean, ruta: string, contar: (datos: T) => number, evento: string) {
   const [cantidad, setCantidad] = useState(0)
   useEffect(() => {
     if (!activo) return
-    const contar = () =>
-      void api<unknown[]>('/directorio/solicitantes?estado=pendiente').then((lista) => setCantidad(lista.length))
-    contar()
-    const intervalo = window.setInterval(contar, 8000)
-    window.addEventListener('registros-cambiaron', contar)
-    return () => (window.clearInterval(intervalo), window.removeEventListener('registros-cambiaron', contar))
-  }, [activo])
+    const actualizar = () =>
+      void api<T>(ruta)
+        .then((datos) => setCantidad(contar(datos)))
+        .catch(() => {})
+    actualizar()
+    const intervalo = window.setInterval(actualizar, 8000)
+    window.addEventListener(evento, actualizar)
+    return () => (window.clearInterval(intervalo), window.removeEventListener(evento, actualizar))
+  }, [activo, ruta, contar, evento])
   return cantidad
 }
+const contarLista = (lista: unknown[]) => lista.length
+const contarSinLeer = (chats: { sin_leer: number }[]) => chats.reduce((total, chat) => total + chat.sin_leer, 0)
 
 const Cargando = () => (
   <Layout page="inicio" href={hashLink} demo={false}>
@@ -66,7 +70,13 @@ function App() {
   const { usuario, cargando, entrar, registrar, salir } = useSesion()
   const [grupo, setGrupo] = useState<Coordinator['grupo']>('organico')
   const [sugerido, setSugerido] = useState('')
-  const porAceptar = usePorAceptar(!!usuario)
+  const porAceptar = useContador(
+    !!usuario,
+    '/directorio/solicitantes?estado=pendiente',
+    contarLista,
+    'registros-cambiaron',
+  )
+  const sinLeer = useContador(!!usuario, '/whatsapp/conversaciones', contarSinLeer, 'whatsapp-leido')
   const [recursos, setRecursos] = useState<TrainingResource[]>()
   useEffect(() => {
     if (usuario) void api<Parameters<typeof recursoDe>[0][]>('/contenidos').then((c) => setRecursos(c.map(recursoDe)))
@@ -102,7 +112,7 @@ function App() {
         canjes: <Canjes />,
         whatsapp: <Whatsapp />,
       }}
-      badges={{ habilitar: porAceptar }}
+      badges={{ habilitar: porAceptar, whatsapp: sinLeer }}
       onSignOut={() => void salir()}
     />
   )

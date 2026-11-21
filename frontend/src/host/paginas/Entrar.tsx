@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import type { FormEvent } from 'react'
+import { BrandLogo } from '../../ecoconecta-coordinacion/components/layout/BrandLogo'
 import { Layout } from '../../ecoconecta-coordinacion/components/layout/Layout'
 import { ErrorMessage } from '../../ecoconecta-coordinacion/components/ui/Feedback'
 import { Icon } from '../../ecoconecta-coordinacion/components/ui/Icon'
@@ -24,6 +25,10 @@ export function Entrar({
   return (
     <Layout page="inicio" href={hashLink} demo={false}>
       <div className="acceso">
+        {/* El mismo logo que la barra: al entrar viaja a la esquina con una View Transition (eco-logo). */}
+        <div className="acceso-logo">
+          <BrandLogo href="#/capacitacion?publica=1" />
+        </div>
         <section className="card acceso-tarjeta" aria-labelledby="acceso-titulo">
           <MotionPills className="segmented-control acceso-modo" label="Entrar o crear cuenta" active={modo}>
             <button type="button" aria-pressed={modo === 'entrar'} onClick={() => setModo('entrar')}>

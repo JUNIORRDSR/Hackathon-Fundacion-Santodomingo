@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import logo from '../../../../identidad-visual/Logo EcoConecta - Verde bosque.png'
 
 const width = 2172
@@ -21,23 +21,22 @@ const wings = [
 export function BrandLogo({ href }: { href: string }) {
   const id = useId()
   const image = useRef<HTMLImageElement>(null)
-  const [flapping, setFlapping] = useState(false)
+  // Las alas animadas copian el PNG: solo aparecen cuando la imagen cargó; desde ahí aletean en bucle.
+  const [listo, setListo] = useState(false)
   const bitmap = id + '-bitmap'
-
-  function flap() {
-    if (image.current?.naturalWidth) setFlapping(true)
-  }
+  useEffect(() => setListo(!!image.current?.complete && !!image.current.naturalWidth), [])
 
   return (
-    <a
-      className="brand-link"
-      href={href}
-      aria-label="EcoConecta Villas de San Pablo"
-      onPointerEnter={flap}
-      onFocus={flap}
-    >
-      <span className="brand-mark" data-flapping={flapping}>
-        <img ref={image} src={logo} alt="" width={width} height={height} onLoad={flap} />
+    <a className="brand-link" href={href} aria-label="EcoConecta Villas de San Pablo">
+      <span className="brand-mark" data-flapping={listo}>
+        <img
+          ref={image}
+          src={logo}
+          alt=""
+          width={width}
+          height={height}
+          onLoad={() => setListo(!!image.current?.naturalWidth)}
+        />
         <svg className="brand-motion" viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
           <defs>
             <image id={bitmap} href={logo} width={width} height={height} />
@@ -46,14 +45,17 @@ export function BrandLogo({ href }: { href: string }) {
                 <path d={outline} />
               </clipPath>
             ))}
+            {/* El logo sin sus alas: los huecos los llenan las alas animadas, sin parche sobre ningún fondo. */}
+            <mask id={id + '-sin-alas'}>
+              <rect width={width} height={height} fill="white" />
+              {wings.map(({ side, outline }) => (
+                <path key={side} d={outline} fill="black" />
+              ))}
+            </mask>
           </defs>
-          <g className="brand-wing-cover">
-            {wings.map(({ side, outline }) => (
-              <path key={side} d={outline} />
-            ))}
-          </g>
+          <use href={'#' + bitmap} mask={`url(#${id}-sin-alas)`} />
           {wings.map(({ side }) => (
-            <g key={side} className={'brand-wing brand-wing-' + side} onAnimationEnd={() => setFlapping(false)}>
+            <g key={side} className={'brand-wing brand-wing-' + side}>
               <use href={'#' + bitmap} clipPath={`url(#${id}-${side})`} />
             </g>
           ))}

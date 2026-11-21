@@ -8,6 +8,7 @@ import type { Coordinator } from '../../types'
 import { Icon } from '../ui/Icon'
 import type { IconName } from '../ui/Icon'
 import { BrandLogo } from './BrandLogo'
+import { WhatsappLogo } from '../ui/WhatsappLogo'
 import { MotionPills } from '../ui/MotionPills'
 import { animateMotion } from '../ui/motion'
 import { useRouteScene } from './useRouteScene'
@@ -223,9 +224,19 @@ export function Layout({
         </div>
         {coordinator && extraPages.includes('whatsapp') && page !== 'whatsapp' && (
           <div className="fab-lane">
-            <a className="whatsapp-fab" href={href({ page: 'whatsapp' })} aria-label="Abrir el monitor de WhatsApp">
-              <Icon name="chat" />
-              <span>WhatsApp</span>
+            <a
+              className="whatsapp-fab"
+              href={href({ page: 'whatsapp' })}
+              data-sin-leer={!!badges.whatsapp}
+              aria-label={
+                'Abrir el monitor de WhatsApp' + (badges.whatsapp ? ', ' + badges.whatsapp + ' mensajes sin leer' : '')
+              }
+            >
+              <span className="whatsapp-fab-logo">
+                <WhatsappLogo />
+              </span>
+              <span className="whatsapp-fab-texto">WhatsApp</span>
+              {!!badges.whatsapp && <span className="whatsapp-fab-cuenta">{badges.whatsapp}</span>}
             </a>
           </div>
         )}

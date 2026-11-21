@@ -29,6 +29,7 @@ const fecha = new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', dat
 export function Vecinos({ nuevo }: { nuevo: number }) {
   const [vecinos, setVecinos] = useState<Vecino[]>()
   const [zonas, setZonas] = useState<Zone[]>([])
+  const [saldos, setSaldos] = useState<Record<string, number>>({})
   const [tipo, setTipo] = useState<Tipo>('todos')
   const [zona, setZona] = useState('')
   const [conjunto, setConjunto] = useState('')
@@ -37,10 +38,15 @@ export function Vecinos({ nuevo }: { nuevo: number }) {
   const [aviso, setAviso] = useState('')
   const [error, setError] = useState('')
   const cargar = useCallback(() => {
-    Promise.all([api<Vecino[]>('/directorio/solicitantes'), api<Zone[]>('/directorio/zonas')])
-      .then(([lista, catalogo]) => {
+    Promise.all([
+      api<Vecino[]>('/directorio/solicitantes'),
+      api<Zone[]>('/directorio/zonas'),
+      api<Record<string, number>>('/puntos/saldos'),
+    ])
+      .then(([lista, catalogo, puntos]) => {
         setVecinos(lista)
         setZonas(catalogo)
+        setSaldos(puntos)
       })
       .catch((e: Error) => setError(e.message))
   }, [])
@@ -128,6 +134,7 @@ export function Vecinos({ nuevo }: { nuevo: number }) {
             },
             { header: 'Lugar y dirección', width: 'minmax(0, 2fr)', cell: (v) => lugarYDireccion(v, nombres) },
             { header: 'WhatsApp', cell: (v) => v.telefono },
+            { header: 'Puntos', cell: (v) => <strong className="vecino-puntos">{saldos[v.id] ?? 0}</strong> },
             {
               header: 'Estado',
               cell: (v) => (
@@ -149,6 +156,10 @@ export function Vecinos({ nuevo }: { nuevo: number }) {
                 <div>
                   <dt>WhatsApp</dt>
                   <dd>{elegido.telefono}</dd>
+                </div>
+                <div>
+                  <dt>Puntos</dt>
+                  <dd>{saldos[elegido.id] ?? 0}</dd>
                 </div>
                 <div className="detail-wide">
                   <dt>Lugar y dirección</dt>

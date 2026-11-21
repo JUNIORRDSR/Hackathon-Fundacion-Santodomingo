@@ -65,6 +65,7 @@ def _entregar_en_la_huerta(cliente: TestClient, vecino: dict, encargado: dict) -
     entrega = respuesta.json()
     assert entrega["estado"] == "recolectada" and entrega["canal"] == "huerta" and float(entrega["kg"]) == 6.5
     assert cliente.get("/api/puntos/por-codigo").json()[entrega["codigo"]] > 0
+    assert cliente.get("/api/puntos/saldos").json()[vecino["id"]] >= 6  # la tabla de vecinos muestra su saldo
     mensajes = cliente.get("/api/whatsapp/simulador/mensajes", params={"telefono": TELEFONO}).json()
     assert any(entrega["codigo"] in m["texto"] and "Ganaste" in m["texto"] for m in mensajes)
     reciclable = cliente.post("/api/solicitudes/entregas", json={

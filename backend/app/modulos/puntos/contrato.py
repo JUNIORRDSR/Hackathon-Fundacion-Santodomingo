@@ -4,7 +4,7 @@ from decimal import Decimal
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel
-from sqlalchemy import insert, select
+from sqlalchemy import func, insert, select
 
 from app.compartido.bd import transaccion
 from app.compartido.eventos import Evento, publicar, suscribir
@@ -89,6 +89,14 @@ def saldo(solicitante_id: UUID) -> Saldo:
                           .order_by(t.movimientos.c.fecha)).all()
     movimientos = [Movimiento.model_validate(dict(fila._mapping)) for fila in filas]
     return Saldo(solicitante_id=solicitante_id, saldo=sum(m.puntos for m in movimientos), movimientos=movimientos)
+
+
+def saldos() -> dict[UUID, int]:
+    """El saldo de cada vecino: la suma de su libro de movimientos, lo ganado menos lo canjeado."""
+    with transaccion() as c:
+        filas = c.execute(select(t.movimientos.c.solicitante_id, func.sum(t.movimientos.c.puntos))
+                          .group_by(t.movimientos.c.solicitante_id))
+        return {fila[0]: int(fila[1]) for fila in filas}
 
 
 def escuchar() -> None:

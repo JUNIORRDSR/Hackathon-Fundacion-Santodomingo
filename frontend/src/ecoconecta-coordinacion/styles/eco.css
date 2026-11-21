@@ -261,6 +261,18 @@ html:has(.eco-app), body:has(> #root > .eco-app) {
   & .field-error { color: var(--error); font-size: .875rem; font-weight: 600; }
   & .select-field { position: relative; }
   & .select-field select { appearance: none; padding-right: 2.05rem; }
+  /* Toda lista desplegable con el aspecto de un campo, también fuera de un formulario (los filtros). */
+  & .select-field select { width: 100%; min-height: 48px; padding: .5rem 2.05rem .5rem .75rem; border: 1px solid var(--control-line); border-radius: .6rem; background: var(--surface); }
+  /* La lista abierta con el estilo de la app donde el navegador lo permite; en los demás queda la nativa. */
+  @supports (appearance: base-select) {
+    & select, & select::picker(select) { appearance: base-select; }
+    & .select-field select::picker-icon { display: none; }
+    & select::picker(select) { margin-block: .3rem; padding: .3rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface); box-shadow: var(--shadow); }
+    & option { min-height: 44px; padding: .55rem .8rem; border-radius: .55rem; }
+    & option:is(:hover, :focus-visible) { background: var(--surface-muted); }
+    & option:checked { background: var(--highlight); color: var(--on-highlight); }
+    & option::checkmark { display: none; }
+  }
   & .select-field svg { position: absolute; right: .65rem; top: 50%; transform: translateY(-50%); pointer-events: none; }
   & fieldset { border: 0; min-width: 0; padding: 0; margin: 0; }
   & .outcome-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; margin-top: .4rem; }

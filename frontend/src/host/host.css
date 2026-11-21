@@ -3,6 +3,8 @@
   /* Registros (ADR-0016): filtros, el aviso de registro, los lugares en tarjetas y el tipo de vecino. */
   & .filtros-registro { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-block: 1rem; }
   & .filtros-registro .select-field { min-width: min(100%, 13rem); }
+  & .filtros-registro .select-field select { border-radius: 9999px; }
+  & .vecino-puntos { font-variant-numeric: tabular-nums; }
   & .registro-aviso { display: flex; align-items: center; gap: .45rem; margin-bottom: 1rem; color: var(--highlight); font-weight: 600; }
   & .lugares-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); gap: 1rem; margin: 1rem 0 0; padding: 0; list-style: none; }
   & .lugar-zona { display: grid; align-content: start; gap: .75rem; padding: 1rem 1.15rem 1.15rem; }

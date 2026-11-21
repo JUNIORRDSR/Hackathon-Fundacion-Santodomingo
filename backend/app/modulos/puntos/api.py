@@ -21,6 +21,12 @@ def cambiar_regla(datos: puntos.NuevaRegla, u: acceso.Usuario = Sesion) -> punto
     return puntos.cambiar_regla(datos)
 
 
+@router.get("/saldos")
+def saldos(_: acceso.Usuario = Sesion) -> dict[UUID, int]:
+    """Puntos de cada vecino, para la tabla de Vecinos y negocios."""
+    return puntos.saldos()
+
+
 @router.get("/solicitantes/{solicitante_id}")
 def saldo(solicitante_id: UUID, _: acceso.Usuario = Sesion) -> puntos.Saldo:
     return puntos.saldo(solicitante_id)

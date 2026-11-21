@@ -1,5 +1,5 @@
 """API de clasificacion: revisar una foto desde /docs, sin WhatsApp. Sirve de plan B en la demo (ADR-0011)."""
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from starlette.concurrency import run_in_threadpool
 
 from app.compartido.tipos import Flujo
@@ -17,5 +17,15 @@ async def evaluar(request: Request, flujo: Flujo | None = None,
                   _: acceso.Usuario = Sesion) -> clasificacion.EvaluacionFoto:
     """La foto va como cuerpo (image/jpeg o image/png); el flujo que se va a entregar es opcional."""
     tipo = request.headers.get("content-type", "").split(";")[0].strip()
-    foto = clasificacion.Foto(contenido=await request.body(), tipo=tipo)
+    foto = clasificacion.Foto(contenido=await _leer(request), tipo=tipo)
     return await run_in_threadpool(clasificacion.evaluar, foto, flujo)
+
+
+async def _leer(request: Request) -> bytes:
+    """Lee por partes y corta en cuanto supera el tope, sin guardar en memoria una foto gigante."""
+    cuerpo = bytearray()
+    async for bloque in request.stream():
+        cuerpo.extend(bloque)
+        if len(cuerpo) > clasificacion.TAMANO_MAXIMO:
+            raise HTTPException(413, "La foto supera los 5 MB.")
+    return bytes(cuerpo)

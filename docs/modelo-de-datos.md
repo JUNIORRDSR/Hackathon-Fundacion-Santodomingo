@@ -6,9 +6,12 @@ tablas salen de `backend/app/modulos/<módulo>/tablas.py`.
 
 ```mermaid
 erDiagram
+  directorio_zonas ||--o{ directorio_conjuntos : "zona_id"
   directorio_zonas ||--o{ directorio_solicitantes : "zona_id"
+  directorio_conjuntos |o--o{ directorio_solicitantes : "conjunto_id"
   directorio_solicitantes ||..o{ solicitudes_solicitudes : "solicitante_id (por ID)"
   directorio_zonas ||..o{ solicitudes_solicitudes : "zona_id (por ID)"
+  directorio_conjuntos |o..o{ solicitudes_solicitudes : "conjunto_id (por ID)"
   directorio_encargados |o..o{ solicitudes_solicitudes : "encargado_id (por ID)"
   acceso_usuarios |o..o{ solicitudes_solicitudes : "asignada_por (por ID)"
   directorio_solicitantes ||..o{ puntos_movimientos : "solicitante_id (por ID)"
@@ -27,7 +30,14 @@ erDiagram
   }
   directorio_zonas {
     uuid id PK
-    string nombre UK
+    string nombre UK "Etapa 1 a 4, Corredor comercial"
+    boolean activo "nada se borra: se desactiva"
+  }
+  directorio_conjuntos {
+    uuid id PK
+    uuid zona_id FK
+    string nombre "único dentro de su zona"
+    boolean activo
   }
   directorio_solicitantes {
     uuid id PK
@@ -35,15 +45,17 @@ erDiagram
     string nombre "nombre o alias"
     string tipo "hogar | unidad_productiva"
     uuid zona_id FK
-    string direccion
+    uuid conjunto_id FK "vacío si la zona no tiene conjuntos"
+    string direccion "torre, apto, casa o local"
     string estado "pendiente | habilitado"
     timestamptz autorizo_en "Ley 1581"
+    string registrado_por "quien firmó en la tableta; vacío si fue por WhatsApp"
   }
   directorio_encargados {
     uuid id PK
     string nombre
     string colectivo "huerteros | recicladores"
-    jsonb zonas "ids de zonas que cubre"
+    jsonb lugares "conjuntos (o zonas sin conjuntos) que cubre"
     boolean activo
   }
   solicitudes_solicitudes {
@@ -52,9 +64,10 @@ erDiagram
     uuid solicitante_id
     string flujo "organico | reciclable"
     uuid zona_id
+    uuid conjunto_id "copia al recibir"
     string direccion "copia al recibir"
     string preferencia "manana | tarde | noche"
-    string canal "whatsapp | asistido | simulador"
+    string canal "whatsapp | asistido | simulador | huerta"
     string estado
     uuid encargado_id
     uuid asignada_por

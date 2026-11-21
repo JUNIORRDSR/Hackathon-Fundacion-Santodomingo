@@ -88,9 +88,9 @@ desarrollo del canal se hacen en `backend/app/modulos/whatsapp/` y en el monitor
 
 ## Azure OpenAI para WhatsApp
 
-El conversador opcional entiende frases como «quiero que recojan mis orgánicos» o «cuántos puntos tengo».
-El flujo y las respuestas del sistema se aplican con las mismas reglas del menú. Consulta la
-[guía de Foundry y la prueba local](docs/azure-openai-whatsapp.md).
+El conversador opcional entiende frases como «quiero que recojan mis orgánicos» o «cuántos puntos tengo»
+y guarda el paso pendiente para seguir por WhatsApp. El backend aplica las reglas del negocio. Consulta la
+[guía del diálogo, el conocimiento y Foundry](docs/azure-openai-whatsapp.md).
 
 Para editar textos en ejecución, apunta `WHATSAPP_REPLIES_FILE` a un JSON UTF-8 editable con claves del
 [catálogo de WhatsApp](backend/app/modulos/whatsapp/respuestas.json). Puedes sobrescribir una parte del catálogo

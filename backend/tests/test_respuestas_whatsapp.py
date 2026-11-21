@@ -7,6 +7,17 @@ from app.modulos.whatsapp.contrato import Turno
 from app.modulos.whatsapp.menu import ConversadorMenu
 
 
+def test_el_registro_admite_consentimiento_explicito_en_palabras():
+    memoria = {"paso": "autorizacion"}
+    telefono = "+573000000001"
+    registro.responder("Tal vez", telefono, memoria)
+    assert memoria == {"paso": "autorizacion"}
+    registro.responder("Sí, autorizo", telefono, memoria)
+    assert memoria == {"paso": "tipo"}
+    registro.responder("Hogar", telefono, memoria)
+    assert memoria["paso"] == "zona"
+
+
 def _editar(ruta, plantillas):
     ruta.write_text(json.dumps(plantillas, ensure_ascii=False), encoding="utf-8")
 

@@ -57,7 +57,7 @@ class SolicitudResumida(BaseModel):
 
 class Herramientas:
     """Lo único que el bot puede hacer; la identidad la ata el sistema, no el modelo (§9).
-    El LLM las usa como herramientas (tool calling). No hay herramienta para asignar, programar ni cerrar."""
+    El diálogo ejecuta estas operaciones. La coordinación asigna, programa y cierra las solicitudes."""
 
     def __init__(self, solicitante_id: UUID):
         self._id = solicitante_id
@@ -95,8 +95,7 @@ class Herramientas:
 
 
 class Conversador(Protocol):
-    """Lo implementa Leonardo (LLM). Recibe el turno y la memoria de la conversación, actúa solo con las herramientas y
-    devuelve los textos a enviar y la memoria nueva. Si falla, responde el menú."""
+    """Recibe el turno y la memoria. Actúa con las herramientas y devuelve textos y estado."""
 
     def responder(self, turno: Turno, memoria: dict, herramientas: Herramientas) -> Respuesta: ...
 

@@ -3,6 +3,7 @@ Canjear y cancelar exigen que el vecino confirme en un mensaje posterior: lo hac
 import json
 import logging
 from dataclasses import dataclass, field
+from typing import Literal
 
 from app.compartido.formato import NOMBRE_FLUJO, dia_local, fecha_larga, hora_corta, kilos
 from app.compartido.tipos import ErrorDeNegocio, Flujo, Franja, NoEncontrado
@@ -56,10 +57,16 @@ class Acciones:
     herramientas: Herramientas
     memoria: dict
     cartel: str | None = None
-    con_aviso: bool = False  # el sistema ya le mandó al vecino un aviso (recibida o cancelada) en este turno
+    aviso: Literal["recibida", "cancelada"] | None = None
+    llamadas: int = 0
     hechos: list[str] = field(default_factory=list)  # lo que cambió sin aviso; sale si Azure falla después
 
+    @property
+    def solo_aviso_de_solicitud(self) -> bool:
+        return self.aviso == "recibida" and self.llamadas == 1
+
     def ejecutar(self, nombre: str, argumentos: str) -> str:
+        self.llamadas += 1
         try:
             datos = json.loads(argumentos or "{}")
             resultado = _ACCIONES[nombre](self, **datos)
@@ -98,10 +105,9 @@ def _pedir(a: Acciones, tipo: str, franja: str, observaciones: str | None) -> di
     foto = a.memoria.get("foto")
     nueva = a.herramientas.pedir_recoleccion(Flujo(tipo), Franja(franja), (observaciones or "")[:300], foto_url=foto)
     a.memoria.pop("foto", None)
-    a.con_aviso = True
+    a.aviso = "recibida"
     return {"codigo": nueva.codigo, "estado": nueva.estado.value, "foto_adjunta": foto is not None,
-            "nota": "El vecino YA recibió un aviso con el código y los siguientes pasos. Responde como mucho una "
-                    "frase corta que no repita el código ni los pasos, o deja tu respuesta vacía."}
+            "nota": "El aviso automático incluye el código y los pasos. Responde solo si el vecino pidió algo más."}
 
 
 def _cancelar(a: Acciones, codigo: str) -> dict:
@@ -112,7 +118,7 @@ def _cancelar(a: Acciones, codigo: str) -> dict:
     if not _confirmado(a, "cancelar", codigo):
         return {**CONFIRMAR, "codigo": codigo}
     a.herramientas.cancelar(codigo)
-    a.con_aviso = True
+    a.aviso = "cancelada"
     return {"codigo": codigo, "estado": "cancelada", "nota": "El sistema ya le mandó el aviso de cancelación."}
 
 

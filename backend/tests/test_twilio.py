@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import aclosing
 from io import BytesIO
 from threading import Event
+from unittest.mock import Mock
 from urllib.error import HTTPError
 from urllib.parse import parse_qsl, urlencode
 from uuid import uuid4
@@ -18,6 +19,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.modulos.directorio import contrato as directorio
 from app.modulos.whatsapp import bot, contactos, monitor, transporte_twilio
+from app.modulos.whatsapp.agente.conversador import ConversadorAgente
 from app.modulos.whatsapp.contrato import MensajeSaliente, Perfil, Respuesta
 from app.modulos.whatsapp.eventos_monitor import GENERAL, EventosMonitor
 from app.modulos.whatsapp.transporte_twilio import TransporteTwilio
@@ -34,6 +36,8 @@ TELEFONO_TWIML = "+573000000007"
 TELEFONO_AVISOS = "+573000000008"
 TELEFONO_MONITOR = "+15555550113"
 TELEFONO_REINTENTO = "+15555550114"
+TELEFONO_AGENTE_TWIML = "+15555550115"
+TELEFONO_AGENTE_REST = "+15555550116"
 ALIAS = "CO.PruebaEcoConecta"
 ALIAS_PORTAFOLIO = "CO.ENT.PruebaEcoConecta"
 
@@ -41,7 +45,7 @@ ALIAS_PORTAFOLIO = "CO.ENT.PruebaEcoConecta"
 @pytest.fixture
 def cliente_twilio(monkeypatch, request):
     telefonos = (TELEFONO, TELEFONO_ALIAS, TELEFONO_CONCURRENCIA, TELEFONO_TWIML, TELEFONO_AVISOS,
-                 TELEFONO_MONITOR, TELEFONO_REINTENTO)
+                 TELEFONO_MONITOR, TELEFONO_REINTENTO, TELEFONO_AGENTE_TWIML, TELEFONO_AGENTE_REST)
     valores = {
         "TWILIO_ACCOUNT_SID": CUENTA,
         "TWILIO_AUTH_TOKEN": TOKEN,
@@ -254,6 +258,36 @@ def test_aviso_de_solicitud_sale_en_twiml_y_habilitacion_fuera_del_webhook_sale_
     mensaje, = ElementTree.fromstring(respuesta.content).findall("Message")
     assert "Recibimos tu solicitud ORG-" in "".join(mensaje.itertext())
     assert salidas == [aviso_habilitacion]
+
+
+@pytest.mark.parametrize("cliente_twilio", [pytest.param(True, id="twiml"), pytest.param(False, id="rest")],
+                         indirect=True)
+def test_el_agente_envia_un_solo_aviso_al_registrar_una_solicitud(cliente_twilio, monkeypatch):
+    cliente, salidas = cliente_twilio
+    twiml = bot.transporte().respuesta_twiml
+    telefono = TELEFONO_AGENTE_TWIML if twiml else TELEFONO_AGENTE_REST
+    directorio.registrar_solicitante(directorio.NuevoSolicitante(
+        telefono=telefono, nombre="Prueba aviso del agente", tipo="hogar", zona_id=directorio.zonas()[0].id,
+        direccion="Dirección ficticia", autoriza_datos=True,
+    ), habilitado=True)
+    pedir = {"type": "function_call", "call_id": "pedir", "name": "pedir_recoleccion",
+             "arguments": '{"tipo":"reciclable","franja":"tarde","observaciones":null}'}
+    repetido = {"type": "message", "role": "assistant", "content": [
+        {"type": "output_text", "text": "Listo, tu solicitud quedó recibida y ya te enviamos el código."},
+    ]}
+    azure = Mock()
+    azure.responder.side_effect = [[pedir], [repetido]]
+    monkeypatch.setenv("CONVERSADOR", "llm")
+    monkeypatch.setattr(bot, "_conversador", ConversadorAgente(azure))
+
+    respuesta = _entregar(cliente, _parametros(telefono, 25 if twiml else 26, "Recoge mis reciclables en la tarde"))
+    assert respuesta.status_code == 200
+    mensajes_twiml = ["".join(m.itertext()) for m in ElementTree.fromstring(respuesta.content).findall("Message")]
+    assert bool(mensajes_twiml) is twiml
+    aviso, = mensajes_twiml + [salida["Body"] for salida in salidas]
+    assert "Recibimos tu solicitud REC-" in aviso and "Código de la bolsa" in aviso
+    registrado, = bot.enviados(telefono)
+    assert registrado.texto == aviso
 
 
 @pytest.mark.parametrize("cliente_twilio", [True], indirect=True)

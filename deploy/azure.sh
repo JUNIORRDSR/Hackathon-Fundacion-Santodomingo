@@ -42,9 +42,12 @@ if [[ "$MODO_CONVERSADOR" == llm ]]; then
   : "${CONVERSADOR_MODELO:?Define el nombre del despliegue en CONVERSADOR_MODELO}"
 fi
 
-# Una suscripción nueva no tiene registrados estos proveedores de recursos.
+# Una suscripción nueva no tiene registrados estos proveedores de recursos. Solo se registran los que falten:
+# registrar pide permiso sobre toda la suscripción, y quien es Contributor del grupo no lo tiene.
 for proveedor in Microsoft.App Microsoft.OperationalInsights Microsoft.ContainerRegistry Microsoft.DBforPostgreSQL; do
-  az provider register --namespace "$proveedor" --wait --output none
+  if [[ "$(az provider show --namespace "$proveedor" --query registrationState --output tsv)" != Registered ]]; then
+    az provider register --namespace "$proveedor" --wait --output none
+  fi
 done
 az extension add --name containerapp --upgrade --yes --output none
 az group create --name "$GRUPO" --location "$REGION" --output none

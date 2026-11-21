@@ -39,16 +39,13 @@
   & .segmented-control button:hover { background: var(--background); }
   & .segmented-control button[aria-pressed="true"] { background: var(--surface); color: var(--ink); border-color: var(--line); box-shadow: 0 2px 8px #2d4b3f14; }
   & .timeline-toolbar { display: flex; align-items: center; justify-content: space-between; gap: .45rem; flex-wrap: wrap; margin: .55rem 0 .35rem; }
+  & .timeline-tools { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; min-width: 0; }
   & .date-selector { display: flex; align-items: center; flex-wrap: wrap; gap: .15rem; }
   & .date-selector .icon-button { min-width: 48px; }
   & .date-previous svg { transform: rotate(90deg); }
   & .date-next svg { transform: rotate(-90deg); }
-  & .date-selector input, & .timeline-filter select { min-height: 48px; max-width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 9999px; padding: .43rem .65rem; background: var(--surface); font-size: .8125rem; font-weight: 550; }
-  & .date-selector input { inline-size: 8.15rem; }
   & .date-selector .today-button { margin-left: .1rem; }
-  & .timeline-filter select { padding-right: 2rem; width: 100%; }
-  & .timeline-filter { max-width: min(100%, 13rem); }
-  & .timeline-filter svg { width: .9rem; height: .9rem; }
+  & .timeline-filter { min-inline-size: min(100%, 10.5rem); max-inline-size: min(100%, 14rem); }
 
   & .timeline-scroll { overflow-x: auto; scrollbar-width: thin; border-radius: .6rem; }
   & .timeline-scroll:focus-visible { outline-offset: -2px; }
@@ -115,7 +112,6 @@
     & .stat-card strong { font-size: 1.8rem; }
     & .timeline-panel { padding: .8rem; }
     & .timeline-toolbar { margin-bottom: .55rem; }
-    & .date-selector input { inline-size: 7.65rem; }
     & .date-selector .icon-button { min-width: 48px; }
     & .segmented-control button { min-height: 48px; }
     & .timeline-filter { max-width: 100%; }

@@ -134,6 +134,7 @@ html:has(.eco-app), body:has(> #root > .eco-app) {
   & .button-quiet { background: transparent; color: var(--ink); }
   & .icon-button { display: inline-grid; place-items: center; min-width: 48px; min-height: 48px; border: 0; border-radius: 9999px; background: transparent; color: inherit; }
   & .icon-button:hover:not(:disabled) { --icon-stroke: var(--accent-ink); background: var(--surface-muted); color: var(--ink); }
+  & .topbar-configuracion[aria-current="page"] { background: var(--surface-muted); }
 
   & .card { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 1.35rem; box-shadow: var(--shadow); }
   & .panel-heading { display: flex; justify-content: space-between; align-items: center; gap: .75rem; }

@@ -1,7 +1,5 @@
-"""Contrato de reportes: solo lee los contratos de los demás. El CSV no lleva datos personales; el desglose por
+"""Contrato de reportes: solo lee los contratos de los demás. El Excel no lleva datos personales; el desglose por
 vecino muestra su nombre solo a la coordinación que ya lo atiende (RN-07)."""
-import csv
-import io
 from collections import defaultdict
 from datetime import date
 from decimal import Decimal
@@ -13,6 +11,7 @@ from app.compartido.formato import dia_local
 from app.compartido.tipos import Colectivo, Flujo
 from app.modulos.directorio import contrato as directorio
 from app.modulos.puntos import contrato as puntos
+from app.modulos.reportes.excel import libro_solicitudes
 from app.modulos.solicitudes import contrato as solicitudes
 
 
@@ -98,16 +97,11 @@ def _clave_de(por: Agrupacion):
     return lambda s: s.conjunto or s.zona
 
 
-def csv_de_solicitudes(desde: date, hasta: date, colectivo: Colectivo | None = None) -> str:
+def xlsx_de_solicitudes(desde: date, hasta: date, colectivo: Colectivo | None = None) -> bytes:
     """Una fila por solicitud, sin nombre, teléfono ni dirección; el conjunto sirve para la tarifa multiusuario."""
-    salida = io.StringIO("﻿")
-    salida.seek(0, io.SEEK_END)
-    escritor = csv.writer(salida, delimiter=";")
-    escritor.writerow(["codigo", "flujo", "estado", "zona", "conjunto", "canal", "recibida", "dia", "kg"])
-    for s in _en_periodo(desde, hasta, colectivo):
-        escritor.writerow([s.codigo, s.flujo, s.estado, s.zona, s.conjunto or "", s.canal,
-                           dia_local(s.recibida), s.dia or "", str(s.kg or "").replace(".", ",")])
-    return salida.getvalue()
+    filas = ((s.codigo, s.flujo, s.estado, s.zona, s.conjunto, s.canal, dia_local(s.recibida), s.dia, s.kg)
+             for s in _en_periodo(desde, hasta, colectivo))
+    return libro_solicitudes(filas)
 
 
 def _en_periodo(desde: date, hasta: date, colectivo: Colectivo | None) -> list[solicitudes.SolicitudVista]:

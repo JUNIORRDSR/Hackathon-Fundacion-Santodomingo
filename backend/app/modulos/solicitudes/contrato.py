@@ -206,6 +206,11 @@ def de_solicitante(solicitante_id: UUID) -> list[SolicitudVista]:
     return _consultar(select(tabla).where(tabla.c.solicitante_id == solicitante_id).order_by(tabla.c.recibida.desc()))
 
 
+def hay_solicitudes_del_conjunto(id: UUID) -> bool:
+    with transaccion() as c:
+        return bool(c.scalar(select(select(1).where(tabla.c.conjunto_id == id).exists())))
+
+
 def _operar(id: UUID, accion, evento=None) -> SolicitudVista:
     """Carga, aplica la regla del dominio, guarda y publica, todo en una transacción."""
     with transaccion() as c:

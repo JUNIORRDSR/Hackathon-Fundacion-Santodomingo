@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { PageHeader } from '../../ecoconecta-coordinacion/components/layout/Layout'
-import { descargarCsv } from '../../ecoconecta-coordinacion/components/recolecciones/exportar'
 import { EmptyState, ErrorMessage } from '../../ecoconecta-coordinacion/components/ui/Feedback'
 import { Icon } from '../../ecoconecta-coordinacion/components/ui/Icon'
 import { MotionPills } from '../../ecoconecta-coordinacion/components/ui/MotionPills'
+import { useSubmission } from '../../ecoconecta-coordinacion/components/ui/useSubmission'
+import { descargarExcel } from '../../ecoconecta-coordinacion/services/exportarExcel'
 import { api } from '../api'
 import { mesActual, moverMes, nombreMes, periodo } from './meses'
 
@@ -35,6 +36,7 @@ export function Informes({ grupo }: { grupo: 'organico' | 'reciclable' }) {
   const [por, setPor] = useState<Por>('conjunto')
   const [filas, setFilas] = useState<Fila[]>()
   const [error, setError] = useState('')
+  const descarga = useSubmission()
   const { desde, hasta } = periodo(mes)
   const colectivo = grupo === 'organico' ? 'huerteros' : 'recicladores'
   const consulta = `por=${por}&desde=${desde}&hasta=${hasta}&colectivo=${colectivo}`
@@ -51,16 +53,15 @@ export function Informes({ grupo }: { grupo: 'organico' | 'reciclable' }) {
   const suma = (campo: (f: Fila) => number) => (filas ?? []).reduce((total, f) => total + campo(f), 0)
 
   function exportar() {
-    descargarCsv(`informe-${por}-${mes}.csv`, [
-      [COLUMNA[por], 'Solicitudes', 'Recolecciones', 'Kilos', 'Puntos'],
-      ...(filas ?? []).map((f) => [
-        f.nombre,
-        String(f.solicitudes),
-        String(f.recolecciones),
-        kilos.format(Number(f.kg)),
-        String(f.puntos),
-      ]),
-    ])
+    const columnas = [
+      { header: COLUMNA[por], width: 36 },
+      { header: 'Solicitudes', width: 16 },
+      { header: 'Recolecciones', width: 17 },
+      { header: 'Kilos', width: 14, format: '0.00' },
+      { header: 'Puntos', width: 14 },
+    ]
+    const datos = (filas ?? []).map((f) => [f.nombre, f.solicitudes, f.recolecciones, Number(f.kg), f.puntos])
+    void descarga.run(() => descargarExcel(`informe-${por}-${mes}`, 'Informe', columnas, datos))
   }
 
   return (
@@ -69,8 +70,13 @@ export function Informes({ grupo }: { grupo: 'organico' | 'reciclable' }) {
         title="Informes"
         description="Cuánto se pidió, se recolectó y se pesó cada mes, para la coordinación y la fundación."
         action={
-          <button type="button" className="button button-secondary" disabled={!filas?.length} onClick={exportar}>
-            Exportar tabla
+          <button
+            type="button"
+            className="button button-secondary"
+            disabled={!filas?.length || descarga.busy}
+            onClick={exportar}
+          >
+            {descarga.busy ? 'Preparando Excel…' : 'Exportar tabla en Excel'}
           </button>
         }
       />
@@ -104,6 +110,7 @@ export function Informes({ grupo }: { grupo: 'organico' | 'reciclable' }) {
         </MotionPills>
       </div>
       {error && <ErrorMessage message={error} />}
+      {descarga.error && <ErrorMessage message={descarga.error} />}
       {!filas && !error && <p className="muted">Cargando el informe de {titulo}…</p>}
       {filas?.length === 0 && (
         <div className="card">

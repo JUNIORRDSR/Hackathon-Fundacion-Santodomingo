@@ -1,5 +1,9 @@
 """El escenario de demostración del reto (§11), de punta a punta, por la API y el simulador de WhatsApp."""
+from datetime import datetime
+from io import BytesIO
+
 from fastapi.testclient import TestClient
+from openpyxl import load_workbook
 
 from app.main import app
 
@@ -27,18 +31,33 @@ def test_escenario_de_demostracion():
     _comprobar_avisos(admin)
     _consultar_puntos_y_canje(admin)
     _comprobar_impacto(huerteros)
+    _comprobar_excel(huerteros, solicitud["codigo"])
 
 
 def _comprobar_impacto(huerteros: TestClient) -> None:
-    """El Inicio muestra el impacto del mes con datos reales, y el CSV abre bien en Excel en español."""
+    """El Inicio muestra el impacto del mes con datos reales."""
     resumen = huerteros.get("/api/reportes/resumen").json()
     assert resumen["total_solicitudes"] >= 1 and resumen["recolecciones"] >= 1 and resumen["vecinos"] >= 1
     assert resumen["puntos"] >= 12 and float(resumen["total_kg"]) == sum(float(d["kg"]) for d in resumen["por_dia"])
     por_vecino = huerteros.get("/api/reportes/desglose", params={"por": "vecino"}).json()
     assert sum(f["recolecciones"] for f in por_vecino) == resumen["recolecciones"]
     assert any(f["nombre"] == "La Esquina" and f["puntos"] >= 12 for f in por_vecino)
-    texto = huerteros.get("/api/reportes/solicitudes.csv").content.decode("utf-8")
-    assert texto.startswith("﻿codigo;flujo;estado")
+
+
+def _comprobar_excel(huerteros: TestClient, codigo: str) -> None:
+    respuesta = huerteros.get("/api/reportes/solicitudes.xlsx", params={"colectivo": "recicladores"})
+    assert respuesta.status_code == 200
+    assert respuesta.headers["content-type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    assert 'filename="solicitudes.xlsx"' in respuesta.headers["content-disposition"]
+    libro = load_workbook(BytesIO(respuesta.content))
+    hoja = libro["Solicitudes"]
+    cabecera, *filas = hoja.values
+    assert cabecera == ("Código", "Flujo", "Estado", "Zona", "Conjunto", "Canal", "Recibida", "Día", "Kg")
+    assert {fila[1] for fila in filas} == {"organico"}
+    fila = next(fila for fila in filas if fila[0] == codigo)
+    assert isinstance(fila[6], datetime) and fila[8] == 2.5
+    assert hoja.freeze_panes == "A2" and hoja.auto_filter.ref == hoja.dimensions
+    libro.close()
 
 
 def _whatsapp(cliente: TestClient, texto: str) -> list[str]:

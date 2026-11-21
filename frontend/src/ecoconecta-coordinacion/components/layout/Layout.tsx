@@ -220,6 +220,17 @@ export function Layout({
               </MotionPills>
               <div className="topbar-actions">
                 <CoordinatorIdentity coordinator={coordinator} choices={choices} onChange={onChange} demo={demo} />
+                {extraPages.includes('configuracion') && (
+                  <a
+                    className="icon-button topbar-configuracion"
+                    href={href({ page: 'configuracion' })}
+                    aria-label="Configuración"
+                    title="Configuración"
+                    aria-current={page === 'configuracion' ? 'page' : undefined}
+                  >
+                    <Icon name="settings" />
+                  </a>
+                )}
                 {onSignOut && (
                   <button type="button" className="icon-button" onClick={onSignOut} aria-label="Salir" title="Salir">
                     <Icon name="logout" />
@@ -237,7 +248,7 @@ export function Layout({
         {coordinator && (
           <div className="fab-lane">
             <div id="eco-acciones" className="fab-acciones" />
-            {extraPages.includes('whatsapp') && page !== 'whatsapp' && (
+            {extraPages.includes('whatsapp') && page !== 'whatsapp' && page !== 'configuracion' && (
               <a
                 className="whatsapp-fab"
                 href={href({ page: 'whatsapp' })}

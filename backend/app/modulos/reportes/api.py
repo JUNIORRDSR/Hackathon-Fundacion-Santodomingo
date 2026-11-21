@@ -1,4 +1,4 @@
-"""API de reportes: resumen y CSV. El coordinador ve su colectivo; el administrador, todos."""
+"""API de reportes: resumen y Excel. El coordinador ve su colectivo; el administrador, todos."""
 from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Depends
@@ -32,9 +32,10 @@ def desglose(por: reportes.Agrupacion = reportes.Agrupacion.CONJUNTO, desde: dat
     return reportes.desglose(*_periodo(desde, hasta), acceso.colectivo_visible(u, colectivo), por)
 
 
-@router.get("/solicitudes.csv", response_class=Response)
-def csv_de_solicitudes(desde: date | None = None, hasta: date | None = None, colectivo: Colectivo | None = None,
-                       u: acceso.Usuario = Sesion) -> Response:
-    contenido = reportes.csv_de_solicitudes(*_periodo(desde, hasta), acceso.colectivo_visible(u, colectivo))
-    return Response(contenido, media_type="text/csv; charset=utf-8",
-                    headers={"Content-Disposition": 'attachment; filename="solicitudes.csv"'})
+@router.get("/solicitudes.xlsx", response_class=Response)
+def xlsx_de_solicitudes(desde: date | None = None, hasta: date | None = None, colectivo: Colectivo | None = None,
+                        u: acceso.Usuario = Sesion) -> Response:
+    contenido = reportes.xlsx_de_solicitudes(*_periodo(desde, hasta), acceso.colectivo_visible(u, colectivo))
+    return Response(contenido, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    headers={"Content-Disposition": 'attachment; filename="solicitudes.xlsx"',
+                             "Cache-Control": "no-store"})

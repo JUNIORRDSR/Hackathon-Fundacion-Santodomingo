@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { groupLabels } from '../labels'
+import type { EcoLink } from '../routes'
 import type { Collector, CollectorInput, WasteType, Zone } from '../types'
 import { PageHeader } from '../components/layout/Layout'
 import { CollectorForm } from '../components/recolectores/CollectorForm'
@@ -11,18 +12,20 @@ export function RecolectoresPage({
   zones,
   group,
   onSave,
+  href,
 }: {
   collectors: Collector[]
   zones: Zone[]
   group: WasteType
   onSave: (input: CollectorInput, id?: string) => Promise<() => void>
+  href: EcoLink
 }) {
   const [editing, setEditing] = useState<Collector | 'new' | null>(null)
   return (
     <>
       <PageHeader
         title="Recolectores"
-        description={'Gestiona los integrantes y zonas de ' + groupLabels[group].toLowerCase() + '.'}
+        description={'Consulta el equipo de ' + groupLabels[group].toLowerCase() + ', su cobertura y sus rutas.'}
         action={
           <button type="button" className="button button-primary" onClick={() => setEditing('new')}>
             <Icon name="plus" /> Agregar recolector
@@ -34,7 +37,7 @@ export function RecolectoresPage({
           {[...collectors]
             .sort((a, b) => Number(b.activo) - Number(a.activo) || a.nombre.localeCompare(b.nombre, 'es'))
             .map((item) => (
-              <li className="card collection-card clickable-card" key={item.id}>
+              <li className="card collection-card" key={item.id}>
                 <div className="collection-card-top">
                   <span className="icon-tile">
                     <Icon name="user" />
@@ -45,20 +48,24 @@ export function RecolectoresPage({
                   </span>
                 </div>
                 <h2>{item.nombre}</h2>
-                <div className="small-details">
-                  <span>
-                    <Icon name="pin" />
-                    {item.zona}
-                  </span>
+                <CollectorCoverage collector={item} zones={zones} />
+                <div className="collector-actions">
+                  <a
+                    href={href({ page: 'recolecciones', collectionView: 'rutas', collectorId: item.id })}
+                    className="button button-secondary"
+                    aria-label={'Ver rutas de ' + item.nombre}
+                  >
+                    Ver rutas
+                  </a>
+                  <button
+                    type="button"
+                    className="button button-quiet"
+                    aria-label={'Editar a ' + item.nombre}
+                    onClick={() => setEditing(item)}
+                  >
+                    <Icon name="edit" /> Editar
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  className="icon-button card-action"
-                  aria-label={'Editar a ' + item.nombre}
-                  onClick={() => setEditing(item)}
-                >
-                  <Icon name="edit" />
-                </button>
               </li>
             ))}
         </ul>
@@ -78,5 +85,29 @@ export function RecolectoresPage({
         />
       )}
     </>
+  )
+}
+
+function CollectorCoverage({ collector, zones }: { collector: Collector; zones: Zone[] }) {
+  const coverage = zones.flatMap((zone) => {
+    const sectors = zone.conjuntos ?? []
+    const selected = sectors.filter((sector) => collector.zonas.includes(sector.id))
+    if (selected.length) {
+      const names = selected.length === sectors.length ? 'Todos los sectores' : selected.map((s) => s.nombre).join(', ')
+      return [{ name: zone.nombre, detail: names }]
+    }
+    if (collector.zonas.includes(zone.id)) return [{ name: zone.nombre, detail: '' }]
+    return []
+  })
+  if (!coverage.length) return <p className="muted">Sin cobertura configurada</p>
+  return (
+    <dl className="collector-coverage" aria-label="Cobertura para solicitudes">
+      {coverage.map(({ name, detail }) => (
+        <div key={name}>
+          <dt>{name}</dt>
+          {detail && <dd>{detail}</dd>}
+        </div>
+      ))}
+    </dl>
   )
 }

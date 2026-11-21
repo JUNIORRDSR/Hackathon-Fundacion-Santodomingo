@@ -1,0 +1,114 @@
+.eco-app {
+  & .routes-panel {
+    display: grid;
+    gap: .85rem;
+  }
+
+  & .routes-toolbar, & .routes-actions, & .collector-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .65rem;
+  }
+
+  & .routes-toolbar {
+    justify-content: space-between;
+    gap: .85rem 1.3rem;
+    padding: 1rem 1.15rem;
+  }
+
+  & .routes-toolbar h2, & .public-routes h2 {
+    font-size: 1.2rem;
+    margin-bottom: .25rem;
+  }
+
+  & .routes-toolbar-note {
+    flex-basis: 100%;
+  }
+
+  & .routes-toolbar p, & .route-notice, & .public-routes p {
+    font-size: .875rem;
+  }
+
+  & .route-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 15rem));
+    gap: .65rem;
+  }
+
+  & .coverage-group summary {
+    font-size: .875rem;
+    font-weight: 650;
+  }
+
+  & .route-day-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+    margin-top: .3rem;
+  }
+
+  & .route-day-options label {
+    border: 1px solid var(--line);
+    border-radius: .65rem;
+    min-height: 44px;
+    padding-inline: .5rem;
+  }
+
+  & .route-day-options label:has(:checked) {
+    border-color: var(--highlight-hover);
+    background: var(--surface-muted);
+  }
+
+  & .collector-actions {
+    margin-top: auto;
+  }
+
+  & .collector-coverage {
+    display: grid;
+    gap: .45rem;
+    font-size: .875rem;
+  }
+
+  & .collector-coverage dt {
+    font-weight: 650;
+  }
+
+  & .collector-coverage dd {
+    color: var(--muted);
+  }
+
+  & .coverage-group summary {
+    min-height: 44px;
+    cursor: pointer;
+    padding-block: .55rem;
+  }
+
+  & .coverage-group summary > .muted {
+    float: inline-end;
+    margin-inline-start: .5rem;
+    font-weight: 500;
+  }
+
+  & .public-routes {
+    margin-bottom: 1.1rem;
+    padding: 1rem 1.15rem;
+  }
+
+  & .public-routes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    gap: .65rem;
+    margin-top: .8rem;
+  }
+
+  & .public-routes-grid li {
+    display: grid;
+    align-content: start;
+    gap: .25rem;
+    padding: .75rem;
+    border: 1px solid var(--line);
+    border-radius: .8rem;
+    overflow-wrap: anywhere;
+  }
+}

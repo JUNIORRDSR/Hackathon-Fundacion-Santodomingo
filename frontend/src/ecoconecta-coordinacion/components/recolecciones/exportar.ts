@@ -1,31 +1,31 @@
-import { statusLabels, wasteLabels } from '../../labels'
+import { statusLabels, timeMinutes, wasteLabels } from '../../labels'
+import { descargarExcel } from '../../services/exportarExcel'
 import type { PlannedRequest } from './timelineData'
 
-// La hoja de ruta del día en CSV que Excel en español abre en columnas: «;», coma decimal y tildes (BOM).
+const columnas = [
+  { header: 'Hora', width: 14, format: 'hh:mm' },
+  { header: 'Encargado', width: 25 },
+  { header: 'Código', width: 15 },
+  { header: 'Vecino', width: 30 },
+  { header: 'Dirección', width: 43 },
+  { header: 'Residuo', width: 16 },
+  { header: 'Estado', width: 17 },
+  { header: 'Kg', width: 12, format: '0.00' },
+]
+
 export function exportarDia(fecha: string, visibles: PlannedRequest[], nombres: Map<string, string>) {
-  const filas = [
-    ['Hora', 'Encargado', 'Código', 'Vecino', 'Dirección', 'Residuo', 'Estado', 'Kg'],
-    ...visibles.map((item) => [
-      item.asignacion.hora ?? 'Sin hora',
+  const filas = visibles.map((item) => {
+    const minutos = timeMinutes(item.asignacion.hora)
+    return [
+      minutos === undefined ? 'Sin hora' : minutos / 1440,
       nombres.get(item.asignacion.recolectorId) ?? 'Sin encargado',
       item.codigo,
       item.solicitante,
       item.ubicacion,
       wasteLabels[item.tipo],
       statusLabels[item.estado],
-      item.resultado?.estado === 'recolectada' ? String(item.resultado.pesoKg).replace('.', ',') : '',
-    ]),
-  ]
-  descargarCsv(`cronograma-${fecha}.csv`, filas)
-}
-
-// CSV que Excel en español abre en columnas: «;», comillas en cada celda y BOM para las tildes.
-export function descargarCsv(nombre: string, filas: string[][]) {
-  const celda = (valor: string) => '"' + valor.replace(/"/g, '""') + '"'
-  const csv = '\ufeff' + filas.map((fila) => fila.map(celda).join(';')).join('\r\n')
-  const enlace = document.createElement('a')
-  enlace.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
-  enlace.download = nombre
-  enlace.click()
-  window.setTimeout(() => URL.revokeObjectURL(enlace.href), 1000)
+      item.resultado?.estado === 'recolectada' ? item.resultado.pesoKg : null,
+    ]
+  })
+  return descargarExcel(`cronograma-${fecha}`, 'Cronograma', columnas, filas)
 }

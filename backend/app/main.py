@@ -13,6 +13,7 @@ from app.compartido import bd
 from app.compartido.configuracion import variable
 from app.compartido.tipos import ErrorDeNegocio, NoEncontrado
 from app.modulos.acceso import api as acceso_api
+from app.modulos.acceso import contrato as acceso
 from app.modulos.clasificacion import api as clasificacion_api
 from app.modulos.contenidos import api as contenidos_api
 from app.modulos.directorio import api as directorio_api
@@ -52,6 +53,7 @@ def _conectar_modulos() -> None:
     if bd.reiniciar_si_se_pidio():
         logging.getLogger("ecoconecta").warning("Base reiniciada: los esquemas se crean de nuevo")
     bd.crear_tablas()
+    acceso.preparar_esquema()
     if os.getenv("SEMBRAR_DEMO", "1") == "1":
         semillas.sembrar()
 

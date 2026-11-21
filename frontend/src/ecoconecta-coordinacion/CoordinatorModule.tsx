@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Layout, PageHeader } from './components/layout/Layout'
+import { CollectionRoutes } from './components/recolecciones/CollectionRoutes'
 import { RequestDetail } from './components/solicitudes/RequestDetail'
 import { ErrorMessage, LoadingState } from './components/ui/Feedback'
 import { Icon } from './components/ui/Icon'
@@ -33,13 +34,10 @@ interface CoordinatorModuleProps {
   onDemoChoice?: (id: string) => void
   trainingResources?: TrainingResource[]
   publicTrainingHref?: string
-  // Páginas que pone el host (registros por habilitar, canjes, WhatsApp) y salida de la sesión.
+  // El host aporta las páginas adicionales, los contadores y las acciones de su integración.
   extraPages?: Partial<Record<EcoPage, ReactNode>>
-  // Contadores junto a las opciones del menú, como los vecinos por aceptar en Registros.
   badges?: Partial<Record<EcoPage, number>>
-  // El impacto del barrio en el Inicio: lo arma el host con los reportes.
   dashboardImpact?: ReactNode
-  // La entrega directa en la huerta, junto a la agenda de Recolecciones.
   collectionsAction?: ReactNode
   onSignOut?: () => void
 }
@@ -95,14 +93,6 @@ export function CoordinatorModule({
           }
         />
       )}
-    </Layout>
-  )
-}
-
-export function PublicTrainingModule({ resources, href }: { resources?: TrainingResource[]; href: EcoLink }) {
-  return (
-    <Layout page="capacitacion" href={href} demo={false}>
-      <CapacitacionPage resources={resources ?? sampleTraining} sample={!resources} />
     </Layout>
   )
 }
@@ -239,7 +229,7 @@ function CoordinatorContent({
     case 'recolecciones':
       content = (
         <RecoleccionesPage
-          key={location.requestId ?? ''}
+          key={JSON.stringify([location.requestId, location.collectionView, location.collectorId])}
           requests={requests}
           collectors={collectors}
           requestId={location.requestId}
@@ -247,12 +237,29 @@ function CoordinatorContent({
           onSave={saveResult}
           onOpen={open}
           action={collectionsAction}
+          initialView={location.collectionView}
+          routes={
+            <CollectionRoutes
+              coordinator={coordinator}
+              repository={repository}
+              collectors={collectors}
+              zones={zones}
+              href={href}
+              initialCollector={location.collectorId}
+            />
+          }
         />
       )
       break
     case 'recolectores':
       content = (
-        <RecolectoresPage collectors={collectors} zones={zones} group={coordinator.grupo} onSave={saveCollector} />
+        <RecolectoresPage
+          collectors={collectors}
+          zones={zones}
+          group={coordinator.grupo}
+          href={href}
+          onSave={saveCollector}
+        />
       )
   }
 

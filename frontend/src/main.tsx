@@ -3,14 +3,17 @@ import { createRoot } from 'react-dom/client'
 import { CoordinatorModule, PublicTrainingModule } from './ecoconecta-coordinacion'
 import type { Coordinator, TrainingResource } from './ecoconecta-coordinacion'
 import { hashLink, readHash } from './ecoconecta-coordinacion/routes'
-import { LoadingState } from './ecoconecta-coordinacion/components/ui/Feedback'
+import { ErrorMessage, LoadingState } from './ecoconecta-coordinacion/components/ui/Feedback'
 import { Layout } from './ecoconecta-coordinacion/components/layout/Layout'
+import { useRepositoryQuery } from './ecoconecta-coordinacion/services/useCoordinatorData'
 import './host/host.css'
 import { api } from './host/api'
 import { capacitacionPublica, crearRepositorio, recursoDe } from './host/repositorio'
+import { rutasPublicas } from './host/rutas'
 import { useSesion } from './host/sesion'
 import type { Usuario } from './host/sesion'
 import { Canjes } from './host/paginas/Canjes'
+import { Configuracion } from './host/paginas/configuracion/Configuracion'
 import { Entrar } from './host/paginas/Entrar'
 import { EntregaHuerta } from './host/paginas/EntregaHuerta'
 import { Escanear } from './host/paginas/Escanear'
@@ -63,15 +66,27 @@ const Cargando = () => (
 )
 
 function Capacitacion() {
-  const [recursos, setRecursos] = useState<TrainingResource[]>()
-  useEffect(() => void capacitacionPublica().then(setRecursos), [])
-  return recursos ? <PublicTrainingModule resources={recursos} href={() => capacitacionHref} /> : <Cargando />
+  const { state, reload } = useRepositoryQuery(capacitacionPublica)
+  return (
+    <PublicTrainingModule
+      resources={state?.status === 'ready' ? state.data : []}
+      href={() => capacitacionHref}
+      loadRoutes={rutasPublicas}
+      resourcesFeedback={
+        !state ? (
+          <p role="status">Cargando guías…</p>
+        ) : state.status === 'error' ? (
+          <ErrorMessage message="No se pudieron cargar las guías." retry={reload} />
+        ) : undefined
+      }
+    />
+  )
 }
 
 function App() {
   const hash = useSyncExternalStore(suscribir, leerHash)
   const location = readHash(hash)
-  const { usuario, cargando, entrar, registrar, salir } = useSesion()
+  const { usuario, cargando, aviso, entrar, registrar, salir, actualizarPerfil, claveCambiada } = useSesion()
   const [grupo, setGrupo] = useState<Coordinator['grupo']>('organico')
   const [sugerido, setSugerido] = useState('')
   const porAceptar = useContador(
@@ -84,14 +99,21 @@ function App() {
   const porEntregar = useContador(!!usuario, '/puntos/canjes?estado=pedido', contarLista, 'canjes-cambiaron')
   const [recursos, setRecursos] = useState<TrainingResource[]>()
   useEffect(() => {
-    if (usuario) void api<Parameters<typeof recursoDe>[0][]>('/contenidos').then((c) => setRecursos(c.map(recursoDe)))
+    if (usuario) {
+      void api<Parameters<typeof recursoDe>[0][]>('/contenidos')
+        .then((c) => setRecursos(c.map(recursoDe)))
+        .catch(() => {})
+    }
   }, [usuario])
 
   if (location.page === 'capacitacion' && new URLSearchParams(hash.split('?')[1]).get('publica') === '1') {
     return <Capacitacion />
   }
   if (cargando) return <Cargando />
-  if (!usuario) return <Entrar key={sugerido} onEntrar={entrar} onRegistrar={registrar} usuarioInicial={sugerido} />
+  if (!usuario) {
+    return <Entrar key={sugerido} onEntrar={entrar} onRegistrar={registrar} usuarioInicial={sugerido} aviso={aviso} />
+  }
+  const esAdmin = usuario.rol === 'administrador'
   const coordinador = coordinadorDe(usuario, grupo)
   // El administrador cambia de equipo aquí mismo; un coordinador cambia de cuenta: sale y entra con la otra.
   function elegirEquipo(id: string) {
@@ -106,7 +128,7 @@ function App() {
       key={coordinador.grupo}
       coordinator={coordinador}
       repository={repositorio}
-      location={location}
+      location={!esAdmin && location.page === 'configuracion' ? { page: 'inicio' } : location}
       href={hashLink}
       demoChoices={EQUIPOS}
       onDemoChoice={elegirEquipo}
@@ -114,10 +136,30 @@ function App() {
       publicTrainingHref={capacitacionHref}
       extraPages={{
         escanear: <Escanear />,
-        habilitar: <Registros porAceptar={porAceptar} />,
+        habilitar: (
+          <Registros
+            porAceptar={porAceptar}
+            vista={location.recordsView ?? 'aceptar'}
+            onVista={(recordsView) => {
+              window.location.hash = hashLink({ page: 'habilitar', recordsView })
+            }}
+          />
+        ),
         informes: <Informes grupo={coordinador.grupo} />,
-        canjes: <Canjes esAdmin={usuario.rol === 'administrador'} />,
+        canjes: <Canjes esAdmin={esAdmin} />,
         whatsapp: <Whatsapp />,
+        ...(esAdmin && {
+          configuracion: (
+            <Configuracion
+              usuario={usuario}
+              onPerfil={actualizarPerfil}
+              onClavePropia={() => {
+                setSugerido(usuario.usuario)
+                claveCambiada()
+              }}
+            />
+          ),
+        }),
       }}
       badges={{ habilitar: porAceptar, whatsapp: sinLeer, canjes: porEntregar }}
       dashboardImpact={<Impacto grupo={coordinador.grupo} />}

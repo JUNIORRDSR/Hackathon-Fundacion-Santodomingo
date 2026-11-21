@@ -46,3 +46,17 @@ encargados = Table(
     Column("activo", Boolean, nullable=False),
     schema="directorio",
 )
+
+rutas_recoleccion = Table(
+    "rutas_recoleccion", metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("nombre", String(80), nullable=False),
+    Column("encargado_id", Uuid, ForeignKey("directorio.encargados.id"), nullable=False),
+    Column("zona_id", Uuid, ForeignKey("directorio.zonas.id"), nullable=False),
+    Column("conjunto_id", Uuid, ForeignKey("directorio.conjuntos.id")),
+    Column("dias", JSONB, nullable=False),
+    Column("hora_inicio", String(5), nullable=False),
+    Column("hora_fin", String(5), nullable=False),
+    Column("publicada", Boolean, nullable=False),
+    schema="directorio",
+)

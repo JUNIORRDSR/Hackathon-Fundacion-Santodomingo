@@ -17,10 +17,12 @@ export function Entrar({
   onEntrar,
   onRegistrar,
   usuarioInicial = '',
+  aviso = '',
 }: {
   onEntrar: (usuario: string, clave: string) => Promise<void>
   onRegistrar: (cuenta: NuevaCuenta) => Promise<void>
   usuarioInicial?: string
+  aviso?: string
 }) {
   const [modo, setModo] = useState<Modo>('entrar')
   return (
@@ -40,13 +42,13 @@ export function Entrar({
             </button>
           </MotionPills>
           {modo === 'entrar' ? (
-            <FormularioEntrar onEntrar={onEntrar} usuarioInicial={usuarioInicial} />
+            <FormularioEntrar onEntrar={onEntrar} usuarioInicial={usuarioInicial} aviso={aviso} />
           ) : (
             <Registro onRegistrar={onRegistrar} />
           )}
         </section>
         <a className="acceso-guias" href="#/capacitacion?publica=1">
-          <Icon name="book" /> ¿Solo quieres aprender a separar? Ver las guías
+          <Icon name="book" /> Guías de separación, rutas y horarios
         </a>
       </div>
     </Layout>
@@ -56,9 +58,11 @@ export function Entrar({
 function FormularioEntrar({
   onEntrar,
   usuarioInicial,
+  aviso,
 }: {
   onEntrar: (usuario: string, clave: string) => Promise<void>
   usuarioInicial: string
+  aviso: string
 }) {
   const id = useId()
   const submit = useSubmission()
@@ -78,6 +82,11 @@ function FormularioEntrar({
         </h1>
         <p className="muted">Con tu usuario de coordinación.</p>
       </div>
+      {aviso && (
+        <p className="registro-aviso" role="status">
+          {aviso}
+        </p>
+      )}
       <div className="field">
         <label htmlFor={id + '-usuario'}>Usuario</label>
         <input

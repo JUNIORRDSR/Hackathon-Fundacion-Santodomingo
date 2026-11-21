@@ -22,7 +22,7 @@ export async function api<T>(ruta: string, metodo = 'GET', cuerpo?: unknown, sig
     if (signal?.aborted) throw error
     throw new ErrorDeApi(0, 'No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.')
   }
-  if (!respuesta.ok) throw new ErrorDeApi(respuesta.status, await mensajeDe(respuesta))
+  if (!respuesta.ok) throw new ErrorDeApi(respuesta.status, await mensajeDe(respuesta, ruta))
   return (respuesta.status === 204 ? undefined : await respuesta.json()) as T
 }
 
@@ -35,8 +35,8 @@ export const urlDeAdjunto = (url: string) => {
   return cartel >= 0 ? url.slice(cartel) : '/api/whatsapp/adjunto?url=' + encodeURIComponent(url)
 }
 
-async function mensajeDe(respuesta: Response): Promise<string> {
-  if (respuesta.status === 401) return 'Tu sesión terminó. Vuelve a entrar.'
+async function mensajeDe(respuesta: Response, ruta: string): Promise<string> {
+  if (respuesta.status === 401 && ruta !== '/acceso/entrar') return 'Tu sesión terminó. Vuelve a entrar.'
   const { detail } = await respuesta.json().catch(() => ({ detail: undefined }))
   if (typeof detail === 'string') return detail
   if (Array.isArray(detail)) return detail.map((item: { msg: string }) => item.msg).join('. ')

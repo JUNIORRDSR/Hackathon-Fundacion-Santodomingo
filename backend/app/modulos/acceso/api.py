@@ -1,7 +1,8 @@
-"""API de acceso: entrar, salir, crear usuarios (administrador) y registrarse con el código de la fundación."""
+"""API de sesión, registro y configuración de cuentas."""
 import hmac
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, Field
 
 from app.compartido.configuracion import variable
@@ -19,10 +20,11 @@ class Credenciales(BaseModel):
 
 @router.post("/entrar")
 def entrar(datos: Credenciales, request: Request) -> acceso.Usuario:
-    usuario = acceso.autenticar(datos.usuario, datos.clave)
-    if usuario is None:
+    cuenta = acceso.autenticar(datos.usuario, datos.clave)
+    if cuenta is None:
         raise HTTPException(401, "Usuario o clave incorrectos.")
-    request.session["usuario"] = usuario.model_dump(mode="json")
+    usuario, version = cuenta
+    _iniciar_sesion(request, usuario, version)
     return usuario
 
 
@@ -42,8 +44,12 @@ def registrarse(datos: Registro, request: Request) -> acceso.Usuario:
     usuario = acceso.crear_usuario(acceso.NuevoUsuario(usuario=datos.usuario.strip().lower(), nombre=datos.nombre,
                                                         rol=acceso.Rol.COORDINADOR, colectivo=datos.colectivo,
                                                         clave=datos.clave))
-    request.session["usuario"] = usuario.model_dump(mode="json")
+    _iniciar_sesion(request, usuario)
     return usuario
+
+
+def _iniciar_sesion(request: Request, usuario: acceso.Usuario, version: int = 0) -> None:
+    request.session["usuario"] = {"id": str(usuario.id), "version": version}
 
 
 @router.post("/salir", status_code=204)
@@ -52,8 +58,9 @@ def salir(request: Request) -> None:
 
 
 @router.get("/yo")
-def yo(request: Request) -> acceso.Usuario | None:
+def yo(request: Request, response: Response) -> acceso.Usuario | None:
     """Sin sesión responde null, no 401: abrir la pantalla de entrar no es un error."""
+    response.headers["Cache-Control"] = "no-store"
     try:
         return acceso.usuario_actual(request)
     except HTTPException:
@@ -61,6 +68,45 @@ def yo(request: Request) -> acceso.Usuario | None:
 
 
 @router.post("/usuarios", status_code=201)
-def crear_usuario(datos: acceso.NuevoUsuario, u: acceso.Usuario = Depends(acceso.usuario_actual)) -> acceso.Usuario:
-    acceso.exigir_administrador(u)
-    return acceso.crear_usuario(datos)
+def crear_usuario(datos: acceso.NuevoUsuario, request: Request) -> acceso.Usuario:
+    with acceso.administrar(request):
+        return acceso.crear_usuario(datos)
+
+
+@router.get("/usuarios", dependencies=[Depends(acceso.administrador_actual)])
+def listar_usuarios(response: Response) -> list[acceso.Usuario]:
+    response.headers["Cache-Control"] = "no-store"
+    return acceso.listar_usuarios()
+
+
+@router.put("/usuarios/{id_usuario}")
+def editar_usuario(id_usuario: UUID, datos: acceso.ConfiguracionUsuario, request: Request) -> acceso.Usuario:
+    with acceso.administrar(request) as admin:
+        return acceso.editar_usuario(admin, id_usuario, datos)
+
+
+@router.put("/yo")
+def editar_perfil(datos: acceso.Perfil, request: Request) -> acceso.Usuario:
+    with acceso.administrar(request) as admin:
+        return acceso.editar_perfil(admin.id, datos)
+
+
+class NuevaClave(BaseModel):
+    clave: str
+
+
+class CambioDeClave(NuevaClave):
+    actual: str
+
+
+@router.put("/usuarios/{id_usuario}/clave", status_code=204)
+def restablecer_clave(id_usuario: UUID, datos: NuevaClave, request: Request) -> None:
+    with acceso.administrar(request) as admin:
+        acceso.restablecer_clave(admin, id_usuario, datos.clave)
+
+
+@router.put("/yo/clave", status_code=204)
+def cambiar_mi_clave(datos: CambioDeClave, request: Request) -> None:
+    with acceso.administrar(request) as admin:
+        acceso.cambiar_mi_clave(admin, datos.actual, datos.clave)
+    request.session.clear()

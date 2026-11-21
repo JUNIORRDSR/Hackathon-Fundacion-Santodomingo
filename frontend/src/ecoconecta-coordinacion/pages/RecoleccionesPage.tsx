@@ -23,6 +23,8 @@ export function RecoleccionesPage({
   onSave,
   onOpen,
   action,
+  initialView,
+  routes,
 }: {
   requests: Request[]
   collectors: Collector[]
@@ -31,9 +33,11 @@ export function RecoleccionesPage({
   onSave: (result: CollectionResult) => Promise<() => void>
   onOpen: (item: Request) => void
   action?: ReactNode // la entrega directa, que pone el host
+  initialView?: 'rutas'
+  routes: ReactNode
 }) {
   // El cronograma por horas vive aquí: en Inicio solo queda la lista de hoy (PRODUCT.md).
-  const [view, setView] = useState<'programadas' | 'resultados' | 'cronograma'>('programadas')
+  const [view, setView] = useState<'programadas' | 'resultados' | 'cronograma' | 'rutas'>(initialView ?? 'programadas')
   const [clock, setClock] = useState(localTime)
   useEffect(() => {
     const timer = window.setInterval(() => setClock(localTime()), 30000)
@@ -101,27 +105,34 @@ export function RecoleccionesPage({
           >
             Cronograma
           </button>
+          <button className="pill" type="button" aria-pressed={view === 'rutas'} onClick={() => setView('rutas')}>
+            Rutas
+          </button>
         </MotionPills>
-        <form
-          className="search-field"
-          role="search"
-          onSubmit={(event) => {
-            event.preventDefault()
-            if (scheduled.length === 1) setSelectedId(scheduled[0].id)
-          }}
-        >
-          <Icon name="search" />
-          <input
-            type="search"
-            aria-label="Buscar por el código escrito en la bolsa"
-            placeholder="Código de la bolsa (ORG-0001)"
-            value={code}
-            onChange={(event) => setCode(event.target.value)}
-          />
-        </form>
+        {view !== 'rutas' && (
+          <form
+            className="search-field"
+            role="search"
+            onSubmit={(event) => {
+              event.preventDefault()
+              if (scheduled.length === 1) setSelectedId(scheduled[0].id)
+            }}
+          >
+            <Icon name="search" />
+            <input
+              type="search"
+              aria-label="Buscar por el código escrito en la bolsa"
+              placeholder="Código de la bolsa (ORG-0001)"
+              value={code}
+              onChange={(event) => setCode(event.target.value)}
+            />
+          </form>
+        )}
       </div>
       <div className="view-content" key={view}>
-        {view === 'cronograma' ? (
+        {view === 'rutas' ? (
+          routes
+        ) : view === 'cronograma' ? (
           <ScheduleTimeline
             planned={getPlannedRequests(requests)}
             collectors={collectors}
@@ -180,7 +191,7 @@ export function RecoleccionesPage({
           </div>
         )}
       </div>
-      {selected && (
+      {selected && view !== 'rutas' && (
         <CollectionResultForm
           key={selected.id}
           request={selected}

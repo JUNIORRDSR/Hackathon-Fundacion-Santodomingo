@@ -88,7 +88,7 @@ export function CollectorForm({
             )}
           </div>
           <fieldset className="field" id={id + '-zone'} tabIndex={-1}>
-            <legend>Lugares que cubre</legend>
+            <legend>Cobertura para solicitudes</legend>
             {zones
               .filter((zone) => zone.activo !== false)
               .map((zone) => {
@@ -97,7 +97,11 @@ export function CollectorForm({
                 const ids = sets.map((set) => set.id)
                 const marked = ids.filter((item) => selected.includes(item)).length
                 return (
-                  <div key={zone.id} className="place-group">
+                  <details key={zone.id} className="place-group coverage-group">
+                    <summary>
+                      <span>{zone.nombre}</span>
+                      <span className="muted">{marked === ids.length ? 'Completa' : marked + ' de ' + ids.length}</span>
+                    </summary>
                     <label className="checkbox-field">
                       <input
                         type="checkbox"
@@ -108,10 +112,10 @@ export function CollectorForm({
                         disabled={submit.busy}
                         onChange={(event) => toggle(ids, event.target.checked)}
                       />{' '}
-                      {zone.nombre} completa
+                      Seleccionar toda la etapa
                     </label>
                     <div className="place-sets">{sets.map((set) => choice(set))}</div>
-                  </div>
+                  </details>
                 )
               })}
             {validation.zone && <span className="field-error">{validation.zone}</span>}

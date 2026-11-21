@@ -65,6 +65,32 @@ export interface Collector {
 
 export type CollectorInput = Pick<Collector, 'nombre' | 'zonas' | 'activo'>
 
+export interface RouteSchedule {
+  nombre: string
+  dias: number[] // 0 es lunes, 6 es domingo
+  horaInicio: string
+  horaFin: string
+}
+
+export interface CollectionRouteInput extends RouteSchedule {
+  zonaId: string
+  conjuntoId: string | null
+  encargadoId: string
+  publicada: boolean
+}
+
+export interface CollectionRoute extends CollectionRouteInput {
+  id: string
+  disponible: boolean
+}
+
+export interface PublicCollectionRoute extends RouteSchedule {
+  id: string
+  grupo: WasteType
+  zona: string
+  conjunto: string | null
+}
+
 interface TrainingDetails {
   id: string
   titulo: string
@@ -86,4 +112,6 @@ export interface CoordinatorRepository {
   saveResult(coordinator: Coordinator, result: CollectionResult): Promise<Request>
   cancel(coordinator: Coordinator, solicitudId: string, motivo: string): Promise<Request>
   saveCollector(coordinator: Coordinator, input: CollectorInput, id?: string): Promise<Collector>
+  listRoutes(coordinator: Coordinator, signal?: AbortSignal): Promise<CollectionRoute[]>
+  saveRoute(coordinator: Coordinator, input: CollectionRouteInput, id?: string): Promise<CollectionRoute>
 }

@@ -1,9 +1,12 @@
-"""Lugares del barrio en dos niveles, zona y conjunto (ADR-0017). Nada se borra: se desactiva, por el historial."""
+"""Lugares del barrio en dos niveles, zona y conjunto (ADR-0017)."""
 from collections import defaultdict
+from collections.abc import Callable
+from typing import Annotated
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field
-from sqlalchemy import insert, select, update
+from pydantic import BaseModel, StringConstraints
+from sqlalchemy import delete, insert, select, update
+from sqlalchemy.exc import IntegrityError
 
 from app.compartido.bd import transaccion
 from app.compartido.tipos import ErrorDeNegocio, NoEncontrado
@@ -11,7 +14,7 @@ from app.modulos.directorio import tablas as t
 
 
 class NuevoLugar(BaseModel):
-    nombre: str = Field(min_length=2, max_length=60)
+    nombre: Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=60)]
 
 
 class CambioLugar(NuevoLugar):
@@ -69,11 +72,44 @@ def crear_conjunto(zona_id: UUID, nombre: str) -> ConjuntoVista:
 
 
 def cambiar_conjunto(id: UUID, cambio: CambioLugar) -> ConjuntoVista:
-    conjunto(id)
+    try:
+        with transaccion() as c:
+            consulta = update(t.conjuntos).where(t.conjuntos.c.id == id).values(**cambio.model_dump())
+            fila = c.execute(consulta.returning(t.conjuntos)).mappings().one_or_none()
+    except IntegrityError as error:
+        if getattr(error.orig, "sqlstate", None) != "23505":
+            raise
+        raise ErrorDeNegocio("Esa zona ya tiene un conjunto con ese nombre.") from error
+    return ConjuntoVista.model_validate(fila) if fila else _no_existe("el conjunto", id)
+
+
+def eliminar_conjunto(id: UUID, tiene_historial: Callable[[UUID], bool]) -> None:
     with transaccion() as c:
-        c.execute(update(t.conjuntos).where(t.conjuntos.c.id == id)
-                  .values(nombre=cambio.nombre.strip(), activo=cambio.activo))
-    return conjunto(id)
+        lugar = select(t.conjuntos.c.id).where(t.conjuntos.c.id == id)
+        if c.scalar(lugar.with_for_update()) is None:
+            _no_existe("el conjunto", id)
+        uso = _uso_del_conjunto(c, id)
+        if uso is None and tiene_historial(id):
+            uso = "solicitudes en el historial"
+        if uso:
+            raise ErrorDeNegocio(f"Este lugar tiene {uso}. Puedes desactivarlo desde Editar.")
+        c.execute(delete(t.conjuntos).where(t.conjuntos.c.id == id))
+
+
+def _uso_del_conjunto(c, id: UUID) -> str | None:
+    referencias = (
+        ("vecinos registrados", t.solicitantes.c.conjunto_id == id),
+        ("rutas asociadas", t.rutas_recoleccion.c.conjunto_id == id),
+        ("encargados asignados", t.encargados.c.lugares.contains([str(id)])),
+    )
+    return next((uso for uso, condicion in referencias if c.scalar(select(select(1).where(condicion).exists()))), None)
+
+
+def reservar_conjunto(id: UUID) -> bool:
+    """Mantiene el conjunto hasta que se guarde la referencia en esta transacción."""
+    with transaccion() as c:
+        consulta = select(t.conjuntos.c.id).where(t.conjuntos.c.id == id).with_for_update(read=True, key_share=True)
+        return c.scalar(consulta) is not None
 
 
 def zonas() -> list[ZonaVista]:
@@ -112,12 +148,14 @@ def validar_lugar(zona_id: UUID, conjunto_id: UUID | None) -> None:
     actual = zona(zona_id)
     if conjunto_id is None and any(c.activo for c in actual.conjuntos):
         raise ErrorDeNegocio(f"Elige el conjunto o sector de {actual.nombre}.")
-    if conjunto_id is not None and all(c.id != conjunto_id for c in actual.conjuntos):
+    if conjunto_id is not None and (all(c.id != conjunto_id for c in actual.conjuntos)
+                                    or not reservar_conjunto(conjunto_id)):
         raise ErrorDeNegocio("Ese conjunto no es de la zona elegida.")
 
 
 def existe_lugar(id: UUID) -> bool:
-    return any(z.id == id or any(c.id == id for c in z.conjuntos) for z in zonas())
+    with transaccion() as c:
+        return c.scalar(select(t.zonas.c.id).where(t.zonas.c.id == id)) is not None or reservar_conjunto(id)
 
 
 def _sin_repetir(c, consulta, mensaje: str) -> None:

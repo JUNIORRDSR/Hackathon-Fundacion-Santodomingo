@@ -7,8 +7,8 @@ type Data = { requests: Request[]; collectors: Collector[]; zones: Zone[] }
 type QueryMode = 'requests' | 'collectors' | 'none'
 type Loader<T> = (signal: AbortSignal) => Promise<T>
 
-function useRepositoryQuery<T>(load: Loader<T>, enabled: boolean) {
-  const [entry, setEntry] = useState<{ load: Loader<T>; state: QueryState<T> }>()
+export function useRepositoryQuery<T>(load: Loader<T>, enabled = true) {
+  const [entry, setEntry] = useState<{ load: Loader<T>; state: Exclude<QueryState<T>, { status: 'loading' }> }>()
   const [attempt, setAttempt] = useState(0)
   const state = entry?.load === load ? entry.state : undefined
 

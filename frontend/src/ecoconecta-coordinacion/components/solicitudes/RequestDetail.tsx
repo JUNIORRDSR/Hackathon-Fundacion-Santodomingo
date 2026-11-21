@@ -7,6 +7,7 @@ import { ErrorMessage } from '../ui/Feedback'
 import { Icon } from '../ui/Icon'
 import { Modal } from '../ui/Modal'
 import type { CloseModal } from '../ui/Modal'
+import { TimeField } from '../ui/TimeField'
 import { useSubmission } from '../ui/useSubmission'
 import { CancelRequest } from './CancelRequest'
 import { StatusBadge, WasteIcon } from './RequestList'
@@ -206,15 +207,15 @@ export function RequestDetail({
                   </div>
                   <div className="field">
                     <label htmlFor={id + '-hour'}>Hora (opcional)</label>
-                    <input
-                      type="time"
+                    <TimeField
                       id={id + '-hour'}
+                      label="Hora de recolección"
                       value={hour}
                       disabled={submit.busy}
                       aria-invalid={!!validation.hour}
                       aria-describedby={validation.hour ? id + '-hour-error' : undefined}
-                      onChange={(event) => {
-                        setHour(event.target.value)
+                      onChange={(value) => {
+                        setHour(value)
                         setValidation((prev) => ({ ...prev, hour: '' }))
                       }}
                     />

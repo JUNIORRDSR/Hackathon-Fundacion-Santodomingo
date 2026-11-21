@@ -1,8 +1,9 @@
 import { isLocalDate, timeMinutes } from '../labels'
 import { createDemoData, demoZones } from '../mocks/demoData'
-import type { Collector, Coordinator, CoordinatorRepository, Request } from '../types'
+import type { CollectionRoute, Collector, Coordinator, CoordinatorRepository, Request, WasteType } from '../types'
 
-type DemoData = ReturnType<typeof createDemoData>
+type DemoRoute = CollectionRoute & { grupo: WasteType }
+type DemoData = ReturnType<typeof createDemoData> & { routes?: DemoRoute[] }
 const storageKey = 'ecoconecta-coordinacion-demo-v1'
 const wait = () => new Promise<void>((resolve) => setTimeout(resolve, 180))
 
@@ -76,6 +77,33 @@ export function createMockRepository(storage?: Storage): CoordinatorRepository {
     },
     listCollectors: (coordinator, signal) =>
       load(({ collectors }) => collectors.filter(({ grupo }) => grupo === coordinator.grupo), signal),
+    listRoutes: (coordinator, signal) =>
+      load(
+        ({ routes = [], collectors }) =>
+          routes
+            .filter(({ grupo }) => grupo === coordinator.grupo)
+            .map((route) => ({ ...route, disponible: collectors.some((c) => c.id === route.encargadoId && c.activo) })),
+        signal,
+      ),
+    saveRoute(coordinator, input, id) {
+      return transact((data) => {
+        const routes = (data.routes ??= [])
+        const index = routes.findIndex((route) => route.id === id && route.grupo === coordinator.grupo)
+        const collector = data.collectors.find((c) => c.id === input.encargadoId && c.grupo === coordinator.grupo)
+        if (id && index < 0) throw new Error('La ruta ya no está disponible en tu equipo.')
+        if (!collector) throw new Error('Elige un responsable de tu equipo.')
+        if (input.publicada && !collector.activo) throw new Error('Elige un responsable activo para publicar.')
+        const saved: DemoRoute = {
+          ...input,
+          id: id ?? crypto.randomUUID(),
+          grupo: coordinator.grupo,
+          disponible: collector.activo,
+        }
+        if (id) routes[index] = saved
+        else routes.push(saved)
+        return saved
+      })
+    },
     assign(coordinator, assignment) {
       return transact((data) => {
         const { index, request } = findRequest(data, coordinator, assignment.solicitudId)

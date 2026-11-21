@@ -1,8 +1,11 @@
 import './styles/eco.css'
 import './styles/dashboard.css'
 import './styles/motion.css'
+import './styles/pickers.css'
+import './styles/rutas.css'
 
-export { CoordinatorModule, PublicTrainingModule } from './CoordinatorModule'
+export { CoordinatorModule } from './CoordinatorModule'
+export { PublicTrainingModule } from './pages/PublicTrainingModule'
 export { createMockRepository } from './services/mockRepository'
 export type { EcoLink, EcoLocation, EcoPage } from './routes'
 export type {
@@ -13,6 +16,7 @@ export type {
   Coordinator,
   CoordinatorRepository,
   LocalDate,
+  PublicCollectionRoute,
   Request,
   RequestStatus,
   TrainingResource,

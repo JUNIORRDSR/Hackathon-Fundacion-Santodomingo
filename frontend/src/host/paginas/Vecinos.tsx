@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { DataTable } from '../../ecoconecta-coordinacion/components/ui/DataTable'
 import { EmptyState, ErrorMessage } from '../../ecoconecta-coordinacion/components/ui/Feedback'
+import { FilterSelect } from '../../ecoconecta-coordinacion/components/ui/FilterSelect'
 import { Icon } from '../../ecoconecta-coordinacion/components/ui/Icon'
 import { Modal } from '../../ecoconecta-coordinacion/components/ui/Modal'
 import { MotionPills } from '../../ecoconecta-coordinacion/components/ui/MotionPills'
@@ -73,36 +74,25 @@ export function Vecinos({ nuevo }: { nuevo: number }) {
             </button>
           ))}
         </MotionPills>
-        <div className="select-field">
-          <select
-            aria-label="Filtrar por zona"
-            value={zona}
-            onChange={(e) => {
-              setZona(e.target.value)
-              setConjunto('')
-            }}
-          >
-            <option value="">Todas las zonas</option>
-            {zonas.map((z) => (
-              <option key={z.id} value={z.id}>
-                {z.nombre}
-              </option>
-            ))}
-          </select>
-          <Icon name="chevron" />
-        </div>
+        <FilterSelect
+          label="Filtrar por zona"
+          value={zona}
+          options={[{ value: '', label: 'Todas las zonas' }, ...zonas.map((z) => ({ value: z.id, label: z.nombre }))]}
+          onChange={(value) => {
+            setZona(value)
+            setConjunto('')
+          }}
+        />
         {conjuntos.length > 0 && (
-          <div className="select-field">
-            <select aria-label="Filtrar por conjunto" value={conjunto} onChange={(e) => setConjunto(e.target.value)}>
-              <option value="">Todos los conjuntos</option>
-              {conjuntos.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nombre}
-                </option>
-              ))}
-            </select>
-            <Icon name="chevron" />
-          </div>
+          <FilterSelect
+            label="Filtrar por conjunto"
+            value={conjunto}
+            options={[
+              { value: '', label: 'Todos los conjuntos' },
+              ...conjuntos.map((c) => ({ value: c.id, label: c.nombre })),
+            ]}
+            onChange={setConjunto}
+          />
         )}
       </div>
       {error && <ErrorMessage message={error} retry={cargar} />}

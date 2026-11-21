@@ -1,0 +1,142 @@
+.eco-app {
+  & .picker-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .65rem;
+    min-inline-size: 0;
+    min-block-size: 48px;
+    max-inline-size: 100%;
+    padding: .45rem .8rem;
+    border: 1px solid var(--line);
+    border-radius: 9999px;
+    background: var(--surface);
+    font-size: .875rem;
+    font-weight: 550;
+    text-align: start;
+  }
+
+  & .picker-trigger:is(:hover, [data-state='open']) { background: var(--surface-muted); }
+  & .picker-trigger[data-state='open'] { border-color: var(--highlight); }
+  & .picker-trigger svg { width: 1rem; height: 1rem; }
+  & .picker-value { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  & .date-picker-trigger { justify-content: flex-start; }
+
+  & .picker-popover {
+    z-index: 8;
+    min-inline-size: 0;
+    padding: .35rem;
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: 0 14px 30px -14px #2d4b3f55, var(--shadow);
+  }
+
+  & .picker-options {
+    min-inline-size: var(--radix-select-trigger-width);
+    max-inline-size: min(19rem, var(--radix-select-content-available-width));
+    max-block-size: var(--radix-select-content-available-height);
+    overflow: hidden;
+  }
+
+  & .picker-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .6rem;
+    min-block-size: 44px;
+    padding: .4rem .65rem;
+    border-radius: .6rem;
+    font-size: .875rem;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+  }
+
+  & .picker-option[data-highlighted] { outline-offset: -2px; outline: 2px solid var(--highlight); background: var(--surface-muted); }
+  & .picker-option[data-state='checked'] { background: var(--highlight); color: var(--on-highlight); --icon-stroke: var(--accent-on-highlight); }
+  & .picker-option[data-state='checked'][data-highlighted] { outline: 2px solid var(--accent-on-highlight); }
+  & .picker-scroll { display: flex; min-block-size: 1.55rem; justify-content: center; align-items: center; }
+  & .picker-scroll:first-child svg { rotate: 180deg; }
+
+  & .calendar-popover {
+    inline-size: min(21rem, var(--radix-popover-content-available-width));
+    max-block-size: var(--radix-popover-content-available-height);
+    overflow: auto;
+    padding: .65rem;
+  }
+
+  & .calendar-popover .rdp-root { position: relative; }
+  & .calendar-popover .rdp-month_caption { display: grid; place-items: center; min-block-size: 44px; padding-inline: 2.45rem; text-align: center; }
+  & .calendar-popover .rdp-caption_label { color: var(--highlight); font: 650 .9rem/1.25 var(--font-heading); text-transform: capitalize; }
+  & .calendar-popover .rdp-nav { display: flex; justify-content: space-between; position: absolute; inset: 0 0 auto; pointer-events: none; }
+  & .calendar-popover .rdp-month_grid { inline-size: 100%; border-collapse: collapse; table-layout: fixed; text-align: center; }
+  & .calendar-popover .rdp-weekday { padding-block: .25rem; color: var(--muted); font-size: .75rem; font-weight: 650; }
+  & .calendar-popover .rdp-day { padding: .08rem; }
+  & .calendar-popover :is(.rdp-day_button, .rdp-button_previous, .rdp-button_next) {
+    display: inline-grid;
+    place-items: center;
+    min-block-size: 44px;
+    border: 1px solid transparent;
+    border-radius: .65rem;
+    background: transparent;
+    font-size: .875rem;
+    pointer-events: auto;
+  }
+  & .calendar-popover :is(.rdp-button_previous, .rdp-button_next) { inline-size: 44px; padding: 0; }
+  & .calendar-popover [data-orientation='left'] { rotate: 90deg; }
+  & .calendar-popover [data-orientation='right'] { rotate: -90deg; }
+  & .calendar-popover .rdp-day_button { inline-size: 100%; padding: 0; }
+  & .calendar-popover .rdp-outside .rdp-day_button { color: var(--muted); }
+  & .calendar-popover .rdp-today .rdp-day_button { border-color: var(--control-line); font-weight: 700; }
+  & .calendar-popover button:hover { background: var(--surface-muted); }
+  & .calendar-popover button:focus-visible { position: relative; outline-offset: -2px; }
+  & .calendar-popover .rdp-selected .rdp-day_button { background: var(--highlight); color: var(--on-highlight); font-weight: 700; }
+  & .calendar-popover .rdp-selected .rdp-day_button:focus-visible { outline-color: var(--accent-on-highlight); }
+
+  & .time-field { position: relative; }
+  & .time-field input { padding-inline-end: 3rem; font-variant-numeric: tabular-nums; }
+  & .time-field .time-field-trigger {
+    position: absolute;
+    inset: 1px 1px 1px auto;
+    min-block-size: 44px;
+    min-inline-size: 48px;
+    border-radius: .5rem;
+  }
+  & .time-field-trigger:focus-visible { outline-offset: -4px; }
+  & .time-field-trigger[data-state='open'] { background: var(--surface-muted); }
+
+  & .time-popover {
+    display: grid;
+    gap: .65rem;
+    inline-size: min(15rem, var(--radix-popover-content-available-width));
+    max-block-size: var(--radix-popover-content-available-height);
+    padding: .6rem;
+    overflow: auto;
+  }
+  & .time-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+  & .time-options { min-inline-size: 0; text-align: center; }
+  & .time-options > span { color: var(--muted); font-size: .8125rem; font-weight: 650; }
+  & .time-options > div {
+    position: relative;
+    display: grid;
+    gap: .15rem;
+    max-block-size: 9.5rem;
+    padding: .2rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid var(--line);
+    border-radius: .7rem;
+  }
+  & .time-options button {
+    min-block-size: 44px;
+    border: 0;
+    border-radius: .5rem;
+    background: transparent;
+    font-variant-numeric: tabular-nums;
+  }
+  & .time-options button:hover { background: var(--surface-muted); }
+  & .time-options button:focus-visible { outline-offset: -3px; }
+  & .time-options button[data-state='on'] { background: var(--highlight); color: var(--on-highlight); font-weight: 650; }
+  & .time-options button[data-state='on']:focus-visible { outline-color: var(--accent-on-highlight); }
+}

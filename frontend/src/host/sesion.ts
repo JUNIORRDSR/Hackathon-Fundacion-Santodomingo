@@ -8,6 +8,9 @@ export interface Usuario {
   nombre: string
   rol: 'coordinador' | 'administrador'
   colectivo: 'huerteros' | 'recicladores' | null
+  correo: string | null
+  telefono: string | null
+  activo: boolean
 }
 
 export interface NuevaCuenta {
@@ -29,13 +32,36 @@ function conTransicion(cambio: () => void) {
 export function useSesion() {
   const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [cargando, setCargando] = useState(true)
+  const [aviso, setAviso] = useState('')
   useEffect(() => {
-    api<Usuario>('/acceso/yo')
+    api<Usuario | null>('/acceso/yo')
       .then(setUsuario)
       .catch(() => setUsuario(null))
       .finally(() => setCargando(false))
   }, [])
-  const cambiar = (nuevo: Usuario | null) => conTransicion(() => setUsuario(nuevo))
+  useEffect(() => {
+    if (!usuario) return
+    const consulta = new AbortController()
+    const actualizar = () =>
+      void api<Usuario | null>('/acceso/yo', 'GET', undefined, consulta.signal)
+        .then((nuevo) => {
+          if (JSON.stringify(nuevo) !== JSON.stringify(usuario)) {
+            setUsuario((anterior) => (anterior === usuario ? nuevo : anterior))
+          }
+        })
+        .catch(() => {})
+    const intervalo = window.setInterval(actualizar, 30_000)
+    window.addEventListener('focus', actualizar)
+    return () => {
+      consulta.abort()
+      window.clearInterval(intervalo)
+      window.removeEventListener('focus', actualizar)
+    }
+  }, [usuario])
+  const cambiar = (nuevo: Usuario | null, mensaje = '') => {
+    setAviso(mensaje)
+    conTransicion(() => setUsuario(nuevo))
+  }
   const entrar = async (nombre: string, clave: string) =>
     cambiar(await api<Usuario>('/acceso/entrar', 'POST', { usuario: nombre, clave }))
   const registrar = async (cuenta: NuevaCuenta) => cambiar(await api<Usuario>('/acceso/registro', 'POST', cuenta))
@@ -43,5 +69,14 @@ export function useSesion() {
     await api('/acceso/salir', 'POST')
     cambiar(null)
   }
-  return { usuario, cargando, entrar, registrar, salir }
+  return {
+    usuario,
+    cargando,
+    aviso,
+    entrar,
+    registrar,
+    salir,
+    actualizarPerfil: setUsuario,
+    claveCambiada: () => cambiar(null, 'Tu clave cambió. Vuelve a entrar con la nueva clave.'),
+  }
 }

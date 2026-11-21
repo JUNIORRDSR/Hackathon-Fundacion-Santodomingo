@@ -13,7 +13,9 @@ from app.compartido.tipos import Colectivo, ErrorDeNegocio, NoEncontrado, TipoGe
 from app.modulos.directorio import tablas as t
 from app.modulos.directorio.lugares import (  # noqa: F401  los lugares son parte del contrato público (ADR-0017)
     CambioLugar, ConjuntoVista, Lugar, NuevoLugar, ZonaVista, cambiar_conjunto, cambiar_zona, conjunto, crear_conjunto,
-    crear_zona, existe_lugar, lugares_para_elegir, validar_lugar, zona, zonas)
+    crear_zona, eliminar_conjunto, existe_lugar, lugares_para_elegir, validar_lugar, zona, zonas)
+from app.modulos.directorio.rutas import (  # noqa: F401
+    DatosRuta, RutaPublica, RutaVista, actualizar_ruta, crear_ruta, ruta, rutas, rutas_publicas)
 
 TELEFONO = r"^\+\d{8,15}$"  # E.164, como lo entrega WhatsApp
 # Un nombre o alias: letras de cualquier idioma, hasta seis palabras. Sin cifras ni enlaces: llega a cada prompt.
@@ -141,9 +143,9 @@ def solicitantes(estado: EstadoSolicitante | None = None) -> list[SolicitanteVis
 
 
 def registrar_encargado(nuevo: NuevoEncargado) -> EncargadoVista:
-    _exigir_lugares(nuevo.lugares)
     encargado_nuevo = EncargadoVista(id=uuid4(), **nuevo.model_dump())
     with transaccion() as c:
+        _exigir_lugares(nuevo.lugares)
         c.execute(insert(t.encargados).values({**encargado_nuevo.model_dump(),
                                                "lugares": [str(z) for z in encargado_nuevo.lugares]}))
     return encargado_nuevo
@@ -151,9 +153,9 @@ def registrar_encargado(nuevo: NuevoEncargado) -> EncargadoVista:
 
 def actualizar_encargado(id: UUID, cambio: CambioEncargado) -> EncargadoVista:
     actual = encargado(id)
-    _exigir_lugares(cambio.lugares)
     nuevo = actual.model_copy(update=cambio.model_dump())
     with transaccion() as c:
+        _exigir_lugares(cambio.lugares)
         c.execute(update(t.encargados).where(t.encargados.c.id == id).values(
             nombre=nuevo.nombre, lugares=[str(z) for z in nuevo.lugares], activo=nuevo.activo))
     return nuevo

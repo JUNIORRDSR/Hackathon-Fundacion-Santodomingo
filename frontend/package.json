@@ -13,9 +13,11 @@
     "node": "^20.19.0 || >=22.12.0"
   },
   "dependencies": {
+    "@daypicker/react": "^10.0.2",
     "@shadcn/react": "^0.3.1",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.2",
+    "exceljs": "^4.4.0",
     "jsqr": "^1.4.0",
     "lucide-react": "^1.77.0",
     "qrcode-generator": "^2.0.4",

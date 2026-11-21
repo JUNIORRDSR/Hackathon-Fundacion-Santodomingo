@@ -10,6 +10,7 @@ import type {
   Zone,
 } from '../ecoconecta-coordinacion'
 import { api, urlDeAdjunto } from './api'
+import { guardarRuta, rutasDe } from './rutas'
 
 // El CoordinatorRepository de Daniela contra la API real (ADR-0007): traduce la vista del backend a sus tipos.
 export interface SolicitudVista {
@@ -111,8 +112,8 @@ export function recursoDe(c: ContenidoVista): TrainingResource {
   return { ...base, tipo: 'guia', pasos: c.pasos, url: c.url ?? undefined }
 }
 
-export async function capacitacionPublica(): Promise<TrainingResource[]> {
-  return (await api<ContenidoVista[]>('/contenidos/publicos')).map(recursoDe)
+export async function capacitacionPublica(signal?: AbortSignal): Promise<TrainingResource[]> {
+  return (await api<ContenidoVista[]>('/contenidos/publicos', 'GET', undefined, signal)).map(recursoDe)
 }
 
 // Lo que ganó cada recolección, por código: Resultados y el detalle lo muestran.
@@ -150,6 +151,8 @@ export function crearRepositorio(): CoordinatorRepository {
       return lista.map((e) => recolectorDe(e, catalogo))
     },
     listZones: zonas,
+    listRoutes: (c, signal) => rutasDe(colectivoDe(c.grupo), signal),
+    saveRoute: (c, input, id) => guardarRuta(colectivoDe(c.grupo), input, id),
     assign: (_, a) => asignar(a),
     saveResult: (_, r) => guardarResultado(r),
     cancel: (_, id, motivo) => solicitud(id + '/cancelacion', { motivo }),

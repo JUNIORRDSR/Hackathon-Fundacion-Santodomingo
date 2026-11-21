@@ -1,10 +1,13 @@
 import { useId, useRef, useState, useSyncExternalStore } from 'react'
 import type { CSSProperties } from 'react'
-import { formatDay, isLocalDate, shiftDate, statusLabels, timeMinutes } from '../../labels'
+import { formatDay, shiftDate, statusLabels, timeMinutes } from '../../labels'
 import type { Collector, LocalDate, Request } from '../../types'
-import { EmptyState } from '../ui/Feedback'
+import { DatePicker } from '../ui/DatePicker'
+import { EmptyState, ErrorMessage } from '../ui/Feedback'
+import { FilterSelect } from '../ui/FilterSelect'
 import { Icon } from '../ui/Icon'
 import { MotionPills } from '../ui/MotionPills'
+import { useSubmission } from '../ui/useSubmission'
 import { getCollectorNames, getTimelineData } from './timelineData'
 import type { PlannedRequest } from './timelineData'
 import { useTimelineMotion } from './useTimelineMotion'
@@ -152,14 +155,7 @@ function DateSelector({
       >
         <Icon name="chevron" />
       </button>
-      <input
-        type="date"
-        value={date}
-        aria-label="Fecha de planificación"
-        onChange={(event) => {
-          if (isLocalDate(event.target.value)) onChange(event.target.value)
-        }}
-      />
+      <DatePicker label="Fecha de planificación" value={date} today={today} onChange={onChange} />
       <button
         type="button"
         className="icon-button date-next"
@@ -194,6 +190,7 @@ export function ScheduleTimeline({
   const [selectedDate, setSelectedDate] = useState<LocalDate>()
   const [collectorId, setCollectorId] = useState('')
   const [selectedView, setSelectedView] = useState<View>()
+  const descarga = useSubmission()
   const compact = useSyncExternalStore(subscribeToWidth, prefersAgenda, () => false)
 
   const firstUpcoming = planned.find(({ asignacion }) => asignacion.fecha >= today)
@@ -224,30 +221,28 @@ export function ScheduleTimeline({
       </div>
       <div className="timeline-toolbar">
         <DateSelector date={date} today={today} onChange={setSelectedDate} />
-        <div className="select-field timeline-filter">
-          <select
-            aria-label="Filtrar por recolector"
+        <div className="timeline-tools">
+          <FilterSelect
+            className="timeline-filter"
+            label="Filtrar por recolector"
             value={collectorId}
-            onChange={(event) => setCollectorId(event.target.value)}
+            options={[
+              { value: '', label: 'Todo el equipo' },
+              ...[...names].map(([value, label]) => ({ value, label })),
+            ]}
+            onChange={setCollectorId}
+          />
+          <button
+            type="button"
+            className="button button-secondary timeline-export"
+            disabled={visible.length === 0 || descarga.busy}
+            onClick={() => void descarga.run(() => exportarDia(date, visible, names))}
           >
-            <option value="">Todo el equipo</option>
-            {[...names].map(([id, name]) => (
-              <option key={id} value={id}>
-                {name}
-              </option>
-            ))}
-          </select>
-          <Icon name="chevron" />
+            {descarga.busy ? 'Preparando Excel…' : 'Exportar día en Excel'}
+          </button>
         </div>
-        <button
-          type="button"
-          className="button button-secondary timeline-export"
-          disabled={visible.length === 0}
-          onClick={() => exportarDia(date, visible, names)}
-        >
-          Exportar el día
-        </button>
       </div>
+      {descarga.error && <ErrorMessage message={descarga.error} />}
       <div className="view-content" key={JSON.stringify([view, date, collectorId])}>
         {visible.length === 0 ? (
           <EmptyState title="Sin recolecciones para este día">

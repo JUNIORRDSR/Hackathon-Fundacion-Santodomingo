@@ -71,8 +71,8 @@ export function Impacto({ grupo }: { grupo: Grupo }) {
               <Icon name="chevron" />
             </button>
           </div>
-          <a className="button button-secondary" href={'/api/reportes/solicitudes.csv?' + consulta} download>
-            Exportar el mes
+          <a className="button button-secondary" href={'/api/reportes/solicitudes.xlsx?' + consulta} download>
+            Exportar mes en Excel
           </a>
         </div>
       </div>

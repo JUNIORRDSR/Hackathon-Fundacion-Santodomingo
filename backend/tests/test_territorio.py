@@ -3,7 +3,9 @@ Corre después de test_reiniciar_base, que vacía la base: el teléfono 9 de tes
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 
+from app.compartido.bd import transaccion
 from app.main import app
 from app.modulos.directorio import contrato as directorio
 
@@ -78,3 +80,55 @@ def _desactivar(cliente: TestClient, conjunto: str) -> None:
     cambio = cliente.patch(f"/api/directorio/conjuntos/{conjunto}", json={"nombre": "Torre de Prueba", "activo": False})
     assert cambio.status_code == 200 and cambio.json()["activo"] is False
     assert all(str(lugar.conjunto_id) != conjunto for lugar in directorio.lugares_para_elegir())
+
+
+def test_editar_y_eliminar_un_sector_sin_uso():
+    cliente = sesion("rosa")
+    zona, conjunto = _crear_lugares(cliente)
+    ruta = f"/api/directorio/conjuntos/{conjunto}"
+    otro = cliente.post(f"/api/directorio/zonas/{zona}/conjuntos", json={"nombre": "Sector del Parque"}).json()
+    assert cliente.patch(ruta, json={"nombre": "Sector del Parque"}).status_code == 409
+    cambio = cliente.patch(ruta, json={"nombre": "  Sector del Mirador  "})
+    assert cambio.status_code == 200 and cambio.json()["nombre"] == "Sector del Mirador"
+    assert TestClient(app).delete(ruta).status_code == 401
+    assert cliente.delete(ruta).status_code == 204
+    assert cliente.delete(ruta).status_code == 404
+    actual = next(z for z in cliente.get("/api/directorio/zonas").json() if z["id"] == zona)
+    assert [c["id"] for c in actual["conjuntos"]] == [otro["id"]]
+
+
+def test_no_se_elimina_un_sector_que_tiene_encargados_o_rutas():
+    cliente = sesion("rosa")
+    zona, conjunto = _crear_lugares(cliente)
+    ruta = f"/api/directorio/conjuntos/{conjunto}"
+    datos = {"nombre": "Encargado del sector", "colectivo": "huerteros", "lugares": [conjunto]}
+    encargado = cliente.post("/api/directorio/encargados", json=datos).json()
+    bloqueo = cliente.delete(ruta)
+    assert bloqueo.status_code == 409 and "encargados" in bloqueo.json()["detail"]
+    cobertura = {"nombre": datos["nombre"], "lugares": []}
+    assert cliente.patch(f"/api/directorio/encargados/{encargado['id']}", json=cobertura).status_code == 200
+    horario = {"nombre": "Ruta activa del sector", "colectivo": "huerteros", "dias": [0], "hora_inicio": "07:30",
+               "hora_fin": "09:00", "encargado_id": encargado["id"], "zona_id": zona, "conjunto_id": conjunto}
+    assert cliente.post("/api/directorio/rutas", json=horario).status_code == 201
+    bloqueo = cliente.delete(ruta)
+    assert bloqueo.status_code == 409 and "rutas" in bloqueo.json()["detail"]
+
+
+def test_no_se_elimina_un_sector_que_tiene_vecinos_o_historial():
+    cliente = sesion("rosa")
+    zona, conjunto = _crear_lugares(cliente)
+    datos = {"telefono": "+12025550191", "nombre": "Vecina de prueba", "tipo": "hogar",
+             "zona_id": zona, "conjunto_id": conjunto, "direccion": "Apto 203", "autoriza_datos": True}
+    vecino = cliente.post("/api/directorio/solicitantes", json=datos).json()
+    solicitud = cliente.post("/api/solicitudes", json={"solicitante_id": vecino["id"], "flujo": "organico",
+                                                       "preferencia": "manana"}).json()
+    ruta = f"/api/directorio/conjuntos/{conjunto}"
+    bloqueo = cliente.delete(ruta)
+    assert bloqueo.status_code == 409 and "vecinos" in bloqueo.json()["detail"]
+    # La ubicación del vecino puede cambiar sin alterar la ubicación guardada en la solicitud.
+    with transaccion() as c:
+        c.execute(text("UPDATE directorio.solicitantes SET conjunto_id = NULL WHERE id = :id"), {"id": vecino["id"]})
+    bloqueo = cliente.delete(ruta)
+    assert bloqueo.status_code == 409 and "historial" in bloqueo.json()["detail"]
+    assert cliente.patch(ruta, json={"nombre": "Torre de Prueba", "activo": False}).status_code == 200
+    assert cliente.get(f"/api/solicitudes/{solicitud['id']}").json()["conjunto"] == "Torre de Prueba"

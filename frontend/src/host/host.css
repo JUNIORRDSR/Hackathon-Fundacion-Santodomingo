@@ -4,6 +4,7 @@
   & .filtros-registro { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-block: 1rem; }
   & .filtros-registro .select-field { min-width: min(100%, 13rem); }
   & .filtros-registro .select-field select { border-radius: 9999px; }
+  & .filtros-registro .picker-trigger { min-inline-size: min(100%, 12rem); max-inline-size: min(100%, 18rem); }
   & .vecino-puntos { font-variant-numeric: tabular-nums; }
   & .registro-aviso { display: flex; align-items: center; gap: .45rem; margin-bottom: 1rem; color: var(--highlight); font-weight: 600; }
   & .lugares-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); gap: 1rem; margin: 1rem 0 0; padding: 0; list-style: none; }
@@ -11,10 +12,14 @@
   & .lugar-zona[data-activo="false"] { opacity: .7; }
   & .lugar-cabeza { display: flex; align-items: center; gap: .5rem; }
   & .lugar-cabeza h2 { flex: 1; color: var(--highlight); font-size: 1.15rem; }
-  & .lugar-conjuntos { display: flex; flex-wrap: wrap; gap: .45rem; margin: 0; padding: 0; list-style: none; }
-  & .lugar-conjunto { min-height: 48px; padding: 0 .95rem; border: 1px solid var(--line); border-radius: 9999px; background: var(--surface); color: var(--ink); font-weight: 600; }
-  & .lugar-conjunto:hover { background: var(--surface-muted); }
-  & .lugar-conjunto[data-activo="false"] { border-style: dashed; color: var(--muted); }
+  & .lugar-conjuntos { display: grid; gap: .35rem; margin: 0; padding: 0; list-style: none; }
+  & .lugar-conjunto { display: grid; gap: .1rem; padding: .45rem .65rem .2rem; border: 1px solid var(--line); border-radius: .75rem; }
+  & .lugar-conjunto-nombre { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .5rem; overflow-wrap: anywhere; }
+  & .lugar-conjunto-acciones { display: flex; flex-wrap: wrap; gap: .25rem; }
+  & .lugar-conjunto-acciones .button { min-height: 44px; padding-inline: .45rem; }
+  & .lugar-eliminar { color: var(--error); --icon-stroke: var(--error); }
+  & .lugar-confirmar { background: var(--error); color: #fff; }
+  & .lugar-confirmar:hover:not(:disabled) { filter: brightness(.9); }
   & .lugar-agregar { justify-self: start; }
   & .tipo-registro { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; }
 

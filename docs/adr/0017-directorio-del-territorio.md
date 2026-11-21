@@ -17,11 +17,12 @@ WhatsApp, y Registros solo muestra a los pendientes de aceptar.
 1. **Lugares en dos niveles:** zona (Etapa 1 a 4, Corredor comercial) y conjunto o sector (Brisas de San Pablo,
    Mirasol, Álamos, Manzana 19, Sector Salón Comunal…), según `docs/reto/contexto-barrio.md`. Torre, apartamento, casa
    o local van en la dirección. Nueva tabla `directorio.conjuntos` (zona, nombre, activo); `zonas` gana `activo`.
-   Ningún lugar se borra: se desactiva, porque solicitudes e historial lo nombran.
+   Las zonas y los conjuntos con registros asociados se pueden desactivar. Los conjuntos sin uso se pueden eliminar.
 2. **El lugar de un vecino o negocio** es un conjunto, o una zona que no tiene conjuntos (el Corredor comercial). Cada
    solicitud guarda la zona y el conjunto del momento, para que el historial no cambie si el vecino se muda.
 3. **Registros con tres pestañas:** Por aceptar · Vecinos y negocios (tabla con filtros por tipo, zona y conjunto, y
-   botón para registrar) · Lugares (crear y renombrar zonas y conjuntos). Registran la coordinación y el administrador.
+   botón para registrar) · Lugares (crear y editar zonas y conjuntos, eliminar conjuntos sin uso). Registran la
+   coordinación y el administrador.
 4. **Registro desde la tableta:** tipo (hogar o negocio), nombre, WhatsApp, zona y conjunto, dirección y la casilla
    «El vecino autorizó el uso de sus datos». La autorización queda firmada: quién registró y cuándo (Ley 1581 admite
    la autorización verbal con constancia). Queda habilitado de una vez, como un piloto, y el bot le escribe la

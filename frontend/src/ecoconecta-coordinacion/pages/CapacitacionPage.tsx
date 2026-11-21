@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { TrainingResource } from '../types'
 import { TrainingCard, VideoCard } from '../components/capacitacion/TrainingCards'
 import { EmptyState } from '../components/ui/Feedback'
@@ -7,10 +8,14 @@ export function CapacitacionPage({
   resources,
   sample = false,
   publicHref,
+  schedules,
+  resourcesFeedback,
 }: {
   resources: TrainingResource[]
   sample?: boolean
   publicHref?: string
+  schedules?: ReactNode
+  resourcesFeedback?: ReactNode
 }) {
   return (
     <>
@@ -33,28 +38,30 @@ export function CapacitacionPage({
           </a>
         )}
       </section>
-      {resources.length ? (
-        <>
-          <div className="training-grid">
+      {schedules}
+      {resourcesFeedback ??
+        (resources.length ? (
+          <>
+            <div className="training-grid">
+              {resources
+                .filter((item) => item.tipo === 'guia')
+                .map((item) => (
+                  <TrainingCard key={item.id} resource={item} />
+                ))}
+            </div>
             {resources
-              .filter((item) => item.tipo === 'guia')
+              .filter((item) => item.tipo === 'video')
               .map((item) => (
-                <TrainingCard key={item.id} resource={item} />
+                <VideoCard key={item.id} resource={item} />
               ))}
+          </>
+        ) : (
+          <div className="card">
+            <EmptyState title="Aún no hay guías publicadas">
+              Vuelve más adelante para consultar los materiales.
+            </EmptyState>
           </div>
-          {resources
-            .filter((item) => item.tipo === 'video')
-            .map((item) => (
-              <VideoCard key={item.id} resource={item} />
-            ))}
-        </>
-      ) : (
-        <div className="card">
-          <EmptyState title="Aún no hay guías publicadas">
-            Vuelve más adelante para consultar los materiales.
-          </EmptyState>
-        </div>
-      )}
+        ))}
     </>
   )
 }

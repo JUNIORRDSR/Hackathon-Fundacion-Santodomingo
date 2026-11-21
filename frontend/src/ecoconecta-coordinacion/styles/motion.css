@@ -136,3 +136,28 @@
   from { opacity: .82; translate: 0 8px; }
   to { opacity: 1; translate: 0 0; }
 }
+
+/* Isotipo de Villas de San Pablo (MonarchMark): dos aleteos y una pausa larga, viva sin distraer. */
+.eco-app {
+  & .monarch { display: block; width: 5.25rem; height: auto; overflow: visible; stroke: none; }
+  & :is(.monarch-near, .monarch-far) { transform-box: view-box; transform-origin: 770px 628px; }
+  & .monarch-near { --wing-fold: .42; }
+  & .monarch-far { --wing-fold: .58; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    & .monarch { animation: eco-monarch-lift 5.6s ease-in-out 1.2s infinite; }
+    & :is(.monarch-near, .monarch-far) { animation: eco-monarch-flap 5.6s ease-in-out 1.2s infinite; }
+    & .monarch-far { animation-delay: 1.26s; }
+  }
+}
+
+/* Las alas se pliegan hacia el eje del cuerpo, inclinado 48,5°: rotar 41,5° lo deja vertical. */
+@keyframes eco-monarch-flap {
+  0%, 8%, 16%, 100% { transform: none; }
+  4%, 12% { transform: rotate(41.5deg) scaleX(var(--wing-fold)) rotate(-41.5deg); }
+}
+
+@keyframes eco-monarch-lift {
+  0%, 24%, 100% { translate: 0 0; }
+  10% { translate: 0 -4%; }
+}

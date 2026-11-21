@@ -232,7 +232,9 @@ export function DashboardPage({
           {recent.length ? (
             <RequestList requests={recent} onSelect={onSelect} compact />
           ) : (
-            <EmptyState title="Todavía no hay solicitudes">Aquí verás los últimos registros.</EmptyState>
+            <EmptyState title="Todavía no hay solicitudes" icon="monarch">
+              Aquí verás los últimos registros.
+            </EmptyState>
           )}
         </section>
         <section className="card bento-panel training-shortcut">

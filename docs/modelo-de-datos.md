@@ -15,6 +15,7 @@ erDiagram
   solicitudes_solicitudes ||..o| puntos_movimientos : "codigo (por ID)"
   puntos_reglas ||--o{ puntos_movimientos : "regla_version"
   directorio_solicitantes ||..o| whatsapp_conversaciones : "telefono (por ID)"
+  directorio_solicitantes ||..o| etiquetas_codigos : "solicitante_id (por ID)"
   directorio_solicitantes ||..o{ whatsapp_mensajes : "telefono (por ID)"
 
   acceso_usuarios {
@@ -91,6 +92,10 @@ erDiagram
     string url
     boolean activo
   }
+  etiquetas_codigos {
+    uuid solicitante_id PK
+    int numero UK "código escrito = número + dígito verificador"
+  }
   whatsapp_conversaciones {
     string telefono PK
     jsonb memoria "paso del registro o del bot"
@@ -109,6 +114,7 @@ erDiagram
 
 - **Una sola solicitud abierta por solicitante y flujo:** índice único parcial `una_abierta_por_flujo` sobre
   `(solicitante_id, flujo)` cuando el estado es recibida, asignada o programada.
-- **Códigos cortos:** las secuencias `solicitudes.consecutivo_organico` y `solicitudes.consecutivo_reciclable`.
+- **Códigos cortos:** las secuencias `solicitudes.consecutivo_organico` y `solicitudes.consecutivo_reciclable`; la del
+  código de cada hogar es `etiquetas.consecutivo`, que empieza en 100 (ADR-0015).
 - **El libro de puntos solo crece:** nada actualiza ni borra `puntos.movimientos`, y `codigo` es único, así que una
   recolección no puede acreditar dos veces.

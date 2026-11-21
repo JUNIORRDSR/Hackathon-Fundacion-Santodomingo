@@ -1,0 +1,101 @@
+/* Escanear bolsas (ADR-0015): la cámara a un lado y lo que trajo el QR al otro; en el celular, una debajo de la otra. */
+.eco-app {
+  & .escaneo-vista { margin-bottom: 1.1rem; }
+  & .escaneo { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
+  & .escaneo-camara { display: grid; gap: .9rem; padding: .75rem; }
+  & .escaneo-resultado { padding: 1.25rem; scroll-margin: 1rem; }
+
+  /* El visor: verde bosque mientras enciende, esquinas amarillas como guía y una línea que barre el recuadro. */
+  & .visor { position: relative; aspect-ratio: 4 / 3; overflow: hidden; isolation: isolate; border-radius: 1rem; background: var(--highlight); }
+  & .visor video { display: block; width: 100%; height: 100%; object-fit: cover; transition: filter var(--motion-card) var(--motion-ease); }
+  & .visor[data-pausa="true"] video { filter: saturate(.3) brightness(.55); }
+  & .visor-marco { position: absolute; top: 50%; left: 50%; width: min(56%, 15rem); aspect-ratio: 1; translate: -50% -50%; border-radius: 1.1rem; box-shadow: 0 0 0 100vmax #063b2e52; }
+  & .visor-marco::before { content: ""; position: absolute; inset: 0; border: .28rem solid var(--yellow); border-radius: inherit; mask: conic-gradient(at 2rem 2rem, #0000 75%, #000 0) 0 0 / calc(100% - 2rem) calc(100% - 2rem); }
+  & .visor-marco i { position: absolute; top: 12%; left: 10%; right: 10%; height: 2px; border-radius: 2px; background: linear-gradient(90deg, #f6c40000, var(--yellow), #f6c40000); box-shadow: 0 0 14px #f6c400b3; }
+  & .visor[data-pausa="true"] .visor-marco { box-shadow: none; }
+  & .visor[data-pausa="true"] .visor-marco i { display: none; }
+  & .visor-estado { position: absolute; left: 50%; bottom: .85rem; translate: -50% 0; display: inline-flex; align-items: center; gap: .45rem; padding: .35rem .8rem; border-radius: 9999px; background: #063b2ed9; color: var(--on-highlight); font-size: .8125rem; font-weight: 650; white-space: nowrap; }
+  & .visor-estado::before { content: ""; width: .5rem; height: .5rem; border-radius: 50%; background: var(--yellow); }
+  & .visor[data-pausa="true"] .visor-estado::before { background: var(--on-highlight); opacity: .55; }
+  & .visor-aviso { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: .5rem; padding: 1.5rem; text-align: center; color: var(--on-highlight); font-size: .9rem; }
+  & .visor-aviso svg { width: 2.2rem; height: 2.2rem; --icon-stroke: var(--yellow); }
+  & .visor-aviso strong { font-size: 1.05rem; }
+  & .visor-aviso span { max-width: 22rem; opacity: .85; }
+  & .visor-manual { display: grid; gap: .4rem; padding: 0 .35rem .35rem; }
+  & .visor-manual label { color: var(--muted); font-size: .875rem; font-weight: 600; }
+  & .visor-manual-campo { display: flex; gap: .5rem; }
+  & .visor-manual-campo input { flex: 1; }
+  & .visor-manual-campo input:not(:placeholder-shown) { text-transform: uppercase; }
+
+  /* Lo que trajo el QR */
+  & .escaneo-espera { display: grid; justify-items: center; gap: .55rem; padding-block: 1.25rem; text-align: center; }
+  & .escaneo-espera .monarch { width: 7rem; margin-bottom: .35rem; }
+  & .escaneo-espera h2 { font-size: 1.35rem; }
+  & .escaneo-espera p { max-width: 26rem; color: var(--muted); }
+  & .escaneo-pasos { display: flex; flex-wrap: wrap; justify-content: center; gap: .4rem; margin: .75rem 0 0; padding: 0; list-style: none; counter-reset: paso; }
+  & .escaneo-pasos li { counter-increment: paso; display: inline-flex; align-items: center; gap: .4rem; padding: .3rem .7rem .3rem .35rem; border-radius: 9999px; background: var(--surface-muted); font-size: .8125rem; font-weight: 600; }
+  & .escaneo-pasos li::before { content: counter(paso); display: grid; place-items: center; width: 1.35rem; height: 1.35rem; border-radius: 50%; background: var(--highlight); color: var(--on-highlight); font-size: .72rem; }
+  & .bolsa { display: grid; gap: .9rem; }
+  & .bolsa > .detail-identity > svg { width: 1.4rem; height: 1.4rem; margin-inline: .55rem; }
+  & .bolsa > .button { justify-self: start; }
+  & .bolsa-solicitud { display: grid; gap: .9rem; }
+  & .bolsa-solicitud .detail-data { margin-top: 0; }
+  & .bolsa-solicitud > .button-primary, & .bolsa-solicitud .dialog-form .button-primary { min-height: 48px; }
+  & .bolsa-solicitud .dialog-form { margin-top: 0; }
+  & .bolsa-aviso { display: flex; align-items: flex-start; gap: .55rem; padding: .75rem; border-radius: .7rem; background: #fbf3d4; color: var(--ink); }
+  & .bolsa-aviso svg { margin-top: .15rem; }
+  & .bolsa-lista { display: grid; justify-items: center; gap: .45rem; padding-block: 1rem; text-align: center; }
+  & .bolsa-lista .monarch { width: 7.5rem; margin-bottom: .25rem; }
+  & .bolsa-lista h2 { font-size: 1.35rem; }
+  & .bolsa-puntos { font: 650 2.6rem/1 var(--font-heading); letter-spacing: -.04em; color: var(--highlight); font-variant-numeric: tabular-nums; }
+  & .bolsa-lista .button-primary { margin-top: .75rem; min-height: 48px; }
+
+  /* Hoja de stickers */
+  & .etiquetas-barra { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin-bottom: 1rem; }
+  & .etiquetas-barra .button-primary { margin-left: auto; }
+  & .etiquetas-nota { flex-basis: 100%; margin: 0; font-size: .875rem; }
+  & .etiquetas-hoja { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: .75rem; margin: 0; padding: 0; list-style: none; }
+  & .etiqueta { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); align-items: center; gap: .8rem; padding: .75rem; border: 1px solid var(--line); border-radius: 1rem; background: #ffffff; }
+  & .etiqueta-qr { width: 100%; height: auto; fill: #000000; stroke: none; shape-rendering: crispEdges; }
+  & .etiqueta strong { display: block; font-size: 1rem; overflow-wrap: anywhere; }
+  & .etiqueta > div > span { display: block; color: var(--muted); font-size: .8125rem; }
+  & .etiqueta > div > .etiqueta-marca { display: flex; align-items: center; gap: .3rem; margin-top: .55rem; color: var(--highlight); font-size: .7rem; font-weight: 650; }
+  & .etiqueta-marca img { width: 1.5rem; height: auto; }
+  & .etiqueta > div > .etiqueta-codigo { margin-top: .3rem; }
+  & .etiqueta-codigo b { color: var(--ink); font: 750 1.3rem/1 var(--font-heading); letter-spacing: .05em; font-variant-numeric: tabular-nums; }
+
+  @media (max-width: 860px) {
+    & .escaneo { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    & .visor-marco i { animation: eco-escaneo 2.4s ease-in-out infinite alternate; }
+    & .escaneo .monarch-celebra { animation: eco-monarch-entra .6s var(--motion-spring) both, eco-monarch-lift 5.6s ease-in-out 1.8s infinite; }
+    & .escaneo .monarch-celebra :is(.monarch-near, .monarch-far) {
+      animation: eco-monarch-aleteo .42s ease-in-out 3, eco-monarch-flap 5.6s ease-in-out 1.8s infinite;
+    }
+  }
+}
+
+@keyframes eco-escaneo {
+  from { top: 12%; }
+  to { top: 86%; }
+}
+
+/* Al registrar, la mariposa entra y aletea tres veces seguidas antes de volver a su pausa. */
+@keyframes eco-monarch-entra {
+  from { opacity: 0; scale: .7; }
+}
+
+@keyframes eco-monarch-aleteo {
+  50% { transform: rotate(41.5deg) scaleX(var(--wing-fold)) rotate(-41.5deg); }
+}
+
+/* Al imprimir solo sale la hoja: tres stickers por fila con línea de corte. */
+@media print {
+  @page { margin: 10mm; }
+  .eco-app :is(.topbar, .site-footer, .skip-link, .page-header, .escaneo-vista, .etiquetas-barra, .fab-lane, .demo-note) { display: none !important; }
+  .eco-app .main-content { width: auto; padding: 0; }
+  .eco-app .etiquetas-hoja { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3mm; }
+  .eco-app .etiqueta { break-inside: avoid; grid-template-columns: 24mm minmax(0, 1fr); padding: 3mm; border: .25mm dashed #8a8a8a; border-radius: 3mm; }
+}

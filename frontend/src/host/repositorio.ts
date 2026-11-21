@@ -1,4 +1,6 @@
 import type {
+  Assignment,
+  CollectionResult,
   Collector,
   CoordinatorRepository,
   Request,
@@ -10,7 +12,7 @@ import type {
 import { api, urlDeAdjunto } from './api'
 
 // El CoordinatorRepository de Daniela contra la API real (ADR-0007): traduce la vista del backend a sus tipos.
-interface SolicitudVista {
+export interface SolicitudVista {
   id: string
   codigo: string
   estado: 'recibida' | 'asignada' | 'programada' | 'recolectada' | 'rechazada' | 'cancelada'
@@ -113,11 +115,22 @@ export async function capacitacionPublica(): Promise<TrainingResource[]> {
 // Lo que ganó cada recolección, por código: Resultados y el detalle lo muestran.
 const puntosPorCodigo = (signal?: AbortSignal) =>
   api<Record<string, number>>('/puntos/por-codigo', 'GET', undefined, signal)
+const solicitud = (ruta: string, cuerpo: object) =>
+  api<SolicitudVista>('/solicitudes/' + ruta, 'POST', cuerpo).then(solicitudDe)
+
+// Recolecciones y la pantalla Escanear asignan y registran igual.
+export const asignar = (a: Assignment) =>
+  solicitud(a.solicitudId + '/asignacion', { encargado_id: a.recolectorId, dia: a.fecha, hora: a.hora ?? null })
+export const guardarResultado = (r: CollectionResult) =>
+  r.estado === 'recolectada'
+    ? solicitud(r.solicitudId + '/recoleccion', { kg: r.pesoKg }).then(async (s) => ({
+        ...s,
+        puntos: (await puntosPorCodigo())[s.codigo],
+      }))
+    : solicitud(r.solicitudId + '/rechazo', { motivo: r.motivoRechazo })
 
 export function crearRepositorio(): CoordinatorRepository {
   const zonas = (signal?: AbortSignal) => api<Zone[]>('/directorio/zonas', 'GET', undefined, signal)
-  const solicitud = (ruta: string, cuerpo: object) =>
-    api<SolicitudVista>('/solicitudes/' + ruta, 'POST', cuerpo).then(solicitudDe)
   return {
     listRequests: async (c, signal) => {
       const [lista, puntos] = await Promise.all([
@@ -134,15 +147,8 @@ export function crearRepositorio(): CoordinatorRepository {
       return lista.map((e) => recolectorDe(e, catalogo))
     },
     listZones: zonas,
-    assign: (_, a) =>
-      solicitud(a.solicitudId + '/asignacion', { encargado_id: a.recolectorId, dia: a.fecha, hora: a.hora ?? null }),
-    saveResult: (_, r) =>
-      r.estado === 'recolectada'
-        ? solicitud(r.solicitudId + '/recoleccion', { kg: r.pesoKg }).then(async (s) => ({
-            ...s,
-            puntos: (await puntosPorCodigo())[s.codigo],
-          }))
-        : solicitud(r.solicitudId + '/rechazo', { motivo: r.motivoRechazo }),
+    assign: (_, a) => asignar(a),
+    saveResult: (_, r) => guardarResultado(r),
     cancel: (_, id, motivo) => solicitud(id + '/cancelacion', { motivo }),
     saveCollector: async (c, input, id) => {
       const cuerpo = { nombre: input.nombre, zonas: input.zonas, activo: input.activo, colectivo: colectivoDe(c.grupo) }

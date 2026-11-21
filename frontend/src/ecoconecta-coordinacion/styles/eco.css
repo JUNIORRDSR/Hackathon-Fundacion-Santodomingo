@@ -309,7 +309,7 @@ html:has(.eco-app), body:has(> #root > .eco-app) {
     & .site-width { width: calc(100% - 1.5rem); }
     & .topbar-inner { column-gap: .35rem; }
     & .brand-link { justify-self: start; }
-    & .brand-mark { width: clamp(9.6rem, 41vw, 13.75rem); }
+    & .brand-mark { width: clamp(10.25rem, 44vw, 14.25rem); }
     & .coordinator-profile { gap: .35rem; max-width: 45vw; }
     & .profile-avatar { width: 2rem; height: 2rem; font-size: .75rem; }
     & .profile-copy strong { font-size: .75rem; }

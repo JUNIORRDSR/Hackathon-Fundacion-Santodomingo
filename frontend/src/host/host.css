@@ -1,5 +1,21 @@
 /* Pantallas del host (entrar, registros, canjes, WhatsApp) con los tokens del módulo de Daniela (.eco-app). */
 .eco-app {
+  /* Registros (ADR-0014): filtros, el aviso de registro, los lugares en tarjetas y el tipo de vecino. */
+  & .filtros-registro { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-block: 1rem; }
+  & .filtros-registro .select-field { min-width: min(100%, 13rem); }
+  & .registro-aviso { display: flex; align-items: center; gap: .45rem; margin-bottom: 1rem; color: var(--highlight); font-weight: 600; }
+  & .lugares-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); gap: 1rem; margin: 1rem 0 0; padding: 0; list-style: none; }
+  & .lugar-zona { display: grid; align-content: start; gap: .75rem; padding: 1rem 1.15rem 1.15rem; }
+  & .lugar-zona[data-activo="false"] { opacity: .7; }
+  & .lugar-cabeza { display: flex; align-items: center; gap: .5rem; }
+  & .lugar-cabeza h2 { flex: 1; color: var(--highlight); font-size: 1.15rem; }
+  & .lugar-conjuntos { display: flex; flex-wrap: wrap; gap: .45rem; margin: 0; padding: 0; list-style: none; }
+  & .lugar-conjunto { min-height: 48px; padding: 0 .95rem; border: 1px solid var(--line); border-radius: 9999px; background: var(--surface); color: var(--ink); font-weight: 600; }
+  & .lugar-conjunto:hover { background: var(--surface-muted); }
+  & .lugar-conjunto[data-activo="false"] { border-style: dashed; color: var(--muted); }
+  & .lugar-agregar { justify-self: start; }
+  & .tipo-registro { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; }
+
   /* Regla de puntos: una tarjeta por residuo, con etiquetas visibles y un ejemplo calculado. */
   & .regla { display: grid; gap: 1rem; margin-top: 1rem; }
   & .regla-cabeza h2 { font-size: 1.25rem; }

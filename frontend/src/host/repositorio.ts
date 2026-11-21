@@ -17,6 +17,7 @@ interface SolicitudVista {
   flujo: WasteType
   solicitante_nombre: string
   zona: string
+  conjunto: string | null
   direccion: string
   observaciones: string
   preferencia: 'manana' | 'tarde' | 'noche'
@@ -32,7 +33,7 @@ interface EncargadoVista {
   id: string
   nombre: string
   colectivo: 'huerteros' | 'recicladores'
-  zonas: string[]
+  lugares: string[]
   activo: boolean
 }
 interface ContenidoVista {
@@ -63,7 +64,7 @@ export function solicitudDe(v: SolicitudVista): Request {
     id: v.id,
     codigo: v.codigo,
     solicitante: v.solicitante_nombre,
-    ubicacion: v.zona + ' · ' + v.direccion,
+    ubicacion: (v.conjunto ?? v.zona) + ' · ' + v.direccion,
     tipo: v.flujo,
     fecha: fechaLocal.format(new Date(v.recibida)),
     fotoUrl: v.foto_url ?? undefined,
@@ -91,10 +92,12 @@ export function solicitudDe(v: SolicitudVista): Request {
   return { ...base, estado, asignacion, resultado: { solicitudId: v.id, estado, motivoRechazo: v.motivo } }
 }
 
+// El encargado cubre lugares (ADR-0014): conjuntos, o zonas sin conjuntos. El módulo los llama «zonas».
 function recolectorDe(e: EncargadoVista, zonas: Zone[]): Collector {
-  const nombres = zonas.filter((zona) => e.zonas.includes(zona.id)).map((zona) => zona.nombre)
+  const lugares = zonas.flatMap((zona) => [zona, ...(zona.conjuntos ?? [])])
+  const nombres = lugares.filter((lugar) => e.lugares.includes(lugar.id)).map((lugar) => lugar.nombre)
   const grupo: WasteType = e.colectivo === 'huerteros' ? 'organico' : 'reciclable'
-  return { id: e.id, nombre: e.nombre, grupo, zonas: e.zonas, zona: nombres.join(', '), activo: e.activo }
+  return { id: e.id, nombre: e.nombre, grupo, zonas: e.lugares, zona: nombres.join(', '), activo: e.activo }
 }
 
 export function recursoDe(c: ContenidoVista): TrainingResource {
@@ -145,7 +148,12 @@ export function crearRepositorio(): CoordinatorRepository {
         : solicitud(r.solicitudId + '/rechazo', { motivo: r.motivoRechazo }),
     cancel: (_, id, motivo) => solicitud(id + '/cancelacion', { motivo }),
     saveCollector: async (c, input, id) => {
-      const cuerpo = { nombre: input.nombre, zonas: input.zonas, activo: input.activo, colectivo: colectivoDe(c.grupo) }
+      const cuerpo = {
+        nombre: input.nombre,
+        lugares: input.zonas,
+        activo: input.activo,
+        colectivo: colectivoDe(c.grupo),
+      }
       let guardado = id
         ? await api<EncargadoVista>('/directorio/encargados/' + id, 'PATCH', cuerpo)
         : await api<EncargadoVista>('/directorio/encargados', 'POST', cuerpo)

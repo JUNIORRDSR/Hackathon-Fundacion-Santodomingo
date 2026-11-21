@@ -6,7 +6,8 @@ import { Modal } from '../ui/Modal'
 import type { CloseModal } from '../ui/Modal'
 import { useSubmission } from '../ui/useSubmission'
 
-// Las zonas salen del catálogo: el sistema sugiere a quien cubre la zona de cada solicitud.
+// Los lugares salen del catálogo (ADR-0014): conjuntos agrupados por zona; el sistema sugiere a quien cubre
+// el conjunto de cada solicitud. Marcar la zona completa marca todos sus conjuntos.
 export function CollectorForm({
   collector,
   zones,
@@ -30,7 +31,7 @@ export function CollectorForm({
     const nombre = name.trim()
     const errors = {
       name: nombre ? '' : 'Escribe el nombre.',
-      zone: selected.length ? '' : 'Elige al menos una zona.',
+      zone: selected.length ? '' : 'Elige al menos un lugar.',
     }
     setValidation(errors)
     if (errors.name || errors.zone) {
@@ -43,10 +44,24 @@ export function CollectorForm({
     })
   }
 
-  function toggle(zone: string, checked: boolean) {
-    setSelected((previous) => (checked ? [...previous, zone] : previous.filter((item) => item !== zone)))
+  function toggle(ids: string[], checked: boolean) {
+    setSelected((previous) =>
+      checked ? [...new Set([...previous, ...ids])] : previous.filter((item) => !ids.includes(item)),
+    )
     setValidation((previous) => ({ ...previous, zone: '' }))
   }
+
+  const choice = (place: { id: string; nombre: string }, label = place.nombre) => (
+    <label key={place.id} className="checkbox-field">
+      <input
+        type="checkbox"
+        checked={selected.includes(place.id)}
+        disabled={submit.busy}
+        onChange={(event) => toggle([place.id], event.target.checked)}
+      />{' '}
+      {label}
+    </label>
+  )
 
   return (
     <Modal title={collector ? 'Editar recolector' : 'Agregar recolector'} onClose={onClose} busy={submit.busy}>
@@ -73,18 +88,32 @@ export function CollectorForm({
             )}
           </div>
           <fieldset className="field" id={id + '-zone'} tabIndex={-1}>
-            <legend>Zonas que cubre</legend>
-            {zones.map((zone) => (
-              <label key={zone.id} className="checkbox-field">
-                <input
-                  type="checkbox"
-                  checked={selected.includes(zone.id)}
-                  disabled={submit.busy}
-                  onChange={(event) => toggle(zone.id, event.target.checked)}
-                />{' '}
-                {zone.nombre}
-              </label>
-            ))}
+            <legend>Lugares que cubre</legend>
+            {zones
+              .filter((zone) => zone.activo !== false)
+              .map((zone) => {
+                const sets = (zone.conjuntos ?? []).filter((set) => set.activo !== false)
+                if (!sets.length) return choice(zone)
+                const ids = sets.map((set) => set.id)
+                const marked = ids.filter((item) => selected.includes(item)).length
+                return (
+                  <div key={zone.id} className="place-group">
+                    <label className="checkbox-field">
+                      <input
+                        type="checkbox"
+                        checked={marked === ids.length}
+                        ref={(input) => {
+                          if (input) input.indeterminate = marked > 0 && marked < ids.length
+                        }}
+                        disabled={submit.busy}
+                        onChange={(event) => toggle(ids, event.target.checked)}
+                      />{' '}
+                      {zone.nombre} completa
+                    </label>
+                    <div className="place-sets">{sets.map((set) => choice(set))}</div>
+                  </div>
+                )
+              })}
             {validation.zone && <span className="field-error">{validation.zone}</span>}
           </fieldset>
           <label className="checkbox-field">

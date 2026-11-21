@@ -49,14 +49,17 @@ export type Request = RequestDetails &
 export interface Zone {
   id: string
   nombre: string
+  activo?: boolean
+  // Conjuntos o sectores de la zona (ADR-0014); una zona sin conjuntos se cubre a sí misma.
+  conjuntos?: { id: string; nombre: string; activo?: boolean }[]
 }
 
 export interface Collector {
   id: string
   nombre: string
   grupo: WasteType
-  zonas: string[] // ids del catálogo de zonas
-  zona: string // nombres de las zonas, para mostrar
+  zonas: string[] // ids de los lugares que cubre: conjuntos, o zonas sin conjuntos
+  zona: string // nombres de esos lugares, para mostrar
   activo: boolean
 }
 

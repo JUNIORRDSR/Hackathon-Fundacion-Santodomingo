@@ -258,6 +258,8 @@ html:has(.eco-app), body:has(> #root > .eco-app) {
   & .outcome-option, & .checkbox-field { display: flex; align-items: center; min-height: 48px; gap: .45rem; cursor: pointer; font-size: .875rem; font-weight: 600; }
   & .outcome-option { padding: .55rem; background: var(--surface); border: 1px solid var(--line); border-radius: .55rem; }
   & .outcome-option:has(:checked) { border-color: var(--highlight-hover); background: var(--surface-muted); }
+  & .place-group { display: grid; padding-block: .25rem; border-top: 1px solid var(--line); }
+  & .place-sets { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 11rem), 1fr)); padding-left: 1.6rem; }
   & .outcome-option input, & .checkbox-field input { accent-color: var(--ink); inline-size: 1.05rem; block-size: 1.05rem; margin: 0; }
   & .outcome-option svg { width: 1rem; height: 1rem; }
 

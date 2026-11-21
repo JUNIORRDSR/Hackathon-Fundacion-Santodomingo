@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { PageHeader } from '../../ecoconecta-coordinacion/components/layout/Layout'
 import { DataTable } from '../../ecoconecta-coordinacion/components/ui/DataTable'
 import { EmptyState, ErrorMessage } from '../../ecoconecta-coordinacion/components/ui/Feedback'
 import { Icon } from '../../ecoconecta-coordinacion/components/ui/Icon'
@@ -7,21 +6,20 @@ import { Modal } from '../../ecoconecta-coordinacion/components/ui/Modal'
 import { useSubmission } from '../../ecoconecta-coordinacion/components/ui/useSubmission'
 import type { Zone } from '../../ecoconecta-coordinacion'
 import { api } from '../api'
+import { lugarYDireccion, nombresDeLugares } from './ubicacion'
 
 interface Solicitante {
   id: string
   nombre: string
   tipo: 'hogar' | 'unidad_productiva'
   zona_id: string
+  conjunto_id: string | null
   direccion: string
   telefono: string
 }
 type Pedido = { flujo: 'organico' | 'reciclable'; preferencia: 'manana' | 'tarde' | 'noche' }
 const FLUJO = { organico: 'Orgánicos', reciclable: 'Reciclables' }
 const FRANJA = { manana: 'mañana', tarde: 'tarde', noche: 'noche' }
-const DESCRIPCION =
-  'Vecinos y negocios nuevos de WhatsApp. Al aceptarlos, su primer pedido entra a Solicitudes ' +
-  'y reciben su código para la bolsa.'
 const pedidoTexto = (p?: Pedido) => (p ? FLUJO[p.flujo] + ' · ' + FRANJA[p.preferencia] : 'Sin pedido')
 
 // RN-08 y ADR-0010: quien se registró por WhatsApp entra al piloto cuando la coordinación lo acepta.
@@ -40,17 +38,16 @@ export function PorHabilitar() {
     ])
       .then(([lista, catalogo, enEspera]) => {
         setPendientes(lista)
-        setZonas(Object.fromEntries(catalogo.map((z) => [z.id, z.nombre])))
+        setZonas(nombresDeLugares(catalogo))
         setPedidos(enEspera)
       })
       .catch((e: Error) => setError(e.message))
   }, [])
   useEffect(cargar, [cargar])
 
-  const zonaYDireccion = (s: Solicitante) => (zonas[s.zona_id] ? zonas[s.zona_id] + ' · ' : '') + s.direccion
+  const zonaYDireccion = (s: Solicitante) => lugarYDireccion(s, zonas)
   return (
     <>
-      <PageHeader title="Registros" description={DESCRIPCION} />
       {error && <ErrorMessage message={error} retry={cargar} />}
       {pendientes?.length === 0 ? (
         <div className="card">
@@ -75,7 +72,7 @@ export function PorHabilitar() {
                 </>
               ),
             },
-            { header: 'Zona y dirección', width: 'minmax(0, 2fr)', cell: zonaYDireccion },
+            { header: 'Lugar y dirección', width: 'minmax(0, 2fr)', cell: zonaYDireccion },
             { header: 'WhatsApp', cell: (s) => s.telefono },
             { header: 'Primer pedido', cell: (s) => <strong>{pedidoTexto(pedidos[s.telefono])}</strong> },
           ]}
@@ -133,7 +130,7 @@ function Aceptar({
               <dd>{s.telefono}</dd>
             </div>
             <div className="detail-wide">
-              <dt>Zona y dirección</dt>
+              <dt>Lugar y dirección</dt>
               <dd>{lugar}</dd>
             </div>
             <div className="detail-wide">

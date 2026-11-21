@@ -12,7 +12,7 @@ import { useSesion } from './host/sesion'
 import type { Usuario } from './host/sesion'
 import { Canjes } from './host/paginas/Canjes'
 import { Entrar } from './host/paginas/Entrar'
-import { PorHabilitar } from './host/paginas/PorHabilitar'
+import { Registros } from './host/paginas/Registros'
 import { Impacto } from './host/paginas/Impacto'
 import { Whatsapp } from './host/paginas/Whatsapp'
 
@@ -110,7 +110,7 @@ function App() {
       trainingResources={recursos}
       publicTrainingHref={capacitacionHref}
       extraPages={{
-        habilitar: <PorHabilitar />,
+        habilitar: <Registros porAceptar={porAceptar} />,
         canjes: <Canjes esAdmin={usuario.rol === 'administrador'} />,
         whatsapp: <Whatsapp />,
       }}

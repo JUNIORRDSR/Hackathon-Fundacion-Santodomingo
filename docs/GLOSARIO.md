@@ -29,6 +29,7 @@ español; el inglés queda solo para los tipos del framework.
 | Conversador | El cerebro del bot: menú numerado o LLM | `Conversador` |
 | Herramientas | Lo único que el bot puede hacer en nombre de un solicitante | `Herramientas` |
 | Código | Identifica una solicitud (ORG-0042, REC-0017). La persona lo escribe en la bolsa y la coordinación lo busca al pesar | `codigo` |
+| Etiqueta | Sticker con el QR del hogar o negocio (`EC1:<id>`). Al pesar, la coordinación lo escanea y llega a su solicitud abierta (ADR-0015) | `EtiquetaVista`, `Lectura` |
 | Canje | El vecino cambia puntos por un premio: lo pide por WhatsApp (código CAN-0001) y la huerta lo entrega (ADR-0008) | `canjes.py` |
 | Premio | Lo que se puede canjear, con su costo en puntos. Lo edita la administración | `PremioVista` |
 | Puntos apartados | Los de un canje pedido y aún no entregado: no se pueden volver a usar | `disponible()` |

@@ -19,6 +19,7 @@ def test_escenario_de_demostracion():
     solicitud = _pedir_organicos(admin, huerteros)
     _comprobar_que_recicladores_no_la_ve(recicladores, solicitud)
     _buscar_por_el_codigo_de_la_bolsa(huerteros, recicladores, solicitud)
+    _escanear_la_etiqueta_de_la_bolsa(huerteros, recicladores, solicitante, solicitud)
     _asignar_programar_y_recoger(huerteros, solicitud)
     assert admin.get(f"/api/puntos/solicitantes/{solicitante['id']}").json()["saldo"] == 12  # RN-05, RN-06
     assert admin.get("/api/puntos/por-codigo").json()[solicitud["codigo"]] == 12
@@ -66,6 +67,19 @@ def _buscar_por_el_codigo_de_la_bolsa(huerteros: TestClient, recicladores: TestC
     codigo = solicitud["codigo"].lower()
     assert huerteros.get(f"/api/solicitudes/codigo/{codigo}").json()["id"] == solicitud["id"]
     assert recicladores.get(f"/api/solicitudes/codigo/{codigo}").status_code == 403
+
+
+def _escanear_la_etiqueta_de_la_bolsa(huerteros: TestClient, recicladores: TestClient, solicitante: dict,
+                                      solicitud: dict) -> None:
+    """O escanea el QR del hogar (ADR-0015): trae su solicitud abierta, solo al colectivo que la atiende."""
+    etiqueta = next(e for e in huerteros.get("/api/etiquetas").json() if e["solicitante_id"] == solicitante["id"])
+    assert etiqueta["contenido"] == f"EC1:{solicitante['id']}" and "telefono" not in etiqueta
+    lectura = huerteros.get("/api/etiquetas/lectura", params={"contenido": etiqueta["contenido"]}).json()
+    assert [s["id"] for s in lectura["solicitudes"]] == [solicitud["id"]]
+    lectura = recicladores.get("/api/etiquetas/lectura", params={"contenido": etiqueta["contenido"]}).json()
+    assert lectura["etiqueta"]["nombre"] == "La Esquina" and lectura["solicitudes"] == []
+    ajeno = huerteros.get("/api/etiquetas/lectura", params={"contenido": "https://otra.cosa"})
+    assert ajeno.status_code == 404 and "no es una etiqueta" in ajeno.json()["detail"]
 
 
 def _asignar_programar_y_recoger(huerteros: TestClient, solicitud: dict) -> None:

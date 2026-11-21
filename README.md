@@ -41,6 +41,12 @@ pytest
 ficticios con sus solicitudes del día: pendientes, programadas a distintas horas, recolectadas con kilos (y sus puntos),
 una rechazada y dos canjes pedidos por WhatsApp. Se puede correr varias veces sin duplicar.
 
+## Escanear bolsas
+
+En **Escanear**, la coordinación apunta la cámara al sticker QR de la bolsa, registra los kilos o el rechazo y sigue con
+la siguiente. En **Etiquetas** imprime los stickers de los hogares habilitados. La cámara del navegador necesita HTTPS o
+`localhost`; sin ella se escribe el código de la bolsa ([ADR-0015](docs/adr/0015-etiqueta-qr-por-hogar.md)).
+
 ## Probar el bot sin WhatsApp
 
 Para repetir pruebas sin enviar mensajes a Twilio, arranca la app con `TRANSPORTE=simulado` en el `.env` de la raíz.

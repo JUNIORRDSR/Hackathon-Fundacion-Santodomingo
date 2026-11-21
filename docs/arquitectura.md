@@ -5,7 +5,7 @@
 
 ## En una frase
 
-Un monolito modular: un proceso FastAPI con siete módulos que solo se hablan por su contrato, y una SPA en React que
+Un monolito modular: un proceso FastAPI con nueve módulos que solo se hablan por su contrato, y una SPA en React que
 sirve el mismo contenedor. El solicitante usa WhatsApp; el coordinador, una tablet.
 
 ## Actores
@@ -34,6 +34,8 @@ flowchart LR
   D -. SolicitanteHabilitado .-> W
   R[reportes] -->|lee| S
   R -->|lee| D
+  E[etiquetas] -->|lee| S
+  E -->|lee| D
   A[acceso] -->|rol y colectivo| Routers((todos los routers))
 ```
 
@@ -47,6 +49,7 @@ flowchart LR
 | whatsapp | Registro por WhatsApp, bot, avisos y monitor con toma de control | — | los eventos de arriba | Jairo: menú, simulador y monitor | Conversador LLM: Leonardo · Transporte: Jorge |
 | contenidos | Educación ambiental y tutoriales por audiencia | — | — | Jairo | — |
 | clasificacion | Revisa si los residuos de una foto están bien separados; orientativo (ADR-0007) | — | — | Leonardo | — |
+| etiquetas | El QR de cada hogar: imprimirlo y leerlo al pesar la bolsa (ADR-0015) | — | — | Leonardo | — |
 | reportes | Resumen por flujo, estado y periodo; CSV sin datos personales | — | — | Jairo | — |
 | acceso | Login, roles y colectivo del coordinador | — | — | Jairo | — |
 | frontend | App de Daniela (módulo `ecoconecta-coordinacion`) más el host: sesión, API y pantallas extra (ADR-0007) | — | — | Daniela: módulo · Jairo: host | — |
@@ -85,7 +88,7 @@ stateDiagram-v2
 - **RN-03:** queda quién asignó (el coordinador) y quién recoge (el encargado).
 - **RN-04:** código corto por flujo (ORG-0042, REC-0017) e historial de cada cambio.
 - El aviso de «recibida» pide escribir el código en la bolsa. Al pesar, la coordinación lo busca en la tablet y registra
-  los kilos en la solicitud correcta.
+  los kilos en la solicitud correcta. Si la bolsa lleva el sticker del hogar, escanea su QR (ADR-0015).
 - Una sola solicitud abierta por solicitante y flujo.
 - «No había nadie» no es un rechazo: se reprograma.
 - El sistema sugiere los encargados de la zona; asigna el coordinador (§9).

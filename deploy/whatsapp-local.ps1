@@ -7,6 +7,11 @@ param(
     [switch]$Cloudflare,
     [Parameter(Mandatory, ParameterSetName = 'Temporal')]
     [switch]$Temporal,
+    [Parameter(Mandatory, ParameterSetName = 'Comprobar')]
+    [switch]$Comprobar,
+    [Parameter(ParameterSetName = 'Ngrok')]
+    [Parameter(ParameterSetName = 'Cloudflare')]
+    [Parameter(ParameterSetName = 'Temporal')]
     [switch]$Compilar
 )
 
@@ -14,6 +19,7 @@ $ErrorActionPreference = 'Stop'
 $Ruta = '/api/whatsapp/twilio'
 $Repo = Split-Path -Parent $PSScriptRoot
 $ArchivoEntorno = Join-Path $Repo '.env'
+$AgenteHttp = 'EcoConecta-Webhook-Probe/1.0'
 
 function Invoke-EcoCompose {
     docker compose --progress quiet -f docker-compose.yml -f deploy/whatsapp-local.compose.yml @args
@@ -73,7 +79,7 @@ function Test-ProxyWebhook([string]$Url, [string]$Servicio) {
         Method = 'Options'
         TimeoutSec = 4
         SkipHttpErrorCheck = $true
-        Headers = @{ 'ngrok-skip-browser-warning' = '1' }
+        UserAgent = $AgenteHttp
     }
     $hasta = [DateTime]::UtcNow.AddSeconds(30)
     do {
@@ -94,8 +100,6 @@ function Test-Webhook([string]$Url, [string]$Token) {
     $clave = [Text.Encoding]::UTF8.GetBytes($Token)
     $datos = [Text.Encoding]::UTF8.GetBytes($Url + $campo + $valor)
     $firma = [Convert]::ToBase64String([Security.Cryptography.HMACSHA1]::HashData($clave, $datos))
-    $cabeceras = @{ 'ngrok-skip-browser-warning' = '1' }
-    $cabecerasFirmadas = $cabeceras + @{ 'X-Twilio-Signature' = $firma }
     $formulario = @{
         Uri = $Url
         Method = 'Post'
@@ -103,12 +107,16 @@ function Test-Webhook([string]$Url, [string]$Token) {
         Body = "$campo=$valor"
         SkipHttpErrorCheck = $true
         TimeoutSec = 4
+        UserAgent = $AgenteHttp
     }
+    $ultimo = 'sin respuesta HTTP'
     $hasta = [DateTime]::UtcNow.AddSeconds(30)
     do {
         try {
-            $sinFirma = Invoke-WebRequest @formulario -Headers $cabeceras
-            $firmado = Invoke-WebRequest @formulario -Headers $cabecerasFirmadas
+            $sinFirma = Invoke-WebRequest @formulario
+            $ultimo = "sin firma $($sinFirma.StatusCode)"
+            $firmado = Invoke-WebRequest @formulario -Headers @{ 'X-Twilio-Signature' = $firma }
+            $ultimo += ", con firma $($firmado.StatusCode)"
             if ($sinFirma.StatusCode -eq 403 -and $firmado.StatusCode -eq 400 -and
                 $firmado.Content -match 'sin teléfono asociado') {
                 return
@@ -118,7 +126,7 @@ function Test-Webhook([string]$Url, [string]$Token) {
         }
         Start-Sleep -Seconds 1
     } while ([DateTime]::UtcNow -lt $hasta)
-    throw 'No se pudo verificar el webhook público. Revisa el túnel y que el dominio apunte a whatsapp-webhook:8080.'
+    throw "No se pudo verificar el webhook público ($ultimo). Revisa el túnel y TWILIO_WEBHOOK_URL."
 }
 
 Push-Location $Repo
@@ -127,6 +135,10 @@ try {
     # Carga los valores resueltos por Compose sin mostrar variables ni secretos.
     $config = Invoke-EcoCompose --profile '*' config --format json | ConvertFrom-Json -AsHashtable
     $app = $config.services.app.environment
+    $ngrok = $config.services.'whatsapp-tunel-ngrok'.environment
+    if ($PSCmdlet.ParameterSetName -in 'Cloudflare', 'Temporal' -and ($ngrok.NGROK_DOMAIN -or $app.NGROK_DOMAIN)) {
+        throw 'NGROK_DOMAIN ya está configurado. Usa el túnel fijo de ngrok para conservar el webhook.'
+    }
     if ($app.TRANSPORTE -ne 'twilio') {
         throw 'Configura TRANSPORTE=twilio en el .env de la raíz.'
     }
@@ -152,8 +164,7 @@ try {
             }
             $servicio = 'whatsapp-tunel-fijo'
         } else {
-            $ngrok = $config.services.'whatsapp-tunel-ngrok'.environment
-            if (-not $ngrok.NGROK_AUTHTOKEN) {
+            if (-not $Comprobar -and -not $ngrok.NGROK_AUTHTOKEN) {
                 throw 'Agrega NGROK_AUTHTOKEN al .env local con el token de tu cuenta de ngrok.'
             }
             $fija = Get-UrlFija $ngrok.NGROK_DOMAIN 'NGROK_DOMAIN'
@@ -166,6 +177,15 @@ try {
             throw "Usa la URL HTTPS pública fija con la ruta $Ruta."
         }
         $url = $fija.AbsoluteUri
+        if ($Comprobar) {
+            if ($app.TWILIO_WEBHOOK_URL -cne $url) {
+                throw "TWILIO_WEBHOOK_URL debe coincidir con $url."
+            }
+            Test-ProxyWebhook $url $servicio
+            Test-Webhook $url $app.TWILIO_AUTH_TOKEN
+            Write-Output "Webhook verificado: $url"
+            return
+        }
         if ($UrlFija) {
             $nuevo = Set-ValorEntorno $original 'CLOUDFLARE_TUNNEL_HOSTNAME' $fija.Host
         }

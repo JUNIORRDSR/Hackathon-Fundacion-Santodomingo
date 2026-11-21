@@ -62,7 +62,13 @@ Después de reiniciar el equipo, abre Docker Desktop y ejecuta el script de nuev
 imagen y el código sigue igual. Twilio conserva la URL guardada y Docker conserva los datos en el volumen `datos`.
 Con el equipo apagado, las pruebas compartidas siguen disponibles en Azure si el Sandbox o remitente apunta allí.
 
-Si ya tienes dominio propio en Cloudflare, puedes usar el mismo proxy con un túnel administrado. Configura el servicio
+Para verificar el túnel mientras la app está activa, ejecuta `pwsh -File deploy/whatsapp-local.ps1 -Comprobar`.
+Envía una sonda firmada sin remitente ni mensaje y conserva los contenedores y el `.env`. Para diagnosticar una
+entrega desde WhatsApp, revisa `docker compose logs --tail 50 app`. El registro `whatsapp.webhook` distingue la firma,
+el acceso al piloto y el procesamiento del turno.
+
+Con `NGROK_DOMAIN` configurado, el script reserva esa instalación para ngrok. En un entorno sin ngrok, si ya tienes
+dominio propio en Cloudflare, puedes usar el mismo proxy con un túnel administrado. Configura el servicio
 HTTP `http://whatsapp-webhook:8080` en Cloudflare, guarda `CLOUDFLARE_TUNNEL_TOKEN` y `CLOUDFLARE_TUNNEL_HOSTNAME`
 en `.env`, y ejecuta `pwsh -File deploy/whatsapp-local.ps1 -Cloudflare -Compilar`. Para una prueba puntual, `-Temporal`
 usa un Quick Tunnel de Cloudflare cuya URL cambia al recrearlo. [Túneles de Cloudflare](https://developers.cloudflare.com/tunnel/concepts/)

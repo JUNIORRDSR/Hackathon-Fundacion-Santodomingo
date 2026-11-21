@@ -1,5 +1,6 @@
 """API de whatsapp: webhook de Twilio, monitor con toma de control (ADR-0007) y simulador. Todo menos el webhook
 pide sesión."""
+import logging
 from urllib.parse import parse_qsl
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -14,6 +15,7 @@ from app.modulos.whatsapp.contrato import MensajeEntrante, MensajeSaliente
 from app.modulos.whatsapp.transporte_twilio import TransporteTwilio
 
 router = APIRouter(prefix="/api/whatsapp", tags=["whatsapp"])
+log = logging.getLogger("whatsapp.webhook")
 Sesion = Depends(acceso.usuario_actual)
 FORMULARIO_MAXIMO = 32 * 1024
 
@@ -32,25 +34,32 @@ async def webhook_twilio(request: Request) -> Response:
     transporte = bot.transporte()
     firma = request.headers.get("X-Twilio-Signature", "")
     if not isinstance(transporte, TransporteTwilio) or not firma:
+        log.info("Solicitud de WhatsApp rechazada: %s", "transporte inactivo" if firma else "sin firma")
         raise HTTPException(403, "Firma de Twilio inválida.")
     parametros = await _formulario_twilio(request)
     if not transporte.firma_valida(parametros, firma):
+        log.warning("Solicitud de WhatsApp rechazada: la firma no coincide con la URL o el token configurado")
         raise HTTPException(403, "Firma de Twilio inválida.")
     try:
         mensaje, sid = transporte.entrada(parametros)
     except PermissionError:
+        log.warning("Solicitud firmada de WhatsApp rechazada: remitente fuera del piloto")
         raise HTTPException(403, "El remitente no está habilitado para esta prueba.") from None
     except ValueError:
+        log.info("Solicitud firmada de WhatsApp rechazada: formulario, cuenta, destinatario o alias inválido")
         raise HTTPException(400, "Mensaje de WhatsApp inválido o remitente sin teléfono asociado.") from None
     return await run_in_threadpool(_respuesta_twilio, transporte, mensaje, sid)
 
 
 def _respuesta_twilio(transporte: TransporteTwilio, mensaje: MensajeEntrante, sid: str) -> Response:
     if transporte.respuesta_twiml:
-        cuerpo = transporte.serializar_twiml(bot.recibir_para_twiml(mensaje, sid))
+        respuestas = bot.recibir_para_twiml(mensaje, sid)
+        cuerpo = transporte.serializar_twiml(respuestas)
+        log.info("Webhook de WhatsApp procesado (SID …%s, respuestas TwiML: %s)", sid[-8:], len(respuestas))
     else:
         bot.recibir(mensaje, sid)
         cuerpo = "<Response/>"
+        log.info("Webhook de WhatsApp procesado (SID …%s, modo REST)", sid[-8:])
     return Response(cuerpo, media_type="application/xml")
 
 

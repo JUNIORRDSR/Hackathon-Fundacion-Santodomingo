@@ -131,7 +131,7 @@
 
   /* Botón flotante de WhatsApp */
   /* El botón vive en un carril sticky al final del contenido: baja con la pantalla y se detiene encima del pie. */
-  & .fab-lane { position: sticky; bottom: 0; z-index: 4; display: flex; justify-content: flex-end; height: 0; margin-top: 4.75rem; pointer-events: none; }
+  & .fab-lane { position: sticky; bottom: 0; z-index: 4; display: flex; justify-content: flex-end; height: 0; margin-top: calc(2.5rem + 60px); /* arriba, el mismo aire que el botón tiene hasta el pie */ pointer-events: none; }
   /* El contenido ocupa el alto disponible: el carril queda siempre al fondo, justo encima del pie. */
   &:has(.fab-lane) .main-content { display: flex; flex-direction: column; padding-bottom: 0; }
   &:has(.fab-lane) .motion-route-stage { flex: 1; }

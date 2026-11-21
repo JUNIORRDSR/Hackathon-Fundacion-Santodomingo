@@ -77,6 +77,7 @@ function App() {
     'registros-cambiaron',
   )
   const sinLeer = useContador(!!usuario, '/whatsapp/conversaciones', contarSinLeer, 'whatsapp-leido')
+  const porEntregar = useContador(!!usuario, '/puntos/canjes?estado=pedido', contarLista, 'canjes-cambiaron')
   const [recursos, setRecursos] = useState<TrainingResource[]>()
   useEffect(() => {
     if (usuario) void api<Parameters<typeof recursoDe>[0][]>('/contenidos').then((c) => setRecursos(c.map(recursoDe)))
@@ -112,7 +113,7 @@ function App() {
         canjes: <Canjes />,
         whatsapp: <Whatsapp />,
       }}
-      badges={{ habilitar: porAceptar, whatsapp: sinLeer }}
+      badges={{ habilitar: porAceptar, whatsapp: sinLeer, canjes: porEntregar }}
       onSignOut={() => void salir()}
     />
   )

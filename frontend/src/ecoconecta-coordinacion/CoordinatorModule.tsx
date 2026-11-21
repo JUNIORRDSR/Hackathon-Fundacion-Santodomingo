@@ -5,6 +5,7 @@ import { RequestDetail } from './components/solicitudes/RequestDetail'
 import { ErrorMessage, LoadingState } from './components/ui/Feedback'
 import { Icon } from './components/ui/Icon'
 import { DashboardHeader, DashboardPage } from './pages/DashboardPage'
+import type { DashboardCounts } from './pages/DashboardPage'
 import { SolicitudesPage } from './pages/SolicitudesPage'
 import { RecoleccionesPage } from './pages/RecoleccionesPage'
 import { RecolectoresPage } from './pages/RecolectoresPage'
@@ -75,6 +76,8 @@ export function CoordinatorModule({
           location={location}
           href={href}
           demo={demo}
+          pages={pages}
+          counts={{ canjes: badges?.canjes, habilitar: badges?.habilitar }}
           training={
             <CapacitacionPage
               resources={trainingResources ?? sampleTraining}
@@ -109,6 +112,8 @@ function CoordinatorContent({
   location,
   href,
   demo,
+  pages,
+  counts,
   training,
 }: {
   coordinator: Coordinator
@@ -116,6 +121,8 @@ function CoordinatorContent({
   location: EcoLocation
   href: EcoLink
   demo: boolean
+  pages: EcoPage[]
+  counts: DashboardCounts
   training: ReactNode
 }) {
   const page = location.page as OperationalPage | 'capacitacion'
@@ -207,6 +214,8 @@ function CoordinatorContent({
           requests={requests}
           collectors={collectors}
           href={href}
+          pages={pages}
+          counts={counts}
           selectedId={selected?.id}
           onSelect={open}
         />

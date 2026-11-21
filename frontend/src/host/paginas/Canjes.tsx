@@ -177,6 +177,7 @@ function DetalleCanje({
     void submit.run(async () => {
       await api('/puntos/canjes/' + c.codigo + '/' + accion, 'POST')
       const aviso = accion === 'entrega' ? `Entregado: ${c.premio}. El vecino recibe su saldo por WhatsApp.` : ''
+      window.dispatchEvent(new Event('canjes-cambiaron'))
       await close(() => alCerrar(aviso))
     })
   return (

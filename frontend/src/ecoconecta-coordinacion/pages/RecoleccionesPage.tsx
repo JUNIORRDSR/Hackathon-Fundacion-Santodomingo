@@ -1,8 +1,10 @@
-import { useState } from 'react'
-import { compareAssignments, formatDate, formatWeight, localDate, wasteLabels } from '../labels'
+import { useEffect, useState } from 'react'
+import { compareAssignments, formatDate, formatWeight, localDate, localTime, wasteLabels } from '../labels'
 import type { CollectionResult, Collector, Request, WasteType } from '../types'
 import { PageHeader } from '../components/layout/Layout'
 import { CollectionResultForm } from '../components/recolecciones/CollectionResultForm'
+import { ScheduleTimeline } from '../components/recolecciones/ScheduleTimeline'
+import { getPlannedRequests } from '../components/recolecciones/timelineData'
 import { StatusBadge } from '../components/solicitudes/RequestList'
 import { EmptyState } from '../components/ui/Feedback'
 import { Icon } from '../components/ui/Icon'
@@ -27,7 +29,13 @@ export function RecoleccionesPage({
   onSave: (result: CollectionResult) => Promise<() => void>
   onOpen: (item: Request) => void
 }) {
-  const [view, setView] = useState<'programadas' | 'resultados'>('programadas')
+  // El cronograma por horas vive aquí: en Inicio solo queda la lista de hoy (PRODUCT.md).
+  const [view, setView] = useState<'programadas' | 'resultados' | 'cronograma'>('programadas')
+  const [clock, setClock] = useState(localTime)
+  useEffect(() => {
+    const timer = window.setInterval(() => setClock(localTime()), 30000)
+    return () => window.clearInterval(timer)
+  }, [])
   const [selectedId, setSelectedId] = useState(requestId)
   const [code, setCode] = useState('')
   const query = code.trim().toLowerCase()
@@ -81,6 +89,14 @@ export function RecoleccionesPage({
           >
             Resultados ({resolved.length})
           </button>
+          <button
+            className="pill"
+            type="button"
+            aria-pressed={view === 'cronograma'}
+            onClick={() => setView('cronograma')}
+          >
+            Cronograma
+          </button>
         </MotionPills>
         <form
           className="search-field"
@@ -101,7 +117,15 @@ export function RecoleccionesPage({
         </form>
       </div>
       <div className="view-content" key={view}>
-        {view === 'programadas' ? (
+        {view === 'cronograma' ? (
+          <ScheduleTimeline
+            planned={getPlannedRequests(requests)}
+            collectors={collectors}
+            today={today}
+            clock={clock}
+            onSelect={onOpen}
+          />
+        ) : view === 'programadas' ? (
           scheduled.length ? (
             <DataTable
               items={scheduled}

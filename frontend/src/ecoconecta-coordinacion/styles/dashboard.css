@@ -62,15 +62,15 @@
   & .timeline-heading { align-items: center; }
   & .timeline-heading p { margin-top: .2rem; }
   & .segmented-control { display: inline-flex; align-items: center; padding: .16rem; border: 1px solid var(--line); border-radius: 9999px; background: var(--surface-muted); flex-shrink: 0; }
-  & .segmented-control button { border: 1px solid transparent; min-height: 40px; padding: .4rem .7rem; border-radius: 9999px; font-size: .8125rem; font-weight: 550; background: transparent; }
+  & .segmented-control button { border: 1px solid transparent; min-height: 48px; padding: .4rem .7rem; border-radius: 9999px; font-size: .8125rem; font-weight: 550; background: transparent; }
   & .segmented-control button:hover { background: var(--background); }
   & .segmented-control button[aria-pressed="true"] { background: var(--surface); color: var(--ink); border-color: var(--line); box-shadow: 0 2px 8px #2d4b3f14; }
   & .timeline-toolbar { display: flex; align-items: center; justify-content: space-between; gap: .45rem; flex-wrap: wrap; margin: .55rem 0 .35rem; }
   & .date-selector { display: flex; align-items: center; flex-wrap: wrap; gap: .15rem; }
-  & .date-selector .icon-button { min-width: 44px; }
+  & .date-selector .icon-button { min-width: 52px; }
   & .date-previous svg { transform: rotate(90deg); }
   & .date-next svg { transform: rotate(-90deg); }
-  & .date-selector input, & .timeline-filter select { min-height: 44px; max-width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 9999px; padding: .43rem .65rem; background: var(--surface); font-size: .8125rem; font-weight: 550; }
+  & .date-selector input, & .timeline-filter select { min-height: 52px; max-width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 9999px; padding: .43rem .65rem; background: var(--surface); font-size: .8125rem; font-weight: 550; }
   & .date-selector input { inline-size: 8.15rem; }
   & .date-selector .today-button { margin-left: .1rem; }
   & .timeline-filter select { padding-right: 2rem; width: 100%; }
@@ -145,9 +145,56 @@
     & .timeline-panel, & .collection-feature { padding: .8rem; }
     & .timeline-toolbar { margin-bottom: .55rem; }
     & .date-selector input { inline-size: 7.65rem; }
-    & .date-selector .icon-button { min-width: 44px; }
-    & .segmented-control button { min-height: 44px; }
+    & .date-selector .icon-button { min-width: 52px; }
+    & .segmented-control button { min-height: 52px; }
     & .timeline-filter { max-width: 100%; }
   }
 
+
+  /* Inicio «Qué hacer hoy» (PRODUCT.md): tareas como lista de pendientes y la agenda de hoy al lado. */
+  & .today-heading { margin-bottom: 1.4rem; }
+  & .today-heading h1 { font-size: clamp(1.9rem, 3vw, 2.4rem); }
+  & .today-heading p { color: var(--muted); margin-top: .35rem; font-size: 1.05rem; }
+  & .today-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 1.5rem; align-items: start; }
+  & .today-tasks h2, & .today-agenda h2 { font-size: 1.25rem; }
+  & .today-tasks h2 { margin-bottom: .8rem; }
+  & .today-task-grid { display: grid; gap: .7rem; }
+  & .today-task { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 1rem; min-height: 5.5rem; padding: .9rem 1rem; color: var(--ink); text-decoration: none; transition: background-color 160ms, box-shadow 160ms; }
+  & .today-task:hover { background: var(--surface-muted); }
+  & .today-task-icon { display: grid; place-items: center; width: 3rem; height: 3rem; border-radius: 1rem; background: var(--highlight); --icon-stroke: var(--accent-on-highlight); }
+  & .today-task-icon svg { width: 1.4rem; height: 1.4rem; }
+  & .today-task-text { display: grid; gap: .15rem; min-width: 0; }
+  & .today-task-text strong { font: 700 1.9rem/1 var(--font-heading); letter-spacing: -.03em; color: var(--highlight); font-variant-numeric: tabular-nums; }
+  & .today-task-text span { font-size: 1rem; }
+  & .today-task-action { display: inline-flex; align-items: center; gap: .35rem; min-height: 3.25rem; padding-inline: 1.1rem; border-radius: 9999px; background: var(--highlight); color: var(--on-highlight); font-weight: 650; white-space: nowrap; --icon-stroke: var(--accent-on-highlight); }
+  & .today-task-arrow { rotate: -90deg; width: 1rem; height: 1rem; }
+  & .today-task[data-done="true"] { background: transparent; box-shadow: none; border-style: dashed; }
+  & .today-task[data-done="true"] .today-task-icon { background: var(--surface-muted); --icon-stroke: #2f7a4e; }
+  & .today-task[data-done="true"] strong { font-size: 1.2rem; color: #2f7a4e; }
+  & .today-task[data-done="true"] .today-task-text span { color: var(--muted); }
+  & .today-task[data-done="true"] .today-task-action { background: transparent; border: 1px solid var(--line); color: var(--muted); --icon-stroke: var(--muted); }
+  & .today-agenda { padding: 1.1rem 1.25rem .6rem; }
+  & .today-agenda-heading { display: flex; justify-content: space-between; align-items: center; gap: .75rem; margin-bottom: .4rem; }
+  & .today-agenda-row { display: flex; align-items: center; gap: .75rem; padding-block: .55rem; border-top: 1px solid var(--line); }
+  & .today-agenda-row:first-child { border-top: 0; }
+  & .today-agenda-main { display: flex; flex: 1; align-items: center; gap: 1rem; min-width: 0; min-height: 3.25rem; padding: .3rem .45rem; border: 0; border-radius: .8rem; background: transparent; color: var(--ink); text-align: left; }
+  & .today-agenda-main:hover { background: var(--surface-muted); }
+  & .today-agenda-hour { flex: 0 0 5.75rem; color: var(--highlight); font-size: 1.05rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  & .today-agenda-who { display: grid; min-width: 0; }
+  & .today-agenda-who strong { font-size: 1.05rem; }
+  & .today-agenda-who span { overflow: hidden; color: var(--muted); font-size: .9rem; text-overflow: ellipsis; white-space: nowrap; }
+  & .today-agenda-state { display: inline-flex; align-items: center; gap: .35rem; padding-inline: .5rem; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  & .today-agenda-row[data-state="recolectada"] .today-agenda-state { color: #2f7a4e; --icon-stroke: #2f7a4e; }
+  & .today-agenda-empty { padding-block: .75rem 1rem; color: var(--muted); font-size: 1.05rem; }
+
+  @media (max-width: 960px) {
+    & .today-layout { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  @media (max-width: 575px) {
+    & .today-task { grid-template-columns: auto minmax(0, 1fr); }
+    & .today-task-action { grid-column: 1 / -1; justify-content: center; }
+    & .today-agenda-row { flex-wrap: wrap; }
+    & .today-agenda-hour { flex-basis: 4.5rem; }
+  }
 }

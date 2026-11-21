@@ -1,10 +1,12 @@
 """Transporte de WhatsApp: autentica webhooks de Twilio y entrega respuestas y avisos."""
 import base64
+import json
 import os
 import re
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field
+from urllib.error import HTTPError
 
 from starlette.datastructures import FormData
 from twilio.request_validator import RequestValidator
@@ -21,6 +23,13 @@ TELEFONO = re.compile(r"\+[1-9][0-9]{7,14}")
 BSUID = re.compile(r"[A-Z]{2}\.(?:ENT\.)?[A-Za-z0-9]{1,128}")
 SID_MENSAJE = re.compile(r"(?:SM|MM)[0-9a-fA-F]{32}")
 PREFIJO = "whatsapp:"
+
+
+class ErrorEnvioTwilio(RuntimeError):
+    def __init__(self, http: int, codigo: int | None):
+        super().__init__("Twilio rechazó el envío")
+        self.http = http
+        self.codigo = codigo
 
 
 @dataclass(frozen=True)
@@ -72,8 +81,13 @@ class TransporteTwilio:
         credencial = base64.b64encode(f"{self.cuenta}:{self.token}".encode()).decode()
         pedido = urllib.request.Request(MENSAJES.format(cuenta=self.cuenta), urllib.parse.urlencode(datos).encode(),
                                         {"Authorization": f"Basic {credencial}"})
-        with urllib.request.urlopen(pedido, timeout=10) as respuesta:
-            respuesta.read()
+        try:
+            with urllib.request.urlopen(pedido, timeout=10) as respuesta:
+                respuesta.read()
+        except HTTPError as error:
+            with error:
+                codigo = _codigo_error(error)
+            raise ErrorEnvioTwilio(error.code, codigo) from None
 
     @staticmethod
     def serializar_twiml(mensajes: list[MensajeSaliente]) -> str:
@@ -87,6 +101,15 @@ class TransporteTwilio:
             else:
                 respuesta.message(mensaje.texto)
         return str(respuesta)
+
+
+def _codigo_error(respuesta: HTTPError) -> int | None:
+    try:
+        cuerpo = json.loads(respuesta.read(4096))
+    except (OSError, ValueError):
+        return None
+    codigo = cuerpo.get("code") if isinstance(cuerpo, dict) else None
+    return codigo if type(codigo) is int else None
 
 
 def _variable(nombre: str) -> str:

@@ -1,4 +1,4 @@
-import { Fragment } from 'react'
+import { Fragment, useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { Bubble, BubbleContent } from '@/components/ui/bubble'
 import { Marker, MarkerContent } from '@/components/ui/marker'
@@ -14,6 +14,7 @@ import {
 import '../../shadcn.css'
 
 export interface MensajeVista {
+  id: number
   direccion: 'entrante' | 'saliente'
   autor: 'vecino' | 'bot' | 'aviso' | 'coordinacion'
   texto: string
@@ -37,12 +38,51 @@ function nombreDelDia(fecha: Date) {
 }
 
 // Los mensajes van por día, y los seguidos del mismo autor se agrupan bajo un solo nombre.
-export function Hilo({ mensajes, control }: { mensajes: MensajeVista[]; control: boolean }) {
+export function Hilo({
+  mensajes,
+  control,
+  alLeer,
+}: {
+  mensajes: MensajeVista[]
+  control: boolean
+  alLeer: (hastaId: number) => Promise<void>
+}) {
+  const ultimoEntrante = mensajes.reduce(
+    (ultimo, mensaje) => (mensaje.direccion === 'entrante' ? mensaje.id : ultimo),
+    0,
+  )
+  const marcaLectura = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const marca = marcaLectura.current
+    if (!marca || !ultimoEntrante) return
+    let enVista = false
+    const comprobarLectura = () => {
+      if (enVista && document.visibilityState === 'visible' && getComputedStyle(marca).visibility === 'visible') {
+        void alLeer(ultimoEntrante)
+      }
+    }
+    const observador = new IntersectionObserver(
+      ([entrada]) => {
+        enVista = entrada.isIntersecting && entrada.intersectionRatio === 1
+        comprobarLectura()
+      },
+      { threshold: 1 },
+    )
+    observador.observe(marca)
+    document.addEventListener('visibilitychange', comprobarLectura)
+    return () => {
+      enVista = false
+      observador.disconnect()
+      document.removeEventListener('visibilitychange', comprobarLectura)
+    }
+  }, [mensajes, ultimoEntrante, alLeer])
+
   return (
     <div className="shadcn hilo">
-      <MessageScrollerProvider autoScroll>
+      <MessageScrollerProvider autoScroll defaultScrollPosition="end" scrollEdgeThreshold={64}>
         <MessageScroller>
-          <MessageScrollerViewport>
+          <MessageScrollerViewport aria-label="Mensajes de la conversación">
             <MessageScrollerContent className="flex flex-col gap-1.5 p-4">
               {mensajes.map((m, i) => {
                 const fecha = new Date(m.fecha)
@@ -51,20 +91,20 @@ export function Hilo({ mensajes, control }: { mensajes: MensajeVista[]; control:
                 const seguido = !nuevoDia && anterior?.autor === m.autor
                 const lado = m.direccion === 'entrante' ? 'start' : 'end'
                 return (
-                  <Fragment key={i}>
+                  <Fragment key={m.id}>
                     {nuevoDia && (
                       <Marker variant="separator" className="hilo-dia">
                         <MarkerContent>{nombreDelDia(fecha)}</MarkerContent>
                       </Marker>
                     )}
-                    <MessageScrollerItem messageId={String(i)} scrollAnchor={m.direccion === 'entrante'}>
+                    <MessageScrollerItem messageId={String(m.id)}>
                       <Message align={lado} className={seguido ? 'hilo-seguido' : 'hilo-primero'}>
                         <MessageContent>
                           {!seguido && <MessageHeader className="hilo-autor">{AUTOR[m.autor]}</MessageHeader>}
                           <Bubble align={lado} data-autor={m.autor}>
                             <BubbleContent className="whitespace-pre-line">{conNegritas(m.texto)}</BubbleContent>
                           </Bubble>
-                          <MessageFooter className="hilo-hora">
+                          <MessageFooter className="hilo-hora" ref={m.id === ultimoEntrante ? marcaLectura : undefined}>
                             {hora.format(fecha)}
                             {m.estado === 'fallido' && ' · No se envió'}
                           </MessageFooter>
@@ -81,7 +121,12 @@ export function Hilo({ mensajes, control }: { mensajes: MensajeVista[]; control:
               )}
             </MessageScrollerContent>
           </MessageScrollerViewport>
-          <MessageScrollerButton />
+          <MessageScrollerButton
+            aria-label="Ir al último mensaje"
+            title="Ir al último mensaje"
+            size="icon"
+            className="inset-s-auto inset-e-4 z-10 translate-x-0 rounded-full shadow-md rtl:translate-x-0"
+          />
         </MessageScroller>
       </MessageScrollerProvider>
     </div>

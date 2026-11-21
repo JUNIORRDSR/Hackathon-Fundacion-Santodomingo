@@ -4,22 +4,17 @@ import { ErrorMessage } from '../ui/Feedback'
 import { useSubmission } from '../ui/useSubmission'
 
 // Cancelar pide un motivo: queda en el historial y al vecino le llega por WhatsApp.
-export function CancelRequest({ onCancel }: { onCancel: (motivo: string) => Promise<void> }) {
+export function CancelRequest({
+  onCancel,
+  onBack,
+}: {
+  onCancel: (motivo: string) => Promise<void>
+  onBack: () => void
+}) {
   const id = useId()
   const submit = useSubmission()
-  const [open, setOpen] = useState(false)
   const [reason, setReason] = useState('')
   const valid = reason.trim().length >= 3
-
-  if (!open) {
-    return (
-      <div className="form-actions">
-        <button type="button" className="button button-secondary" onClick={() => setOpen(true)}>
-          Cancelar solicitud
-        </button>
-      </div>
-    )
-  }
 
   function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -35,7 +30,7 @@ export function CancelRequest({ onCancel }: { onCancel: (motivo: string) => Prom
       </div>
       {submit.error && <ErrorMessage message={submit.error} />}
       <div className="form-actions">
-        <button type="button" className="button button-secondary" disabled={submit.busy} onClick={() => setOpen(false)}>
+        <button type="button" className="button button-secondary" disabled={submit.busy} onClick={onBack}>
           Volver
         </button>
         <button type="submit" className="button button-primary" disabled={submit.busy || !valid}>

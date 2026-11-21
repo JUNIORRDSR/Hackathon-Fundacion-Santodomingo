@@ -139,9 +139,6 @@ function LugarForm({ edicion, onClose, alGuardar }: { edicion: Edicion; onClose:
           {cambia && !activo && <p className="muted">No se borra: quienes viven ahí y su historial lo conservan.</p>}
           {submit.error && <ErrorMessage message={submit.error} />}
           <div className="form-actions">
-            <button type="button" className="button button-secondary" onClick={() => void close()}>
-              Cancelar
-            </button>
             <button type="submit" className="button button-primary" disabled={submit.busy}>
               {submit.busy ? 'Guardando…' : 'Guardar'}
             </button>

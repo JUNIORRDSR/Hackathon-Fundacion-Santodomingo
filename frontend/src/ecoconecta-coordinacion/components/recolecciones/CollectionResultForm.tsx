@@ -129,14 +129,6 @@ export function CollectionResultForm({
             </div>
             {submit.error && <ErrorMessage message={submit.error} />}
             <div className="form-actions">
-              <button
-                className="button button-secondary"
-                type="button"
-                onClick={() => void close()}
-                disabled={submit.busy}
-              >
-                Cancelar
-              </button>
               <button className="button button-primary" type="submit" disabled={submit.busy}>
                 {submit.busy ? 'Guardando…' : submit.error ? 'Reintentar registro' : 'Validar y dar puntos'}
               </button>

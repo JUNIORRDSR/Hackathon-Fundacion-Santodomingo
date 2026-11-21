@@ -33,6 +33,7 @@ export function RequestDetail({
   const [hour, setHour] = useState('')
   const [validation, setValidation] = useState({ collector: '', date: '', hour: '' })
   const [photoFailed, setPhotoFailed] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
   const active = collectors.filter((collector) => collector.activo && collector.grupo === request.tipo)
   const assigned = collectors.find((collector) => collector.id === request.asignacion?.recolectorId)
 
@@ -147,7 +148,7 @@ export function RequestDetail({
                 onError={() => setPhotoFailed(true)}
               />
             ))}
-          {request.estado === 'pendiente' && (
+          {request.estado === 'pendiente' && !cancelling && (
             <form className="dialog-form" onSubmit={(event) => assign(event, close)} noValidate>
               <h3>Asignar recolector</h3>
               {active.length ? (
@@ -237,10 +238,10 @@ export function RequestDetail({
                 <button
                   className="button button-secondary"
                   type="button"
-                  onClick={() => void close()}
+                  onClick={() => setCancelling(true)}
                   disabled={submit.busy}
                 >
-                  Cancelar
+                  Cancelar solicitud
                 </button>
                 <button className="button button-primary" type="submit" disabled={!active.length || submit.busy}>
                   {submit.busy ? 'Guardando…' : submit.error ? 'Reintentar asignación' : 'Confirmar asignación'}
@@ -248,8 +249,11 @@ export function RequestDetail({
               </div>
             </form>
           )}
-          {request.estado === 'asignada' && (
+          {request.estado === 'asignada' && !cancelling && (
             <div className="form-actions">
+              <button type="button" className="button button-secondary" onClick={() => setCancelling(true)}>
+                Cancelar solicitud
+              </button>
               <a
                 className="button button-primary"
                 href={href({ page: 'recolecciones', requestId: request.id })}
@@ -259,8 +263,8 @@ export function RequestDetail({
               </a>
             </div>
           )}
-          {(request.estado === 'pendiente' || request.estado === 'asignada') && (
-            <CancelRequest onCancel={(motivo) => onCancel(request.id, motivo)} />
+          {cancelling && (
+            <CancelRequest onCancel={(motivo) => onCancel(request.id, motivo)} onBack={() => setCancelling(false)} />
           )}
         </>
       )}

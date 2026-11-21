@@ -141,9 +141,6 @@ function Aceptar({
           <p className="muted">Al aceptarlo, su primer pedido entra a Solicitudes y recibe su código por WhatsApp.</p>
           {submit.error && <ErrorMessage message={submit.error} />}
           <div className="form-actions">
-            <button type="button" className="button button-secondary" onClick={() => void close()}>
-              Ahora no
-            </button>
             <button
               type="button"
               className="button button-primary"

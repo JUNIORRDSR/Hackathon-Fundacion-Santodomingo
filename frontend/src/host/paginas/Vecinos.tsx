@@ -146,7 +146,7 @@ export function Vecinos({ nuevo }: { nuevo: number }) {
       )}
       {elegido && (
         <Modal title={elegido.nombre} onClose={() => setElegido(undefined)}>
-          {(close) => (
+          {() => (
             <>
               <dl className="detail-data">
                 <div>
@@ -175,11 +175,6 @@ export function Vecinos({ nuevo }: { nuevo: number }) {
                   </dd>
                 </div>
               </dl>
-              <div className="form-actions">
-                <button type="button" className="button button-secondary" onClick={() => void close()}>
-                  Cerrar
-                </button>
-              </div>
             </>
           )}
         </Modal>

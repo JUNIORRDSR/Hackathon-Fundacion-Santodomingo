@@ -179,9 +179,6 @@ function FormularioEntrega({
           <p className="muted">Gana sus puntos con la regla vigente y le llega el aviso por WhatsApp.</p>
           {submit.error && <ErrorMessage message={submit.error} />}
           <div className="form-actions">
-            <button type="button" className="button button-secondary" onClick={() => void close()}>
-              Cancelar
-            </button>
             <button type="submit" className="button button-primary" disabled={submit.busy || !vecino}>
               {submit.busy ? 'Registrando…' : 'Registrar entrega'}
             </button>

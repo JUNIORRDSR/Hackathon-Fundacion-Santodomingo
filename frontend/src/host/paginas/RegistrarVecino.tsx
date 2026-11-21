@@ -151,9 +151,6 @@ export function RegistrarVecino({
           </p>
           {submit.error && <ErrorMessage message={submit.error} />}
           <div className="form-actions">
-            <button type="button" className="button button-secondary" onClick={() => void close()}>
-              Cancelar
-            </button>
             <button type="submit" className="button button-primary" disabled={submit.busy}>
               {submit.busy ? 'Registrando…' : 'Registrar'}
             </button>

@@ -127,14 +127,6 @@ export function CollectorForm({
           </label>
           {submit.error && <ErrorMessage message={submit.error} />}
           <div className="form-actions">
-            <button
-              type="button"
-              className="button button-secondary"
-              disabled={submit.busy}
-              onClick={() => void close()}
-            >
-              Cancelar
-            </button>
             <button className="button button-primary" type="submit" disabled={submit.busy}>
               {submit.busy ? 'Guardando…' : submit.error ? 'Reintentar' : 'Guardar recolector'}
             </button>

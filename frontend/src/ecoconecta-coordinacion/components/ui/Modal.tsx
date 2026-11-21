@@ -57,6 +57,16 @@ export function Modal({
         event.preventDefault()
         if (!busy) void close()
       }}
+      // Tocar fuera del recuadro (en el velo) también cierra, igual que la X y Esc.
+      onClick={(event) => {
+        const caja = event.currentTarget.getBoundingClientRect()
+        const fuera =
+          event.clientX < caja.left ||
+          event.clientX > caja.right ||
+          event.clientY < caja.top ||
+          event.clientY > caja.bottom
+        if (fuera && event.target === event.currentTarget && !busy) void close()
+      }}
     >
       <div ref={content} className="dialog-content">
         <div className="dialog-header">

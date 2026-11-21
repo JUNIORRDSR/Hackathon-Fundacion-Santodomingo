@@ -2,8 +2,10 @@
 si Azure falla o no alcanza el plazo, responde el diálogo local. Azure se sustituye por un guion."""
 import copy
 import json
+import re
 from decimal import Decimal
 from io import BytesIO
+from pathlib import Path
 from uuid import uuid4
 
 import pytest
@@ -14,7 +16,7 @@ from app.main import app
 from app.modulos.directorio import contrato as directorio
 from app.modulos.puntos import contrato as puntos
 from app.modulos.solicitudes import contrato as solicitudes
-from app.modulos.whatsapp import adjuntos, bot, contactos
+from app.modulos.whatsapp import adjuntos, bot, carteles, contactos
 from app.modulos.whatsapp.agente import cliente as cliente_azure, contexto
 from app.modulos.whatsapp.agente.cliente import AgenteNoDisponible, ClienteAzure, ContenidoBloqueado
 from app.modulos.whatsapp.agente.conversador import ConversadorAgente, para_whatsapp
@@ -273,6 +275,13 @@ def test_pasado_el_tope_de_turnos_responde_el_dialogo_sin_llamar_a_azure(monkeyp
         plantilla("agente_saludo", nombre="Ivo")]
     assert len(azure.pedidos) == 1
 
+
+def test_el_tunel_local_deja_pasar_solo_el_webhook_y_los_carteles():
+    """Twilio descarga cada cartel por la misma URL pública del webhook (deploy/whatsapp-local.nginx.conf)."""
+    nginx = Path(__file__).parents[2] / "deploy" / "whatsapp-local.nginx.conf"
+    rutas = re.findall(r"location\s+(?:[=~]\s+)?(\S+)\s*\{", nginx.read_text(encoding="utf-8"))
+    assert rutas == ["/", r"^/api/whatsapp/carteles/[a-z-]+\.jpg$", "/api/whatsapp/twilio"]
+    assert all(re.fullmatch(rutas[1], carteles.RUTA + archivo) for archivo, _ in carteles.TEMAS.values())
 
 class ConexionFalsa:
     def __init__(self, estado: int, cuerpo: dict):

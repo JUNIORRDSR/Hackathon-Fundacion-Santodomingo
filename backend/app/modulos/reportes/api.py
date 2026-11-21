@@ -25,6 +25,13 @@ def resumen(desde: date | None = None, hasta: date | None = None, colectivo: Col
     return reportes.resumen(*_periodo(desde, hasta), acceso.colectivo_visible(u, colectivo))
 
 
+@router.get("/desglose")
+def desglose(por: reportes.Agrupacion = reportes.Agrupacion.CONJUNTO, desde: date | None = None,
+             hasta: date | None = None, colectivo: Colectivo | None = None,
+             u: acceso.Usuario = Sesion) -> list[reportes.FilaDesglose]:
+    return reportes.desglose(*_periodo(desde, hasta), acceso.colectivo_visible(u, colectivo), por)
+
+
 @router.get("/solicitudes.csv", response_class=Response)
 def csv_de_solicitudes(desde: date | None = None, hasta: date | None = None, colectivo: Colectivo | None = None,
                        u: acceso.Usuario = Sesion) -> Response:

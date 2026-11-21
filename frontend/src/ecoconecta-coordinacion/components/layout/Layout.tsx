@@ -22,6 +22,7 @@ const navigation: { page: EcoPage; label: string; icon: IconName }[] = [
   { page: 'capacitacion', label: 'Capacitación', icon: 'book' },
   { page: 'habilitar', label: 'Registros', icon: 'user' },
   { page: 'canjes', label: 'Canjes', icon: 'gift' },
+  { page: 'informes', label: 'Informes', icon: 'chart' },
 ]
 const modulePages: EcoPage[] = ['inicio', 'solicitudes', 'recolecciones', 'recolectores', 'capacitacion']
 // Las cuatro del flujo quedan a la vista; el resto, en «Más», para que la barra quepa en una línea.

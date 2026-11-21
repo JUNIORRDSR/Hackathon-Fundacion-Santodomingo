@@ -7,6 +7,7 @@ export const routes = [
   'habilitar',
   'canjes',
   'whatsapp',
+  'informes',
 ] as const
 export type EcoPage = (typeof routes)[number]
 

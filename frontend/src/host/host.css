@@ -16,6 +16,15 @@
   & .lugar-agregar { justify-self: start; }
   & .tipo-registro { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; }
 
+  /* Informes (RF-18): filas horizontales, cifras a la derecha con números tabulares y el total al pie. */
+  & .informe { overflow-x: auto; padding: .35rem 1.1rem .5rem; }
+  & .informe-tabla { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  & .informe-tabla :is(th, td) { padding: .8rem .6rem; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+  & .informe-tabla :is(th, td):first-child { text-align: left; white-space: normal; }
+  & .informe-tabla thead th { color: var(--muted); font-size: .875rem; font-weight: 600; }
+  & .informe-tabla tbody th { font-weight: 600; }
+  & .informe-tabla tfoot :is(th, td) { border-bottom: 0; color: var(--highlight); font-weight: 700; }
+
   /* Regla de puntos: una tarjeta por residuo, con etiquetas visibles y un ejemplo calculado. */
   & .regla { display: grid; gap: 1rem; margin-top: 1rem; }
   & .regla-cabeza h2 { font-size: 1.25rem; }

@@ -1,14 +1,17 @@
-"""Contrato de reportes: solo lee los contratos de los demás y no expone datos personales (RN-07)."""
+"""Contrato de reportes: solo lee los contratos de los demás. El CSV no lleva datos personales; el desglose por
+vecino muestra su nombre solo a la coordinación que ya lo atiende (RN-07)."""
 import csv
 import io
 from collections import defaultdict
 from datetime import date
 from decimal import Decimal
+from enum import StrEnum
 
 from pydantic import BaseModel
 
 from app.compartido.formato import dia_local
 from app.compartido.tipos import Colectivo, Flujo
+from app.modulos.directorio import contrato as directorio
 from app.modulos.puntos import contrato as puntos
 from app.modulos.solicitudes import contrato as solicitudes
 
@@ -18,6 +21,21 @@ class Fila(BaseModel):
     estado: solicitudes.Estado
     cantidad: int
     kg: Decimal
+
+
+class Agrupacion(StrEnum):
+    CONJUNTO = "conjunto"
+    ZONA = "zona"
+    ENCARGADO = "encargado"
+    VECINO = "vecino"
+
+
+class FilaDesglose(BaseModel):
+    nombre: str
+    solicitudes: int
+    recolecciones: int
+    kg: Decimal
+    puntos: int
 
 
 class KilosDelDia(BaseModel):
@@ -53,6 +71,31 @@ def resumen(desde: date, hasta: date, colectivo: Colectivo | None = None) -> Res
                    recolecciones=sum(1 for s in lista if s.estado == "recolectada"),
                    vecinos=len({s.solicitante_id for s in lista}), puntos=sum(ganados.get(s.codigo, 0) for s in lista),
                    por_dia=[KilosDelDia(dia=d, kg=k) for d, k in sorted(kilos.items())])
+
+
+def desglose(desde: date, hasta: date, colectivo: Colectivo | None, por: Agrupacion) -> list[FilaDesglose]:
+    """RF-18: cuánto se pidió, se recolectó y se pesó en el periodo, por grupo y de mayor a menor en kilos."""
+    clave = _clave_de(por)
+    grupos = defaultdict(list)
+    for s in _en_periodo(desde, hasta, colectivo):
+        grupos[clave(s)].append(s)
+    ganados = puntos.puntos_por_codigo()
+    filas = [FilaDesglose(nombre=nombre, solicitudes=len(g),
+                          recolecciones=sum(1 for s in g if s.estado == "recolectada"),
+                          kg=sum((s.kg or Decimal(0) for s in g), Decimal(0)),
+                          puntos=sum(ganados.get(s.codigo, 0) for s in g)) for nombre, g in grupos.items()]
+    return sorted(filas, key=lambda f: (-f.kg, f.nombre))
+
+
+def _clave_de(por: Agrupacion):
+    if por == Agrupacion.ENCARGADO:
+        nombres = {e.id: e.nombre for e in directorio.encargados()}
+        return lambda s: nombres.get(s.encargado_id, "Sin asignar")
+    if por == Agrupacion.VECINO:
+        return lambda s: s.solicitante_nombre
+    if por == Agrupacion.ZONA:
+        return lambda s: s.zona
+    return lambda s: s.conjunto or s.zona
 
 
 def csv_de_solicitudes(desde: date, hasta: date, colectivo: Colectivo | None = None) -> str:

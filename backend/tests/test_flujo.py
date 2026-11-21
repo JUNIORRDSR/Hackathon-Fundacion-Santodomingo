@@ -33,6 +33,9 @@ def _comprobar_impacto(huerteros: TestClient) -> None:
     resumen = huerteros.get("/api/reportes/resumen").json()
     assert resumen["total_solicitudes"] >= 1 and resumen["recolecciones"] >= 1 and resumen["vecinos"] >= 1
     assert resumen["puntos"] >= 12 and float(resumen["total_kg"]) == sum(float(d["kg"]) for d in resumen["por_dia"])
+    por_vecino = huerteros.get("/api/reportes/desglose", params={"por": "vecino"}).json()
+    assert sum(f["recolecciones"] for f in por_vecino) == resumen["recolecciones"]
+    assert any(f["nombre"] == "La Esquina" and f["puntos"] >= 12 for f in por_vecino)
     texto = huerteros.get("/api/reportes/solicitudes.csv").content.decode("utf-8")
     assert texto.startswith("﻿codigo;flujo;estado")
 

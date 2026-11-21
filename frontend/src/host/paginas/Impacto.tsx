@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { Icon } from '../../ecoconecta-coordinacion/components/ui/Icon'
 import { api } from '../api'
+import { mesActual, moverMes, nombreMes, periodo } from './meses'
 
 interface Resumen {
   total_kg: string
@@ -12,24 +13,10 @@ interface Resumen {
 }
 type Grupo = 'organico' | 'reciclable'
 
-const ZONA = 'America/Bogota'
-const mesActual = new Intl.DateTimeFormat('en-CA', { timeZone: ZONA }).format(new Date()).slice(0, 7)
-const nombreMes = new Intl.DateTimeFormat('es-CO', { month: 'long', year: 'numeric', timeZone: 'UTC' })
 const diaCorto = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'short', timeZone: 'UTC' })
 const kilos = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 1 })
 const entero = new Intl.NumberFormat('es-CO')
 const etiqueta = (fecha: string) => diaCorto.format(new Date(fecha + 'T00:00:00Z'))
-
-function periodo(mes: string) {
-  const [anio, numero] = mes.split('-').map(Number)
-  const dias = new Date(Date.UTC(anio, numero, 0)).getUTCDate()
-  return { desde: mes + '-01', hasta: mes + '-' + String(dias).padStart(2, '0'), dias }
-}
-
-function moverMes(mes: string, cuantos: number) {
-  const [anio, numero] = mes.split('-').map(Number)
-  return new Date(Date.UTC(anio, numero - 1 + cuantos, 1)).toISOString().slice(0, 7)
-}
 
 // Eje y con números redondos (1, 2 o 5 por potencia de 10) y tres o cuatro marcas.
 function escala(maximo: number) {

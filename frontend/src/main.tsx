@@ -12,10 +12,11 @@ import { useSesion } from './host/sesion'
 import type { Usuario } from './host/sesion'
 import { Canjes } from './host/paginas/Canjes'
 import { Entrar } from './host/paginas/Entrar'
+import { EntregaHuerta } from './host/paginas/EntregaHuerta'
+import { Escanear } from './host/paginas/Escanear'
+import { Impacto } from './host/paginas/Impacto'
 import { Informes } from './host/paginas/Informes'
 import { Registros } from './host/paginas/Registros'
-import { EntregaHuerta } from './host/paginas/EntregaHuerta'
-import { Impacto } from './host/paginas/Impacto'
 import { Whatsapp } from './host/paginas/Whatsapp'
 
 const suscribir = (aviso: () => void) => (
@@ -112,6 +113,7 @@ function App() {
       trainingResources={recursos}
       publicTrainingHref={capacitacionHref}
       extraPages={{
+        escanear: <Escanear />,
         habilitar: <Registros porAceptar={porAceptar} />,
         informes: <Informes grupo={coordinador.grupo} />,
         canjes: <Canjes esAdmin={usuario.rol === 'administrador'} />,

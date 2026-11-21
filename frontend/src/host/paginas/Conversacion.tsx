@@ -70,6 +70,14 @@ export function Conversacion({
     await api(ruta(telefono) + '/control', tomar ? 'POST' : 'DELETE')
     alCambiar()
   }
+  const clasificar = async (mensajeId: number) => {
+    try {
+      await api<string[]>('/whatsapp/mensajes/' + mensajeId + '/clasificacion', 'POST')
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : 'No se pudo clasificar la foto.')
+    }
+    cargar()
+  }
 
   return (
     <section className="card monitor-hilo" aria-label="Conversación">
@@ -101,7 +109,9 @@ export function Conversacion({
           </EmptyState>
         </div>
       )}
-      {conversacion && <Hilo mensajes={mensajes} control={!!conversacion.control} alLeer={marcarLeido} />}
+      {conversacion && (
+        <Hilo mensajes={mensajes} control={!!conversacion.control} alLeer={marcarLeido} alClasificar={clasificar} />
+      )}
       <Redactar telefono={telefono} conControl={!!conversacion?.control} alEnviar={alCambiar} alSimular={alSimular} />
     </section>
   )

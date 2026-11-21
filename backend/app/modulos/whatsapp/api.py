@@ -1,5 +1,6 @@
 """API de whatsapp: webhook de Twilio, monitor con toma de control (ADR-0007) y simulador. Todo menos el webhook
 pide sesión."""
+import logging
 from urllib.parse import parse_qsl
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -9,11 +10,12 @@ from starlette.concurrency import run_in_threadpool
 from starlette.datastructures import FormData
 
 from app.modulos.acceso import contrato as acceso
-from app.modulos.whatsapp import bot, monitor
+from app.modulos.whatsapp import adjuntos, bot, monitor
 from app.modulos.whatsapp.contrato import MensajeEntrante, MensajeSaliente
 from app.modulos.whatsapp.transporte_twilio import TransporteTwilio
 
 router = APIRouter(prefix="/api/whatsapp", tags=["whatsapp"])
+log = logging.getLogger("whatsapp.webhook")
 Sesion = Depends(acceso.usuario_actual)
 FORMULARIO_MAXIMO = 32 * 1024
 
@@ -32,25 +34,32 @@ async def webhook_twilio(request: Request) -> Response:
     transporte = bot.transporte()
     firma = request.headers.get("X-Twilio-Signature", "")
     if not isinstance(transporte, TransporteTwilio) or not firma:
+        log.info("Solicitud de WhatsApp rechazada: %s", "transporte inactivo" if firma else "sin firma")
         raise HTTPException(403, "Firma de Twilio inválida.")
     parametros = await _formulario_twilio(request)
     if not transporte.firma_valida(parametros, firma):
+        log.warning("Solicitud de WhatsApp rechazada: la firma no coincide con la URL o el token configurado")
         raise HTTPException(403, "Firma de Twilio inválida.")
     try:
         mensaje, sid = transporte.entrada(parametros)
     except PermissionError:
+        log.warning("Solicitud firmada de WhatsApp rechazada: remitente fuera del piloto")
         raise HTTPException(403, "El remitente no está habilitado para esta prueba.") from None
     except ValueError:
+        log.info("Solicitud firmada de WhatsApp rechazada: formulario, cuenta, destinatario o alias inválido")
         raise HTTPException(400, "Mensaje de WhatsApp inválido o remitente sin teléfono asociado.") from None
     return await run_in_threadpool(_respuesta_twilio, transporte, mensaje, sid)
 
 
 def _respuesta_twilio(transporte: TransporteTwilio, mensaje: MensajeEntrante, sid: str) -> Response:
     if transporte.respuesta_twiml:
-        cuerpo = transporte.serializar_twiml(bot.recibir_para_twiml(mensaje, sid))
+        respuestas = bot.recibir_para_twiml(mensaje, sid)
+        cuerpo = transporte.serializar_twiml(respuestas)
+        log.info("Webhook de WhatsApp procesado (SID …%s, respuestas TwiML: %s)", sid[-8:], len(respuestas))
     else:
         bot.recibir(mensaje, sid)
         cuerpo = "<Response/>"
+        log.info("Webhook de WhatsApp procesado (SID …%s, modo REST)", sid[-8:])
     return Response(cuerpo, media_type="application/xml")
 
 
@@ -111,6 +120,27 @@ def devolver_al_bot(telefono: str, _: acceso.Usuario = Sesion) -> None:
 def responder(telefono: str, datos: Texto, _: acceso.Usuario = Sesion) -> None:
     if not monitor.responder(telefono, datos.texto):
         raise HTTPException(502, "No se pudo confirmar el envío por WhatsApp. Revisa el estado en la conversación.")
+
+
+@router.get("/adjunto")
+def adjunto(url: str, _: acceso.Usuario = Sesion) -> Response:
+    """La foto o el audio de un vecino para la tablet: se trae de Twilio con la credencial, que no sale del servidor."""
+    try:
+        archivo = adjuntos.descargar(url)
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from None
+    except Exception:
+        raise HTTPException(502, "No se pudo traer el adjunto de Twilio.") from None
+    if not archivo.tipo.startswith(("image/", "audio/")):
+        raise HTTPException(415, "En el monitor solo se muestran fotos y audios.")
+    return Response(archivo.contenido, media_type=archivo.tipo,
+                    headers={"Cache-Control": "private, max-age=3600", "X-Content-Type-Options": "nosniff"})
+
+
+@router.post("/mensajes/{mensaje_id}/clasificacion")
+def clasificar(mensaje_id: int, _: acceso.Usuario = Sesion) -> list[str]:
+    """Con el control tomado, la coordinación pide la revisión de la IA de una foto en lugar de responder ella."""
+    return monitor.clasificar(mensaje_id)
 
 
 @router.post("/simulador")

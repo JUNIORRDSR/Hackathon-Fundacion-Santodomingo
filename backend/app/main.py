@@ -16,6 +16,7 @@ from app.modulos.acceso import api as acceso_api
 from app.modulos.clasificacion import api as clasificacion_api
 from app.modulos.contenidos import api as contenidos_api
 from app.modulos.directorio import api as directorio_api
+from app.modulos.etiquetas import api as etiquetas_api
 from app.modulos.puntos import api as puntos_api
 from app.modulos.puntos import contrato as puntos
 from app.modulos.reportes import api as reportes_api
@@ -27,7 +28,7 @@ from app.modulos.whatsapp.eventos_monitor import ciclo_eventos
 logging.basicConfig(level=logging.INFO)
 SPA = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 ROUTERS = (acceso_api, solicitudes_api, directorio_api, puntos_api, contenidos_api, reportes_api, whatsapp_api,
-           clasificacion_api)
+           clasificacion_api, etiquetas_api)
 
 
 def crear_app() -> FastAPI:

@@ -196,6 +196,17 @@
   & .hilo [data-autor="bot"] > [data-slot="bubble-content"] { background: #d9e8dd; color: var(--ink); border-bottom-right-radius: .35rem; }
   & .hilo [data-autor="coordinacion"] > [data-slot="bubble-content"] { background: var(--highlight); color: var(--on-highlight); border-bottom-right-radius: .35rem; }
   & .hilo [data-autor="aviso"] > [data-slot="bubble-content"] { background: #fbf3d4; color: var(--ink); border: 1px solid #ecd98f; border-bottom-right-radius: .35rem; }
+  /* La foto ocupa una caja fija: el hilo no salta cuando llega y entra con un fundido corto, no de golpe. */
+  & .hilo-foto {
+    display: block; width: min(16rem, 100%); aspect-ratio: 1; padding: 0; border: 0; border-radius: .75rem;
+    overflow: hidden; background: var(--surface-muted); cursor: zoom-in;
+  }
+  & .hilo-foto:focus-visible { outline: 2px solid var(--highlight); outline-offset: 2px; }
+  & .hilo-foto img {
+    display: block; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; opacity: 0;
+    transition: opacity 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  & .hilo-foto img[data-cargada] { opacity: 1; }
 
   @media (max-width: 575px) {
     & .whatsapp-fab-texto { display: none; }
@@ -246,4 +257,24 @@
   0% { opacity: 0; filter: drop-shadow(0 0 2.2rem #f6c400aa); }
   35% { opacity: 1; filter: drop-shadow(0 0 1.6rem #f6c40088); }
   100% { opacity: 1; filter: drop-shadow(0 0 0 #f6c40000); }
+}
+
+/* Visor de fotos: la miniatura crece hasta el centro sobre el velo y vuelve a su sitio del chat al cerrar. */
+.foto-grande { display: block; max-width: 92vw; max-height: 88vh; border-radius: .75rem; view-transition-name: foto-vecino; }
+[data-slot="dialog-overlay"] { view-transition-name: dialog-velo; }
+/* El velo entra después en el orden de captura; sin z-index taparía la foto mientras crece. */
+::view-transition-group(dialog-velo) { z-index: 1; }
+::view-transition-group(foto-vecino) { z-index: 2; }
+::view-transition-group(foto-vecino),
+::view-transition-old(dialog-velo),
+::view-transition-new(dialog-velo) { animation-duration: 250ms; animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+/* Solo se dibuja la foto completa, sin fundido: recortada en la caja que crece coincide con la miniatura,
+   que ya es un recorte centrado, así que no aparece una imagen doble. */
+::view-transition-old(foto-vecino),
+::view-transition-new(foto-vecino) { height: 100%; object-fit: cover; animation: none; mix-blend-mode: normal; }
+:root[data-visor="abre"]::view-transition-old(foto-vecino),
+:root[data-visor="cierra"]::view-transition-new(foto-vecino) { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  /* Sin desplazamiento: la foto aparece en el centro y solo el velo se funde. */
+  ::view-transition-group(foto-vecino) { animation-duration: 0s; }
 }

@@ -8,7 +8,9 @@ from sqlalchemy.dialects.postgresql import insert as insertar_o_actualizar
 
 from app.compartido.bd import transaccion
 from app.compartido.tipos import ErrorDeNegocio, NoEncontrado
+from app.modulos.clasificacion import contrato as clasificacion
 from app.modulos.directorio import contrato as directorio
+from app.modulos.whatsapp import adjuntos, fotos
 from app.modulos.whatsapp import tablas as t
 from app.modulos.whatsapp.bot import enviar
 from app.modulos.whatsapp.contrato import MensajeSaliente
@@ -92,6 +94,23 @@ def responder(telefono: str, texto: str) -> bool:
     if not control:
         raise ErrorDeNegocio("Toma el control de la conversación antes de escribir.")
     return enviar(MensajeSaliente(telefono=telefono, texto=texto), autor="coordinacion") != "fallido"
+
+
+def clasificar(mensaje_id: int) -> list[str]:
+    """La revisión de la IA que pide la coordinación para una foto: el vecino la recibe como respuesta del bot."""
+    consulta = select(t.mensajes.c.telefono, t.mensajes.c.media_url).where(t.mensajes.c.id == mensaje_id)
+    with transaccion() as c:
+        fila = c.execute(consulta).first()
+    if fila is None or not fila.media_url:
+        raise NoEncontrado("Ese mensaje no tiene foto.")
+    try:
+        archivo = adjuntos.descargar(fila.media_url)
+    except Exception as error:
+        raise ErrorDeNegocio("No se pudo traer la foto de Twilio.") from error
+    textos = fotos.responder(clasificacion.Foto(contenido=archivo.contenido, tipo=archivo.tipo), {})
+    for texto in textos:
+        enviar(MensajeSaliente(telefono=fila.telefono, texto=texto), autor="bot")
+    return textos
 
 
 def _resumen(fila, control: str | None, sin_leer: int) -> ConversacionVista:

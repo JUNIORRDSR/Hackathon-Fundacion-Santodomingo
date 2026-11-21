@@ -136,7 +136,7 @@ def test_responde_con_twiml_al_remitente_y_el_sid_repetido_no_responde(cliente_t
     xml = ElementTree.fromstring(respuesta.content)
     assert xml.tag == "Response"
     mensaje, = xml.findall("Message")
-    assert "to" not in mensaje.attrib
+    assert mensaje.attrib == {}
     assert "Soy EcoConecta" in "".join(mensaje.itertext())
 
     repetida = _entregar(cliente, parametros)

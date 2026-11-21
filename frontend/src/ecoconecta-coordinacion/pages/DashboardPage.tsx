@@ -6,6 +6,7 @@ import type { Coordinator, Request } from '../types'
 import { BrandLogo } from '../components/layout/BrandLogo'
 import { getPlannedRequests } from '../components/recolecciones/timelineData'
 import { RequestList } from '../components/solicitudes/RequestList'
+import { EmptyState } from '../components/ui/Feedback'
 import { TaskCard, todayTasks } from './inicio/tareas'
 import type { DashboardCounts } from './inicio/tareas'
 
@@ -86,7 +87,13 @@ export function DashboardPage({
             Ver todas
           </a>
         </div>
-        <RequestList requests={recent} onSelect={onSelect} compact />
+        {recent.length ? (
+          <RequestList requests={recent} onSelect={onSelect} compact />
+        ) : (
+          <EmptyState title="Todavía no hay solicitudes" icon="monarch">
+            Aquí verás los últimos registros.
+          </EmptyState>
+        )}
       </section>
     </>
   )

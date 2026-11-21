@@ -1,6 +1,9 @@
-import { Fragment, useEffect, useRef } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import { flushSync } from 'react-dom'
+import { urlDeAdjunto } from '../api'
 import { Bubble, BubbleContent } from '@/components/ui/bubble'
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Marker, MarkerContent } from '@/components/ui/marker'
 import { Message, MessageContent, MessageFooter, MessageHeader } from '@/components/ui/message'
 import {
@@ -18,6 +21,7 @@ export interface MensajeVista {
   direccion: 'entrante' | 'saliente'
   autor: 'vecino' | 'bot' | 'aviso' | 'coordinacion'
   texto: string
+  media_url: string | null
   estado: string | null
   fecha: string
 }
@@ -42,10 +46,12 @@ export function Hilo({
   mensajes,
   control,
   alLeer,
+  alClasificar,
 }: {
   mensajes: MensajeVista[]
   control: boolean
   alLeer: (hastaId: number) => Promise<void>
+  alClasificar?: (mensajeId: number) => Promise<void>
 }) {
   const ultimoEntrante = mensajes.reduce(
     (ultimo, mensaje) => (mensaje.direccion === 'entrante' ? mensaje.id : ultimo),
@@ -102,7 +108,10 @@ export function Hilo({
                         <MessageContent>
                           {!seguido && <MessageHeader className="hilo-autor">{AUTOR[m.autor]}</MessageHeader>}
                           <Bubble align={lado} data-autor={m.autor}>
-                            <BubbleContent className="whitespace-pre-line">{conNegritas(m.texto)}</BubbleContent>
+                            {m.texto && (
+                              <BubbleContent className="whitespace-pre-line">{conNegritas(m.texto)}</BubbleContent>
+                            )}
+                            {m.media_url && <Adjunto mensaje={m} conControl={control} alClasificar={alClasificar} />}
                           </Bubble>
                           <MessageFooter className="hilo-hora" ref={m.id === ultimoEntrante ? marcaLectura : undefined}>
                             {hora.format(fecha)}
@@ -129,6 +138,96 @@ export function Hilo({
           />
         </MessageScroller>
       </MessageScrollerProvider>
+    </div>
+  )
+}
+
+// La foto o el audio del vecino. Con el control tomado, la coordinación decide:
+// responde ella o pide la revisión de la IA.
+function Adjunto({
+  mensaje,
+  conControl,
+  alClasificar,
+}: {
+  mensaje: MensajeVista
+  conControl: boolean
+  alClasificar?: (mensajeId: number) => Promise<void>
+}) {
+  const [esAudio, setEsAudio] = useState(false)
+  const [cargada, setCargada] = useState(false)
+  const [abierta, setAbierta] = useState(false)
+  const [clasificando, setClasificando] = useState(false)
+  const miniatura = useRef<HTMLImageElement>(null)
+  const grande = useRef<HTMLImageElement>(null)
+  const src = urlDeAdjunto(mensaje.media_url ?? '')
+  // La foto crece desde el chat y vuelve a su sitio: el nombre de la transición pasa de la miniatura a la
+  // foto grande y el navegador interpola entre las dos. data-visor le dice al CSS qué captura dibujar.
+  // Sin View Transitions, el visor abre sin movimiento.
+  const verEnGrande = (abrir: boolean) => {
+    const foto = miniatura.current
+    if (!foto || !('startViewTransition' in document)) return setAbierta(abrir)
+    const fase = abrir ? 'abre' : 'cierra'
+    document.documentElement.dataset.visor = fase
+    foto.style.viewTransitionName = abrir ? 'foto-vecino' : ''
+    const transicion = document.startViewTransition(async () => {
+      flushSync(() => setAbierta(abrir))
+      foto.style.viewTransitionName = abrir ? '' : 'foto-vecino'
+      await grande.current?.decode().catch(() => undefined)
+    })
+    transicion.ready.catch(() => undefined) // el navegador la omite si la pestaña está oculta: no es un error
+    void transicion.finished.finally(() => {
+      foto.style.viewTransitionName = ''
+      if (document.documentElement.dataset.visor === fase) delete document.documentElement.dataset.visor
+    })
+  }
+  const clasificar = async () => {
+    if (!alClasificar) return
+    setClasificando(true)
+    try {
+      await alClasificar(mensaje.id)
+    } finally {
+      setClasificando(false)
+    }
+  }
+  if (esAudio) return <audio controls preload="none" src={src} style={{ maxWidth: '16rem' }} />
+  return (
+    <div style={{ display: 'grid', gap: '0.5rem', padding: '0.25rem' }}>
+      <Dialog open={abierta} onOpenChange={verEnGrande}>
+        <DialogTrigger asChild>
+          <button type="button" className="hilo-foto" aria-label="Ampliar la foto que mandó el vecino">
+            {/* Sin carga diferida: el hilo oculta los mensajes fuera de vista y la foto esperaba al scroll. */}
+            <img
+              ref={miniatura}
+              src={src}
+              alt=""
+              data-cargada={cargada || undefined}
+              onLoad={() => setCargada(true)}
+              onError={() => setEsAudio(true)}
+            />
+          </button>
+        </DialogTrigger>
+        <DialogContent
+          aria-describedby={undefined}
+          onCloseAutoFocus={(evento) => {
+            // El foco vuelve a la miniatura sin desplazar el chat: un salto ahí se vería durante la transición.
+            evento.preventDefault()
+            miniatura.current?.parentElement?.focus({ preventScroll: true })
+          }}
+        >
+          <DialogTitle className="sr-only">Foto que mandó el vecino</DialogTitle>
+          <img ref={grande} src={src} alt="Foto que mandó el vecino" className="foto-grande" />
+        </DialogContent>
+      </Dialog>
+      {conControl && mensaje.direccion === 'entrante' && alClasificar && (
+        <button
+          type="button"
+          className="button button-secondary"
+          disabled={clasificando}
+          onClick={() => void clasificar()}
+        >
+          {clasificando ? 'Clasificando…' : 'Clasificar con IA'}
+        </button>
+      )}
     </div>
   )
 }

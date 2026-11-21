@@ -46,6 +46,13 @@ const paths = {
     'M6.6 6.6C3.9 8.4 2 12 2 12s3.5 7 10 7a10 10 0 0 0 5.4-1.5 M9.9 9.9a3 3 0 0 0 4.2 4.2',
   chart: 'M4 20V11 M10 20V4 M16 20v-7 M3 20h18',
   scale: 'M12 3v17 M4 21h16 M3 7h18 M6 7l-4 8h8z M18 7l-4 8h8z',
+  qr:
+    'M3 8V5a2 2 0 0 1 2-2h3 M16 3h3a2 2 0 0 1 2 2v3 M21 16v3a2 2 0 0 1-2 2h-3 M8 21H5a2 2 0 0 1-2-2v-3' +
+    ' M7 7h4v4H7z M13 13h4v4h-4z M13 7h4 M17 10v1 M7 13v4h4 M13 10h1',
+  camera:
+    'M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z' +
+    ' M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
+  printer: 'M6 9V3h12v6 M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2 M6 14h12v7H6z',
 } as const
 
 export type IconName = keyof typeof paths

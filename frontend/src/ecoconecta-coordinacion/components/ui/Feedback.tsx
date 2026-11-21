@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react'
 import { Icon } from './Icon'
 import type { IconName } from './Icon'
+import { MonarchMark } from './MonarchMark'
 
+// La mariposa acompaña los momentos sin pendientes; los demás vacíos conservan el ícono de su contexto.
 export function EmptyState({
   title,
   children,
@@ -9,13 +11,17 @@ export function EmptyState({
 }: {
   title: string
   children: ReactNode
-  icon?: IconName
+  icon?: IconName | 'monarch'
 }) {
   return (
     <div className="empty-state">
-      <span className="icon-tile">
-        <Icon name={icon} />
-      </span>
+      {icon === 'monarch' ? (
+        <MonarchMark />
+      ) : (
+        <span className="icon-tile">
+          <Icon name={icon} />
+        </span>
+      )}
       <strong>{title}</strong>
       <div>{children}</div>
     </div>

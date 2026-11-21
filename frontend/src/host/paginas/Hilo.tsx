@@ -1,5 +1,6 @@
-import { Fragment, useEffect, useRef } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import { urlDeAdjunto } from '../api'
 import { Bubble, BubbleContent } from '@/components/ui/bubble'
 import { Marker, MarkerContent } from '@/components/ui/marker'
 import { Message, MessageContent, MessageFooter, MessageHeader } from '@/components/ui/message'
@@ -18,6 +19,7 @@ export interface MensajeVista {
   direccion: 'entrante' | 'saliente'
   autor: 'vecino' | 'bot' | 'aviso' | 'coordinacion'
   texto: string
+  media_url: string | null
   estado: string | null
   fecha: string
 }
@@ -42,10 +44,12 @@ export function Hilo({
   mensajes,
   control,
   alLeer,
+  alClasificar,
 }: {
   mensajes: MensajeVista[]
   control: boolean
   alLeer: (hastaId: number) => Promise<void>
+  alClasificar?: (mensajeId: number) => Promise<void>
 }) {
   const ultimoEntrante = mensajes.reduce(
     (ultimo, mensaje) => (mensaje.direccion === 'entrante' ? mensaje.id : ultimo),
@@ -102,7 +106,10 @@ export function Hilo({
                         <MessageContent>
                           {!seguido && <MessageHeader className="hilo-autor">{AUTOR[m.autor]}</MessageHeader>}
                           <Bubble align={lado} data-autor={m.autor}>
-                            <BubbleContent className="whitespace-pre-line">{conNegritas(m.texto)}</BubbleContent>
+                            {m.texto && (
+                              <BubbleContent className="whitespace-pre-line">{conNegritas(m.texto)}</BubbleContent>
+                            )}
+                            {m.media_url && <Adjunto mensaje={m} conControl={control} alClasificar={alClasificar} />}
                           </Bubble>
                           <MessageFooter className="hilo-hora" ref={m.id === ultimoEntrante ? marcaLectura : undefined}>
                             {hora.format(fecha)}
@@ -129,6 +136,47 @@ export function Hilo({
           />
         </MessageScroller>
       </MessageScrollerProvider>
+    </div>
+  )
+}
+
+// La foto o el audio del vecino. Con el control tomado, la coordinación decide: responde ella o pide la revisión de la IA.
+function Adjunto({
+  mensaje,
+  conControl,
+  alClasificar,
+}: {
+  mensaje: MensajeVista
+  conControl: boolean
+  alClasificar?: (mensajeId: number) => Promise<void>
+}) {
+  const [esAudio, setEsAudio] = useState(false)
+  const [clasificando, setClasificando] = useState(false)
+  const src = urlDeAdjunto(mensaje.media_url ?? '')
+  const clasificar = async () => {
+    if (!alClasificar) return
+    setClasificando(true)
+    try {
+      await alClasificar(mensaje.id)
+    } finally {
+      setClasificando(false)
+    }
+  }
+  if (esAudio) return <audio controls preload="none" src={src} style={{ maxWidth: '16rem' }} />
+  return (
+    <div style={{ display: 'grid', gap: '0.5rem', padding: '0.25rem' }}>
+      <img
+        src={src}
+        alt="Foto que mandó el vecino"
+        loading="lazy"
+        onError={() => setEsAudio(true)}
+        style={{ display: 'block', maxWidth: '16rem', maxHeight: '20rem', borderRadius: '0.75rem' }}
+      />
+      {conControl && mensaje.direccion === 'entrante' && alClasificar && (
+        <button type="button" className="button button-secondary" disabled={clasificando} onClick={() => void clasificar()}>
+          {clasificando ? 'Clasificando…' : 'Clasificar con IA'}
+        </button>
+      )}
     </div>
   )
 }

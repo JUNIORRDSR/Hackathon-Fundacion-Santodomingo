@@ -9,7 +9,7 @@ from starlette.concurrency import run_in_threadpool
 from starlette.datastructures import FormData
 
 from app.modulos.acceso import contrato as acceso
-from app.modulos.whatsapp import bot, monitor
+from app.modulos.whatsapp import adjuntos, bot, monitor
 from app.modulos.whatsapp.contrato import MensajeEntrante, MensajeSaliente
 from app.modulos.whatsapp.transporte_twilio import TransporteTwilio
 
@@ -111,6 +111,27 @@ def devolver_al_bot(telefono: str, _: acceso.Usuario = Sesion) -> None:
 def responder(telefono: str, datos: Texto, _: acceso.Usuario = Sesion) -> None:
     if not monitor.responder(telefono, datos.texto):
         raise HTTPException(502, "No se pudo confirmar el envío por WhatsApp. Revisa el estado en la conversación.")
+
+
+@router.get("/adjunto")
+def adjunto(url: str, _: acceso.Usuario = Sesion) -> Response:
+    """La foto o el audio de un vecino para la tablet: se trae de Twilio con la credencial, que no sale del servidor."""
+    try:
+        archivo = adjuntos.descargar(url)
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from None
+    except Exception:
+        raise HTTPException(502, "No se pudo traer el adjunto de Twilio.") from None
+    if not archivo.tipo.startswith(("image/", "audio/")):
+        raise HTTPException(415, "En el monitor solo se muestran fotos y audios.")
+    return Response(archivo.contenido, media_type=archivo.tipo,
+                    headers={"Cache-Control": "private, max-age=3600", "X-Content-Type-Options": "nosniff"})
+
+
+@router.post("/mensajes/{mensaje_id}/clasificacion")
+def clasificar(mensaje_id: int, _: acceso.Usuario = Sesion) -> list[str]:
+    """Con el control tomado, la coordinación pide la revisión de la IA de una foto en lugar de responder ella."""
+    return monitor.clasificar(mensaje_id)
 
 
 @router.post("/simulador")

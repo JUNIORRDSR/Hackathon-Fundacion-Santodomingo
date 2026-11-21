@@ -25,7 +25,16 @@ def test_escenario_de_demostracion():
     assert huerteros.post("/api/puntos/premios", json={"nombre": "Abono", "costo": 80}).status_code == 201
     _comprobar_avisos(admin)
     _consultar_puntos_y_canje(admin)
-    assert huerteros.get("/api/reportes/resumen").json()["total_solicitudes"] >= 1
+    _comprobar_impacto(huerteros)
+
+
+def _comprobar_impacto(huerteros: TestClient) -> None:
+    """El Inicio muestra el impacto del mes con datos reales, y el CSV abre bien en Excel en español."""
+    resumen = huerteros.get("/api/reportes/resumen").json()
+    assert resumen["total_solicitudes"] >= 1 and resumen["recolecciones"] >= 1 and resumen["vecinos"] >= 1
+    assert resumen["puntos"] >= 12 and float(resumen["total_kg"]) == sum(float(d["kg"]) for d in resumen["por_dia"])
+    texto = huerteros.get("/api/reportes/solicitudes.csv").content.decode("utf-8")
+    assert texto.startswith("﻿codigo;flujo;estado")
 
 
 def _whatsapp(cliente: TestClient, texto: str) -> list[str]:

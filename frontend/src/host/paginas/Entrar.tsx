@@ -76,7 +76,7 @@ function FormularioEntrar({
         <h1 id="acceso-titulo" tabIndex={-1}>
           Entrar a la coordinación
         </h1>
-        <p className="muted">Con el usuario de tu colectivo: huerteros o recicladores.</p>
+        <p className="muted">Con tu usuario de coordinación.</p>
       </div>
       <div className="field">
         <label htmlFor={id + '-usuario'}>Usuario</label>

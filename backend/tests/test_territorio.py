@@ -18,7 +18,7 @@ def sesion(usuario: str) -> TestClient:
 
 
 def test_registro_asistido_con_su_conjunto_y_encargado_por_conjunto():
-    huerteros = sesion("huerteros")
+    huerteros = sesion("rosa")
     zona, conjunto = _crear_lugares(huerteros)
     vecino = _registrar_desde_la_tableta(huerteros, zona, conjunto)
     mensajes = huerteros.get("/api/whatsapp/simulador/mensajes", params={"telefono": TELEFONO}).json()
@@ -53,7 +53,7 @@ def _registrar_desde_la_tableta(cliente: TestClient, zona: str, conjunto: str) -
     respuesta = cliente.post("/api/directorio/solicitantes", json={**datos, "conjunto_id": conjunto})
     assert respuesta.status_code == 201, respuesta.text
     vecino = respuesta.json()
-    assert vecino["estado"] == "habilitado" and vecino["registrado_por"] == "Coordinación de huerteros"
+    assert vecino["estado"] == "habilitado" and vecino["registrado_por"] == "Rosa Herrera"
     return vecino
 
 

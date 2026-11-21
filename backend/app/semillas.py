@@ -50,9 +50,9 @@ def _lugares_y_encargados() -> None:
 
 def _usuarios(clave: str) -> None:
     for usuario, nombre, rol, colectivo in (
-            ("huerteros", "Coordinación de huerteros", acceso.Rol.COORDINADOR, Colectivo.HUERTEROS),
-            ("recicladores", "Coordinación de recicladores", acceso.Rol.COORDINADOR, Colectivo.RECICLADORES),
-            ("admin", "Administración de la fundación", acceso.Rol.ADMINISTRADOR, None)):
+            ("rosa", "Rosa Herrera", acceso.Rol.COORDINADOR, Colectivo.HUERTEROS),
+            ("carlos", "Carlos Mendoza", acceso.Rol.COORDINADOR, Colectivo.RECICLADORES),
+            ("fundacion", "Fundación Santo Domingo", acceso.Rol.ADMINISTRADOR, None)):
         acceso.crear_usuario(acceso.NuevoUsuario(usuario=usuario, nombre=nombre, rol=rol, colectivo=colectivo,
                                                  clave=clave))
 

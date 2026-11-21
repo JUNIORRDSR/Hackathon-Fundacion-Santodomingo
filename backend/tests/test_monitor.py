@@ -10,7 +10,7 @@ URL = f"/api/whatsapp/conversaciones/{TELEFONO.replace('+', '%2B')}"
 
 def test_tomar_el_control_calla_al_bot_y_devolverlo_lo_despierta():
     admin = TestClient(app)
-    assert admin.post("/api/acceso/entrar", json={"usuario": "admin", "clave": "ecoconecta-demo"}).status_code == 200
+    assert admin.post("/api/acceso/entrar", json={"usuario": "fundacion", "clave": "ecoconecta-demo"}).status_code == 200
     vecino = lambda texto: admin.post("/api/whatsapp/simulador", json={"telefono": TELEFONO, "texto": texto}).json()
 
     assert vecino("Hola")  # el bot responde con la autorización de datos
@@ -33,7 +33,7 @@ def test_lectura_por_usuario_no_oculta_entrantes_que_llegaron_despues():
     conversaciones = "/api/whatsapp/conversaciones"
     hilo = f"{conversaciones}/{telefono.replace('+', '%2B')}"
     admin, coordinador = TestClient(app), TestClient(app)
-    for cliente, usuario in ((admin, "admin"), (coordinador, "huerteros")):
+    for cliente, usuario in ((admin, "fundacion"), (coordinador, "rosa")):
         credenciales = {"usuario": usuario, "clave": "ecoconecta-demo"}
         assert cliente.post("/api/acceso/entrar", json=credenciales).status_code == 200
 
@@ -65,7 +65,7 @@ def test_fallo_de_envio_de_coordinacion_queda_en_el_hilo_y_se_informa(monkeypatc
 
     monkeypatch.setattr(bot, "_transporte", TransporteNoDisponible())
     cliente = TestClient(app)
-    credenciales = {"usuario": "admin", "clave": "ecoconecta-demo"}
+    credenciales = {"usuario": "fundacion", "clave": "ecoconecta-demo"}
     assert cliente.post("/api/acceso/entrar", json=credenciales).status_code == 200
     hilo = "/api/whatsapp/conversaciones/%2B573000000012"
     assert cliente.post(f"{hilo}/control").status_code == 204

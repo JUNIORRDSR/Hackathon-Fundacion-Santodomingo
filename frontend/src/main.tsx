@@ -98,7 +98,7 @@ function App() {
     const elegido = id as Coordinator['grupo']
     if (!usuario?.colectivo) return setGrupo(elegido)
     if (elegido === coordinador.grupo) return
-    setSugerido(elegido === 'organico' ? 'huerteros' : 'recicladores')
+    setSugerido(elegido === 'organico' ? 'rosa' : 'carlos')
     void salir()
   }
   return (

@@ -14,7 +14,7 @@ def sesion(usuario: str) -> TestClient:
 
 
 def test_escenario_de_demostracion():
-    admin, huerteros, recicladores = sesion("admin"), sesion("huerteros"), sesion("recicladores")
+    admin, huerteros, recicladores = sesion("fundacion"), sesion("rosa"), sesion("carlos")
     solicitante = _registrar_por_whatsapp_y_habilitar(admin)
     solicitud = _pedir_organicos(admin, huerteros)
     _comprobar_que_recicladores_no_la_ve(recicladores, solicitud)

@@ -98,7 +98,7 @@ def test_no_se_consulta_al_modelo_si_esta_desactivada_o_la_foto_no_sirve(modelo,
 
 def _admin() -> TestClient:
     cliente = TestClient(app)
-    respuesta = cliente.post("/api/acceso/entrar", json={"usuario": "admin", "clave": "ecoconecta-demo"})
+    respuesta = cliente.post("/api/acceso/entrar", json={"usuario": "fundacion", "clave": "ecoconecta-demo"})
     assert respuesta.status_code == 200, respuesta.text
     return cliente
 

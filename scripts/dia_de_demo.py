@@ -91,7 +91,7 @@ def llevar_el_dia(solicitud, plan, encargado):
 
 
 def main():
-    llamar("/acceso/entrar", {"usuario": "admin", "clave": CLAVE})
+    llamar("/acceso/entrar", {"usuario": "fundacion", "clave": CLAVE})
     lugares = lugares_por_nombre()
     existentes = {s["telefono"]: s["id"] for s in llamar("/directorio/solicitantes")}
     abiertas = {(s["solicitante_id"], s["colectivo"]) for s in llamar("/solicitudes")}

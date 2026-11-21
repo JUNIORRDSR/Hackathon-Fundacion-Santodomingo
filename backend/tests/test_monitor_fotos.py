@@ -21,7 +21,7 @@ MAL_SEPARADA = {"veredicto": "mal_separado", "flujo_detectado": "reciclable", "p
 @pytest.fixture(scope="module")
 def admin() -> TestClient:
     cliente = TestClient(app)
-    assert cliente.post("/api/acceso/entrar", json={"usuario": "admin", "clave": "ecoconecta-demo"}).status_code == 200
+    assert cliente.post("/api/acceso/entrar", json={"usuario": "fundacion", "clave": "ecoconecta-demo"}).status_code == 200
     zona = cliente.get("/api/directorio/zonas").json()[0]["id"]
     vecina = {"telefono": TELEFONO, "nombre": "Vecina del Monitor", "tipo": "hogar", "zona_id": zona,
               "direccion": "Torre 4, apto 404", "autoriza_datos": True}

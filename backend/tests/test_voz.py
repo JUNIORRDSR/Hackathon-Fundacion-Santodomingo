@@ -44,7 +44,7 @@ def whisper(monkeypatch):
 @pytest.fixture(scope="module")
 def admin() -> TestClient:
     cliente = TestClient(app)
-    assert cliente.post("/api/acceso/entrar", json={"usuario": "admin", "clave": "ecoconecta-demo"}).status_code == 200
+    assert cliente.post("/api/acceso/entrar", json={"usuario": "fundacion", "clave": "ecoconecta-demo"}).status_code == 200
     zona = cliente.get("/api/directorio/zonas").json()[0]["id"]
     vecino = {"telefono": HABILITADA, "nombre": "Vecino de Voz", "tipo": "hogar", "zona_id": zona,
               "direccion": "Torre 2, apto 202", "autoriza_datos": True}

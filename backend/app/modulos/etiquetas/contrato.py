@@ -36,7 +36,7 @@ class Lectura(BaseModel):
 def etiquetas() -> list[EtiquetaVista]:
     """Una por hogar o negocio habilitado, para imprimirlas en stickers o en papel."""
     habilitados = directorio.solicitantes(directorio.EstadoSolicitante.HABILITADO)
-    zonas = {zona.id: zona.nombre for zona in directorio.zonas()}
+    zonas = _lugares()
     codigos = _codigos([s.id for s in habilitados])
     return [_vista(s, zonas, codigos[s.id]) for s in habilitados]
 
@@ -53,7 +53,7 @@ def leer(texto: str, colectivo: Colectivo | None) -> Lectura:
     solicitante = directorio.solicitante(solicitante_id)
     abiertas = [s for s in solicitudes.de_solicitante(solicitante_id)
                 if s.estado in solicitudes.ABIERTOS and colectivo in (None, s.colectivo)]
-    zonas = {solicitante.zona_id: directorio.zona(solicitante.zona_id).nombre}
+    zonas = _lugares()
     return Lectura(etiqueta=_vista(solicitante, zonas, codigo(solicitante_id)), solicitudes=abiertas)
 
 
@@ -84,7 +84,13 @@ def _codigos(ids: list[UUID]) -> dict[UUID, str]:
     return {fila.solicitante_id: dominio.codigo(fila.numero) for fila in filas}
 
 
+def _lugares() -> dict[UUID, str]:
+    """Nombre de cada zona y conjunto: la etiqueta muestra el conjunto del hogar si lo tiene (ADR-0016)."""
+    return {lugar.id: lugar.nombre for zona in directorio.zonas() for lugar in (zona, *zona.conjuntos)}
+
+
 def _vista(s: directorio.SolicitanteVista, zonas: dict[UUID, str], codigo_hogar: str) -> EtiquetaVista:
-    return EtiquetaVista(solicitante_id=s.id, nombre=s.nombre, tipo=s.tipo, zona=zonas.get(s.zona_id, ""),
+    return EtiquetaVista(solicitante_id=s.id, nombre=s.nombre, tipo=s.tipo,
+                         zona=zonas.get(s.conjunto_id or s.zona_id, ""),
                          habilitado=s.estado == directorio.EstadoSolicitante.HABILITADO, contenido=contenido(s.id),
                          codigo=codigo_hogar)

@@ -259,9 +259,14 @@ def _ids(s: Solicitud) -> dict:
     return {"solicitud_id": s.id, "codigo": s.codigo, "solicitante_id": s.solicitante_id, "flujo": s.flujo}
 
 
+def _datos(s: Solicitud) -> dict:
+    """Como asdict pero sin copia profunda: la vista no modifica nada y asdict copiaba cada fecha e ID de cada fila."""
+    return {**vars(s), "historial": [vars(cambio) for cambio in s.historial]}
+
+
 def _vista(s: Solicitud, leer_solicitante=None, leer_zona=None, leer_conjunto=None) -> SolicitudVista:
     solicitante = (leer_solicitante or directorio.solicitante)(s.solicitante_id)
     conjunto = (leer_conjunto or directorio.conjunto)(s.conjunto_id).nombre if s.conjunto_id else None
-    return SolicitudVista(**asdict(s), colectivo=COLECTIVO_DEL_FLUJO[s.flujo], solicitante_nombre=solicitante.nombre,
+    return SolicitudVista(**_datos(s), colectivo=COLECTIVO_DEL_FLUJO[s.flujo], solicitante_nombre=solicitante.nombre,
                           telefono=solicitante.telefono, recibida=s.historial[0].fecha,
                           zona=(leer_zona or directorio.zona)(s.zona_id).nombre, conjunto=conjunto)

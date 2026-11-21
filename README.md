@@ -50,6 +50,9 @@ Entra a la app (usuario `admin`, clave `ecoconecta-demo`) y abre **WhatsApp**: a
 derecha el hilo. En **Simular un vecino** escribes como si fueras un celular (`+573000000009`, «Hola»). Con **Tomar el
 control** el bot calla y respondes como coordinación; **Devolver al bot** lo reactiva (ADR-0007).
 
+El monitor usa una conexión de eventos (`GET /api/whatsapp/eventos`) por pestaña. Cuando el webhook o el
+simulador guardan un mensaje, el backend avisa al navegador y este actualiza la conversación.
+
 Por API: `POST /api/whatsapp/simulador` con `{"telefono": "+573000000001", "texto": "Hola"}`, y
 `GET /api/whatsapp/conversaciones/{telefono}/mensajes` para el hilo, avisos incluidos.
 
@@ -71,10 +74,9 @@ En el Sandbox clásico, `TWILIO_RESPUESTA_TWIML=1` devuelve las respuestas inmed
 incluidos los avisos generados por ese turno para el remitente. Los avisos posteriores del coordinador usan
 la API de Twilio.
 
-Si la cuenta Trial rechaza el texto libre por API, `TWILIO_COORDINACION_EN_WEBHOOK=1` deja las respuestas
-del monitor en cola y las entrega por TwiML la próxima vez que el vecino escriba. Actívalo junto con
-`TWILIO_RESPUESTA_TWIML=1`. Un remitente que admite texto libre por API puede enviar desde el monitor
-sin esperar otro mensaje del vecino.
+El monitor envía el texto de coordinación en el momento a través de la API de Twilio. La cuenta Trial
+puede exigir una plantilla y rechazar ese envío. Para enviar texto libre desde el monitor, configura un
+remitente de WhatsApp habilitado para ello y prueba dentro de la ventana de atención de 24 horas.
 
 El [prototipo TypeScript](modules/whatsapp-recoleccion/README.md) queda como referencia histórica. Las pruebas y el
 desarrollo del canal se hacen en `backend/app/modulos/whatsapp/` y en el monitor del frontend.

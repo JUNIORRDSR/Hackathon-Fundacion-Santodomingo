@@ -10,8 +10,9 @@ from app.compartido.bd import transaccion
 from app.compartido.tipos import ErrorDeNegocio, NoEncontrado
 from app.modulos.directorio import contrato as directorio
 from app.modulos.whatsapp import tablas as t
-from app.modulos.whatsapp.bot import enviar_coordinacion
+from app.modulos.whatsapp.bot import enviar
 from app.modulos.whatsapp.contrato import MensajeSaliente
+from app.modulos.whatsapp.eventos_monitor import notificar
 
 
 class MensajeVista(BaseModel):
@@ -57,7 +58,9 @@ def mensajes_de(telefono: str) -> list[MensajeVista]:
     consulta = select(t.mensajes).where(t.mensajes.c.telefono == telefono).order_by(t.mensajes.c.id)
     with transaccion() as c:
         filas = c.execute(consulta).all()
-    return [MensajeVista.model_validate({**fila._mapping, "fecha": fila.enviado_en}) for fila in filas]
+    return [MensajeVista.model_validate({**fila._mapping, "fecha": fila.enviado_en,
+                                       "estado": "fallido" if fila.estado == "en_cola" else fila.estado})
+            for fila in filas]
 
 
 def marcar_leido(telefono: str, usuario_id: UUID, hasta_id: int) -> None:
@@ -68,8 +71,10 @@ def marcar_leido(telefono: str, usuario_id: UUID, hasta_id: int) -> None:
     with transaccion() as c:
         if c.execute(mensaje).scalar_one_or_none() is None:
             raise NoEncontrado("El mensaje entrante no pertenece a esta conversación.")
-        c.execute(guardar.on_conflict_do_update(index_elements=[lecturas.usuario_id, lecturas.telefono],
-                                               set_={"hasta_id": func.greatest(lecturas.hasta_id, hasta_id)}))
+        cambio = guardar.on_conflict_do_update(index_elements=[lecturas.usuario_id, lecturas.telefono],
+                                               set_={"hasta_id": hasta_id}, where=lecturas.hasta_id < hasta_id)
+        if c.execute(cambio).rowcount:
+            notificar(c, usuario_id)
 
 
 def tomar_control(telefono: str, quien: str) -> None:
@@ -86,7 +91,7 @@ def responder(telefono: str, texto: str) -> bool:
         control = c.execute(select(t.conversaciones.c.control).where(t.conversaciones.c.telefono == telefono)).scalar()
     if not control:
         raise ErrorDeNegocio("Toma el control de la conversación antes de escribir.")
-    return enviar_coordinacion(MensajeSaliente(telefono=telefono, texto=texto)) != "fallido"
+    return enviar(MensajeSaliente(telefono=telefono, texto=texto), autor="coordinacion") != "fallido"
 
 
 def _resumen(fila, control: str | None, sin_leer: int) -> ConversacionVista:
@@ -101,6 +106,7 @@ def _cambiar_control(telefono: str, control: str | None) -> None:
     with transaccion() as c:
         c.execute(insertar_o_actualizar(t.conversaciones).values(nueva).on_conflict_do_update(
             index_elements=[t.conversaciones.c.telefono], set_={"control": control, "actualizada": ahora}))
+        notificar(c)
 
 
 def pedidos_en_espera() -> dict[str, dict]:

@@ -7,7 +7,7 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
-from sqlalchemy import Connection, func, insert, select, update
+from sqlalchemy import Connection, func, insert, select
 from sqlalchemy.dialects.postgresql import insert as insertar_o_actualizar
 
 from app.compartido.bd import transaccion
@@ -16,12 +16,12 @@ from app.modulos.directorio import contrato as directorio
 from app.modulos.whatsapp import fotos, registro
 from app.modulos.whatsapp import tablas as t
 from app.modulos.whatsapp.contrato import Conversador, Herramientas, MensajeEntrante, MensajeSaliente, Transporte, Turno
+from app.modulos.whatsapp.eventos_monitor import notificar
 from app.modulos.whatsapp.menu import ConversadorMenu
 from app.modulos.whatsapp.respuestas import texto as plantilla
-from app.modulos.whatsapp.transporte_twilio import ErrorEnvioTwilio, TransporteTwilio
+from app.modulos.whatsapp.transporte_twilio import ErrorEnvioTwilio
 
 log = logging.getLogger("whatsapp")
-MAX_RESPUESTAS_TWIML = 10
 
 
 @dataclass
@@ -29,7 +29,6 @@ class _RespuestaWebhook:
     """Con Twilio en el sandbox las respuestas viajan en el TwiML del mismo webhook (Jorge)."""
     telefono: str
     mensajes: list[tuple[MensajeSaliente, str]] = field(default_factory=list)
-    encolados: list[MensajeSaliente] = field(default_factory=list)
 
 
 _respuesta_webhook: ContextVar[_RespuestaWebhook | None] = ContextVar("respuesta_webhook", default=None)
@@ -78,7 +77,6 @@ def recibir(mensaje: MensajeEntrante, sid: str | None = None) -> list[str]:
         memoria, control = _conversacion(mensaje.telefono)
         textos, memoria = ([], memoria) if control else _responder(mensaje, memoria)
         _guardar_memoria(mensaje.telefono, memoria)
-        _entregar_encolados(c, mensaje.telefono, 0 if control else max(1, len(textos)))
     for texto in textos:
         enviar(MensajeSaliente(telefono=mensaje.telefono, texto=texto), autor="bot")
     return textos
@@ -94,36 +92,7 @@ def recibir_para_twiml(mensaje: MensajeEntrante, sid: str) -> list[MensajeSalien
         _respuesta_webhook.reset(token)
     for salida, autor in respuesta.mensajes:
         _registrar(salida, "saliente", autor, "emitido")
-    return respuesta.encolados + [salida for salida, _ in respuesta.mensajes]
-
-
-def enviar_coordinacion(mensaje: MensajeSaliente) -> str:
-    """En el Sandbox, espera el siguiente mensaje del vecino para responder con TwiML."""
-    if _coordinacion_en_webhook():
-        _registrar(mensaje, "saliente", "coordinacion", "en_cola")
-        return "en_cola"
-    return enviar(mensaje, autor="coordinacion")
-
-
-def _coordinacion_en_webhook() -> bool:
-    return isinstance(_transporte, TransporteTwilio) and _transporte.coordinacion_en_webhook
-
-
-def _entregar_encolados(c: Connection, telefono: str, respuestas_automaticas: int) -> None:
-    respuesta = _respuesta_webhook.get()
-    cupos = MAX_RESPUESTAS_TWIML - respuestas_automaticas
-    if respuesta is None or not _coordinacion_en_webhook() or cupos <= 0:
-        return
-    tabla = t.mensajes
-    consulta = select(tabla.c.id, tabla.c.texto, tabla.c.media_url).where(
-        tabla.c.telefono == telefono, tabla.c.direccion == "saliente",
-        tabla.c.autor == "coordinacion", tabla.c.estado == "en_cola",
-    ).order_by(tabla.c.id).limit(cupos)
-    filas = c.execute(consulta).all()
-    if filas:
-        c.execute(update(tabla).where(tabla.c.id.in_([fila.id for fila in filas])).values(estado="emitido"))
-        respuesta.encolados.extend(MensajeSaliente(telefono=telefono, texto=fila.texto, media_url=fila.media_url)
-                                   for fila in filas)
+    return [salida for salida, _ in respuesta.mensajes]
 
 
 def enviar(mensaje: MensajeSaliente, autor: str = "aviso") -> str:
@@ -178,6 +147,7 @@ def _registrar(mensaje: MensajeEntrante | MensajeSaliente, direccion: str, autor
         c.execute(insert(t.mensajes).values(telefono=mensaje.telefono, texto=mensaje.texto, media_url=mensaje.media_url,
                                             direccion=direccion, autor=autor, estado=estado,
                                             enviado_en=datetime.now(timezone.utc)))
+        notificar(c)
 
 
 def _conversacion(telefono: str) -> tuple[dict, str | None]:

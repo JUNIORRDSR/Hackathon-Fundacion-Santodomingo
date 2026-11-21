@@ -18,11 +18,13 @@ export const iniciales = (nombre: string | null) =>
 
 export function Conversacion({
   conversacion,
+  revision,
   alCambiar,
   alSimular,
 }: {
   conversacion?: ConversacionVista
-  alCambiar: () => void
+  revision: number
+  alCambiar: (soloLista?: boolean) => void
   alSimular: (telefono: string) => void
 }) {
   const telefono = conversacion?.telefono
@@ -40,7 +42,7 @@ export function Conversacion({
         if (!actual.signal.aborted) setMensajes(datos)
       })
       .catch(() => {
-        // El siguiente refresco vuelve a intentar la carga.
+        // El siguiente aviso del servidor o la reconexión vuelve a cargar el hilo.
       })
   }, [telefono])
   const marcarLeido = useCallback(
@@ -50,7 +52,7 @@ export function Conversacion({
       try {
         await api(ruta(telefono) + '/lectura', 'POST', { hasta_id: hastaId })
         ultimaLectura.current = Math.max(ultimaLectura.current, hastaId)
-        alCambiar()
+        alCambiar(true)
       } catch {
         // La lectura se reintenta si el mensaje sigue visible al refrescar.
       } finally {
@@ -61,17 +63,12 @@ export function Conversacion({
   )
   useEffect(() => {
     cargar()
-    const intervalo = window.setInterval(cargar, 3000)
-    return () => {
-      window.clearInterval(intervalo)
-      solicitud.current?.abort()
-    }
-  }, [cargar])
-  const refrescar = () => (cargar(), alCambiar())
+    return () => solicitud.current?.abort()
+  }, [cargar, revision])
   const control = async (tomar: boolean) => {
     if (!telefono) return
     await api(ruta(telefono) + '/control', tomar ? 'POST' : 'DELETE')
-    refrescar()
+    alCambiar()
   }
 
   return (
@@ -105,7 +102,7 @@ export function Conversacion({
         </div>
       )}
       {conversacion && <Hilo mensajes={mensajes} control={!!conversacion.control} alLeer={marcarLeido} />}
-      <Redactar telefono={telefono} conControl={!!conversacion?.control} alEnviar={refrescar} alSimular={alSimular} />
+      <Redactar telefono={telefono} conControl={!!conversacion?.control} alEnviar={alCambiar} alSimular={alSimular} />
     </section>
   )
 }

@@ -80,9 +80,9 @@ export function Hilo({
 
   return (
     <div className="shadcn hilo">
-      <MessageScrollerProvider autoScroll>
+      <MessageScrollerProvider autoScroll defaultScrollPosition="end" scrollEdgeThreshold={64}>
         <MessageScroller>
-          <MessageScrollerViewport>
+          <MessageScrollerViewport aria-label="Mensajes de la conversación">
             <MessageScrollerContent className="flex flex-col gap-1.5 p-4">
               {mensajes.map((m, i) => {
                 const fecha = new Date(m.fecha)
@@ -107,7 +107,6 @@ export function Hilo({
                           <MessageFooter className="hilo-hora" ref={m.id === ultimoEntrante ? marcaLectura : undefined}>
                             {hora.format(fecha)}
                             {m.estado === 'fallido' && ' · No se envió'}
-                            {m.estado === 'en_cola' && ' · En cola hasta que el vecino escriba'}
                           </MessageFooter>
                         </MessageContent>
                       </Message>
@@ -122,7 +121,12 @@ export function Hilo({
               )}
             </MessageScrollerContent>
           </MessageScrollerViewport>
-          <MessageScrollerButton />
+          <MessageScrollerButton
+            aria-label="Ir al último mensaje"
+            title="Ir al último mensaje"
+            size="icon"
+            className="z-10 rounded-full shadow-md data-[direction=end]:bottom-auto top-1/2 -mt-4"
+          />
         </MessageScroller>
       </MessageScrollerProvider>
     </div>

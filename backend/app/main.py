@@ -64,11 +64,13 @@ def _servir_spa(app: FastAPI) -> None:
 
     @app.get("/{ruta:path}", include_in_schema=False)
     def spa(ruta: str) -> FileResponse:
+        """index.html se revalida siempre (no-cache): tras publicar, nadie corre la versión vieja contra la API nueva.
+        Los de /assets llevan hash en el nombre y pueden quedarse en caché."""
         if ruta.startswith("api/"):
             raise HTTPException(404)
         archivo = (SPA / ruta).resolve()
         dentro = archivo.is_file() and archivo.is_relative_to(SPA.resolve())
-        return FileResponse(archivo if dentro else SPA / "index.html")
+        return FileResponse(archivo if dentro else SPA / "index.html", headers={"Cache-Control": "no-cache"})
 
 
 app = crear_app()

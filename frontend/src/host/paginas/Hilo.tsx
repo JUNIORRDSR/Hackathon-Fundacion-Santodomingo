@@ -125,7 +125,7 @@ export function Hilo({
             aria-label="Ir al último mensaje"
             title="Ir al último mensaje"
             size="icon"
-            className="z-10 rounded-full shadow-md data-[direction=end]:bottom-auto top-1/2 -mt-4"
+            className="inset-s-auto inset-e-4 z-10 translate-x-0 rounded-full shadow-md rtl:translate-x-0"
           />
         </MessageScroller>
       </MessageScrollerProvider>

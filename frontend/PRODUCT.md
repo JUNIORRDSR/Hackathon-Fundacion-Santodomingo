@@ -29,7 +29,7 @@ coordinación y los puntos que premian separar bien.
 
 - Lo de hoy primero y pocas decisiones por pantalla: una acción principal clara en cada lugar.
 - Íconos siempre con texto; lenguaje simple, en verbos («Asignar», «Validar kilos», «Entregar premio»).
-- Letra base de 18 px y botones de al menos 52 px de alto, con espacio entre ellos.
+- Letra base de 17 px y botones de al menos 48 px de alto, con espacio entre ellos.
 - Contraste AA y todo el movimiento apagado con «reducir movimiento».
 
 ## Brand commitments

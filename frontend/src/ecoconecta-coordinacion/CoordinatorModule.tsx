@@ -37,6 +37,8 @@ interface CoordinatorModuleProps {
   extraPages?: Partial<Record<EcoPage, ReactNode>>
   // Contadores junto a las opciones del menú, como los vecinos por aceptar en Registros.
   badges?: Partial<Record<EcoPage, number>>
+  // El impacto del barrio en el Inicio: lo arma el host con los reportes.
+  dashboardImpact?: ReactNode
   onSignOut?: () => void
 }
 
@@ -52,6 +54,7 @@ export function CoordinatorModule({
   publicTrainingHref,
   extraPages = {},
   badges,
+  dashboardImpact,
   onSignOut,
 }: CoordinatorModuleProps) {
   const { page } = location
@@ -78,6 +81,7 @@ export function CoordinatorModule({
           demo={demo}
           pages={pages}
           counts={{ canjes: badges?.canjes, habilitar: badges?.habilitar }}
+          impact={dashboardImpact}
           training={
             <CapacitacionPage
               resources={trainingResources ?? sampleTraining}
@@ -114,6 +118,7 @@ function CoordinatorContent({
   demo,
   pages,
   counts,
+  impact,
   training,
 }: {
   coordinator: Coordinator
@@ -123,6 +128,7 @@ function CoordinatorContent({
   demo: boolean
   pages: EcoPage[]
   counts: DashboardCounts
+  impact?: ReactNode
   training: ReactNode
 }) {
   const page = location.page as OperationalPage | 'capacitacion'
@@ -137,7 +143,7 @@ function CoordinatorContent({
   if (page === 'capacitacion') return training
 
   const isDashboard = page === 'inicio'
-  const dashboardHeader = isDashboard && <DashboardHeader coordinator={coordinator} demo={demo} href={href} />
+  const dashboardHeader = isDashboard && <DashboardHeader coordinator={coordinator} demo={demo} />
 
   if (data.state.status !== 'ready') {
     return (
@@ -210,15 +216,7 @@ function CoordinatorContent({
   switch (page) {
     case 'inicio':
       content = (
-        <DashboardPage
-          requests={requests}
-          collectors={collectors}
-          href={href}
-          pages={pages}
-          counts={counts}
-          selectedId={selected?.id}
-          onSelect={open}
-        />
+        <DashboardPage requests={requests} href={href} pages={pages} counts={counts} impact={impact} onSelect={open} />
       )
       break
     case 'solicitudes':

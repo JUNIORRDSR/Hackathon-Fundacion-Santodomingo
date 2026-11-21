@@ -9,6 +9,7 @@ import { getCollectorNames, getTimelineData } from './timelineData'
 import type { PlannedRequest } from './timelineData'
 import { useTimelineMotion } from './useTimelineMotion'
 import { AgendaList, CollectorAvatar } from './AgendaList'
+import { exportarDia } from './exportar'
 
 type View = 'timeline' | 'agenda'
 const compactQuery = '(max-width: 730px)'
@@ -238,6 +239,14 @@ export function ScheduleTimeline({
           </select>
           <Icon name="chevron" />
         </div>
+        <button
+          type="button"
+          className="button button-secondary timeline-export"
+          disabled={visible.length === 0}
+          onClick={() => exportarDia(date, visible, names)}
+        >
+          Exportar el día
+        </button>
       </div>
       <div className="view-content" key={JSON.stringify([view, date, collectorId])}>
         {visible.length === 0 ? (

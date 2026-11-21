@@ -1,5 +1,43 @@
 /* Pantallas del host (entrar, registros, canjes, WhatsApp) con los tokens del módulo de Daniela (.eco-app). */
 .eco-app {
+  /* Impacto del barrio en el Inicio. Proporción del manual: fondo claro, verdes en cifras y barras, amarillo solo en los puntos. */
+  & .impacto { display: grid; gap: 1.1rem; margin-bottom: 1rem; padding: 1.3rem 1.5rem 1.4rem; }
+  & .impacto h2 { font-size: 1.25rem; text-wrap: balance; }
+  & .impacto-cabeza { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: .8rem 1.5rem; }
+  & .impacto-cabeza p, & .impacto-estado { margin-top: .2rem; color: var(--muted); }
+  & .impacto-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; }
+  & .impacto-mes { padding: 0 .15rem; border: 1px solid var(--line); border-radius: 9999px; background: var(--surface); }
+  & .impacto-mes span { min-width: 9.5rem; font-weight: 650; text-align: center; }
+  & .impacto-mes .icon-button:disabled { opacity: .35; }
+  & .impacto-cuerpo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 1.25rem 2.25rem; align-items: end; }
+  & .impacto-resumen { display: grid; gap: 1.1rem; }
+  & .impacto-kg { display: grid; gap: .3rem; }
+  & .impacto-kg strong { color: var(--highlight); font: 700 clamp(3.2rem, 6.5vw, 4.6rem)/.95 var(--font-heading); letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
+  & .impacto-kg span { max-width: 24ch; font-size: 1.05rem; }
+  & .impacto-cifras { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; margin: 0; padding-top: .9rem; border-top: 1px solid var(--line); }
+  & .impacto-cifras dt { color: var(--muted); font-size: .875rem; }
+  & .impacto-cifras dd { justify-self: start; margin: .2rem 0 0; color: var(--highlight); font: 650 1.6rem/1.15 var(--font-heading); font-variant-numeric: tabular-nums; }
+  & .impacto-puntos dd { padding: 0 .45rem; border-radius: .5rem; background: color-mix(in srgb, var(--yellow) 42%, var(--surface)); color: var(--ink); }
+
+  /* Gráfica de kilos por día: eje y con marcas redondas, líneas guía suaves y la barra elegida con su valor. */
+  & .impacto-grafica { margin: 0; }
+  & .impacto-grafica figcaption { margin-bottom: 2.2rem; color: var(--muted); font-size: .875rem; }
+  & .grafica { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: 10rem auto; column-gap: .55rem; }
+  & .grafica-eje { position: relative; min-width: 2rem; }
+  & .grafica-eje span { position: absolute; right: 0; translate: 0 50%; color: var(--muted); font-size: .8125rem; font-variant-numeric: tabular-nums; }
+  & .grafica-area { position: relative; display: grid; grid-template-columns: repeat(var(--dias), minmax(0, 1fr)); border-bottom: 2px solid var(--control-line); }
+  & .grafica-linea { position: absolute; inset-inline: 0; border-top: 1px dashed var(--line); }
+  & .grafica-columna { position: relative; display: flex; align-items: end; justify-content: center; height: 100%; }
+  & .grafica-barra { position: relative; width: min(72%, 1.15rem); border-radius: 4px 4px 0 0; background: var(--highlight); }
+  & .grafica-valor { position: absolute; bottom: calc(100% + .4rem); left: 50%; translate: -50% 0; padding: .2rem .5rem; border-radius: .5rem; background: var(--highlight); color: var(--on-highlight); font-size: .8125rem; font-weight: 650; white-space: nowrap; }
+  & .grafica-valor[data-lado="inicio"] { left: 0; translate: none; }
+  & .grafica-valor[data-lado="fin"] { right: 0; left: auto; translate: none; }
+  & .grafica-dias { grid-column: 2; display: grid; grid-template-columns: repeat(var(--dias), minmax(0, 1fr)); margin-top: .35rem; color: var(--muted); font-size: .75rem; text-align: center; font-variant-numeric: tabular-nums; }
+
+  @media (max-width: 52rem) {
+    & .impacto-cuerpo { grid-template-columns: minmax(0, 1fr); }
+  }
+
   & ::selection { background: #f6c40066; color: var(--ink); }
   & input, & textarea { caret-color: var(--highlight); }
   & .field-help { color: var(--muted); font-size: .8125rem; }

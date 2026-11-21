@@ -13,6 +13,7 @@ import type { Usuario } from './host/sesion'
 import { Canjes } from './host/paginas/Canjes'
 import { Entrar } from './host/paginas/Entrar'
 import { PorHabilitar } from './host/paginas/PorHabilitar'
+import { Impacto } from './host/paginas/Impacto'
 import { Whatsapp } from './host/paginas/Whatsapp'
 
 const suscribir = (aviso: () => void) => (
@@ -114,6 +115,7 @@ function App() {
         whatsapp: <Whatsapp />,
       }}
       badges={{ habilitar: porAceptar, whatsapp: sinLeer, canjes: porEntregar }}
+      dashboardImpact={<Impacto grupo={coordinador.grupo} />}
       onSignOut={() => void salir()}
     />
   )

@@ -12,6 +12,7 @@ from typing import NamedTuple
 
 from app.modulos.clasificacion import contrato as clasificacion
 from app.modulos.whatsapp import fotos, voz
+from app.modulos.whatsapp.agente.memoria import registrar_actividad
 from app.modulos.whatsapp.contrato import MensajeEntrante
 
 log = logging.getLogger("whatsapp")
@@ -45,6 +46,8 @@ def atender(mensaje: MensajeEntrante, memoria: dict) -> tuple[list[str], Mensaje
         return voz.responder(adjunto.contenido, adjunto.tipo, mensaje)
     if adjunto.tipo.startswith("image/") and clasificacion.activa():
         memoria["foto"] = mensaje.media_url  # la revisión orienta; la foto igual queda para el pedido
+        if os.getenv("CONVERSADOR") == "llm":
+            registrar_actividad(memoria)
         return fotos.responder(clasificacion.Foto(contenido=adjunto.contenido, tipo=adjunto.tipo), memoria), None
     return [], mensaje
 

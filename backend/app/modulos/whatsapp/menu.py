@@ -13,6 +13,7 @@ OPCIONES_MENU = ("1 Pedir recolección de orgánicos\n2 Pedir recolección de re
                  "3 Ver mis solicitudes\n4 Ver mis puntos y canjear\n5 Aprender a separar")
 OPCIONES_FRANJAS = "1 Mañana\n2 Tarde\n3 Noche"
 FRANJA_ELEGIDA = {"1": Franja.MANANA, "2": Franja.TARDE, "3": Franja.NOCHE}
+LARGO_WHATSAPP = 1600  # tope del cuerpo de un mensaje de WhatsApp en Twilio
 
 
 class ConversadorMenu:
@@ -109,7 +110,12 @@ def _canjear(texto: str, ofrecidos: list[str], nombre: str, herramientas: Herram
 
 
 def _aprender(memoria: dict, herramientas: Herramientas) -> list[str]:
-    return [texto_de_pieza(c) for c in herramientas.aprender()] or [plantilla("menu_sin_material")]
+    """Una sola respuesta ahorra cupo de Twilio; si no cabe en el cuerpo de WhatsApp, cada guía va aparte."""
+    piezas = [texto_de_pieza(c) for c in herramientas.aprender()]
+    if not piezas:
+        return [plantilla("menu_sin_material")]
+    unidas = "\n\n".join(piezas)
+    return [unidas] if len(unidas) <= LARGO_WHATSAPP else piezas
 
 
 _OPCIONES = {

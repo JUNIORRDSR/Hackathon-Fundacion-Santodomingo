@@ -4,6 +4,7 @@ import hashlib
 import hmac
 from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
+from urllib.error import HTTPError
 from urllib.parse import parse_qsl, urlencode
 from xml.etree import ElementTree
 
@@ -12,7 +13,8 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.modulos.directorio import contrato as directorio
-from app.modulos.whatsapp import bot, transporte_twilio
+from app.modulos.whatsapp import bot, monitor, transporte_twilio
+from app.modulos.whatsapp.contrato import MensajeSaliente
 from app.modulos.whatsapp.transporte_twilio import TransporteTwilio
 
 RUTA = "/api/whatsapp/twilio"
@@ -162,3 +164,30 @@ def test_aviso_de_solicitud_sale_en_twiml_y_habilitacion_fuera_del_webhook_sale_
     mensaje, = ElementTree.fromstring(respuesta.content).findall("Message")
     assert "Recibimos tu solicitud ORG-" in "".join(mensaje.itertext())
     assert salidas == [aviso_habilitacion]
+
+
+@pytest.mark.parametrize("cliente_twilio", [True], indirect=True)
+def test_coordinacion_envia_de_inmediato_aunque_el_bot_use_twiml(cliente_twilio):
+    cliente, salidas = cliente_twilio
+    monitor.tomar_control(TELEFONO_TWIML, "Prueba")
+    assert monitor.responder(TELEFONO_TWIML, "Respuesta de coordinación")
+    salida, = salidas
+    assert salida["Body"] == "Respuesta de coordinación"
+    assert salida["To"] == f"whatsapp:{TELEFONO_TWIML}"
+    respuesta = _entregar(cliente, _parametros(TELEFONO_TWIML, 21))
+    assert respuesta.status_code == 200
+    assert not ElementTree.fromstring(respuesta.content).findall("Message")
+    assert salidas == [salida]
+
+
+def test_rest_registra_el_fallo_sin_datos_del_mensaje(cliente_twilio, monkeypatch, caplog):
+    def rechazar(pedido, *, timeout):
+        cuerpo = BytesIO(b'{"code":0,"message":"datos privados del proveedor"}')
+        raise HTTPError(pedido.full_url, 400, "Bad Request", {}, cuerpo)
+
+    monkeypatch.setattr(transporte_twilio.urllib.request, "urlopen", rechazar)
+    mensaje = MensajeSaliente(telefono=TELEFONO_AVISOS, texto="Mensaje ficticio")
+    assert bot.enviar(mensaje, autor="coordinacion") == "fallido"
+    assert monitor.mensajes_de(TELEFONO_AVISOS)[-1].estado == "fallido"
+    assert "HTTP 400, código 0" in caplog.text
+    assert "datos privados del proveedor" not in caplog.text

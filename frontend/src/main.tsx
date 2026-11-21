@@ -111,7 +111,7 @@ function App() {
       publicTrainingHref={capacitacionHref}
       extraPages={{
         habilitar: <PorHabilitar />,
-        canjes: <Canjes />,
+        canjes: <Canjes esAdmin={usuario.rol === 'administrador'} />,
         whatsapp: <Whatsapp />,
       }}
       badges={{ habilitar: porAceptar, whatsapp: sinLeer, canjes: porEntregar }}

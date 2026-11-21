@@ -1,5 +1,17 @@
 /* Pantallas del host (entrar, registros, canjes, WhatsApp) con los tokens del módulo de Daniela (.eco-app). */
 .eco-app {
+  /* Regla de puntos: una tarjeta por residuo, con etiquetas visibles y un ejemplo calculado. */
+  & .regla { display: grid; gap: 1rem; margin-top: 1rem; }
+  & .regla-cabeza h2 { font-size: 1.25rem; }
+  & .regla-formulario { display: grid; gap: 1rem; }
+  & .regla-flujos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: 1rem; }
+  & .regla-flujo { display: grid; gap: .9rem; margin: 0; padding: 1.1rem 1.2rem 1.2rem; }
+  & .regla-flujo legend { float: left; width: 100%; margin-bottom: .2rem; color: var(--highlight); font: 650 1.1rem/1.2 var(--font-heading); }
+  & .regla-flujo input { max-width: 9rem; font-variant-numeric: tabular-nums; }
+  & .regla-ejemplo { padding-top: .75rem; border-top: 1px solid var(--line); color: var(--muted); }
+  & .regla-ejemplo strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+  & .regla-aviso { color: var(--highlight); font-weight: 600; }
+
   /* Impacto del barrio en el Inicio. Proporción del manual: fondo claro, verdes en cifras y barras, amarillo solo en los puntos. */
   & .impacto { display: grid; gap: 1.1rem; margin-bottom: 1rem; padding: 1.3rem 1.5rem 1.4rem; }
   & .impacto h2 { font-size: 1.25rem; text-wrap: balance; }

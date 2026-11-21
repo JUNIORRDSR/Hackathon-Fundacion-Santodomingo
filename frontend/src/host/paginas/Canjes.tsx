@@ -9,6 +9,7 @@ import { MotionPills } from '../../ecoconecta-coordinacion/components/ui/MotionP
 import { useSubmission } from '../../ecoconecta-coordinacion/components/ui/useSubmission'
 import { api } from '../api'
 import { Premios } from './Premios'
+import { ReglaPuntos } from './ReglaPuntos'
 
 type Estado = 'pedido' | 'entregado' | 'cancelado'
 interface Canje {
@@ -34,8 +35,8 @@ const Insignia = ({ estado }: { estado: Estado }) => (
 )
 
 // ADR-0008: el vecino pide el canje por WhatsApp y muestra el código; aquí se entrega y se descuentan los puntos.
-export function Canjes() {
-  const [vista, setVista] = useState<'pedidos' | 'premios'>('pedidos')
+export function Canjes({ esAdmin = false }: { esAdmin?: boolean }) {
+  const [vista, setVista] = useState<'pedidos' | 'premios' | 'regla'>('pedidos')
   const [nuevoPremio, setNuevoPremio] = useState(0)
   return (
     <>
@@ -50,15 +51,20 @@ export function Canjes() {
           )
         }
       />
-      <MotionPills className="segmented-control canje-vista" label="Pedidos o premios" active={vista}>
+      <MotionPills className="segmented-control canje-vista" label="Pedidos, premios o regla de puntos" active={vista}>
         <button type="button" aria-pressed={vista === 'pedidos'} onClick={() => setVista('pedidos')}>
           Pedidos
         </button>
         <button type="button" aria-pressed={vista === 'premios'} onClick={() => setVista('premios')}>
           Premios
         </button>
+        <button type="button" aria-pressed={vista === 'regla'} onClick={() => setVista('regla')}>
+          Regla de puntos
+        </button>
       </MotionPills>
-      {vista === 'pedidos' ? <Pedidos /> : <Premios nuevo={nuevoPremio} />}
+      {vista === 'pedidos' && <Pedidos />}
+      {vista === 'premios' && <Premios nuevo={nuevoPremio} />}
+      {vista === 'regla' && <ReglaPuntos editable={esAdmin} />}
     </>
   )
 }

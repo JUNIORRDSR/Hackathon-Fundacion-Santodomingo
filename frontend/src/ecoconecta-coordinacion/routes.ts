@@ -2,6 +2,7 @@ export const routes = [
   'inicio',
   'solicitudes',
   'recolecciones',
+  'escanear',
   'recolectores',
   'capacitacion',
   'habilitar',

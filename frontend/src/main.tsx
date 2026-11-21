@@ -12,6 +12,7 @@ import { useSesion } from './host/sesion'
 import type { Usuario } from './host/sesion'
 import { Canjes } from './host/paginas/Canjes'
 import { Entrar } from './host/paginas/Entrar'
+import { Escanear } from './host/paginas/Escanear'
 import { PorHabilitar } from './host/paginas/PorHabilitar'
 import { Whatsapp } from './host/paginas/Whatsapp'
 
@@ -98,6 +99,7 @@ function App() {
       trainingResources={recursos}
       publicTrainingHref={capacitacionHref}
       extraPages={{
+        escanear: <Escanear />,
         habilitar: <PorHabilitar />,
         canjes: <Canjes />,
         whatsapp: <Whatsapp />,

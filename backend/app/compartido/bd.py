@@ -3,7 +3,7 @@ Una operación es una transacción; si ya hay una abierta, se une a ella (así p
 Los efectos hacia afuera (WhatsApp) corren después del commit."""
 import os
 from collections.abc import Callable, Iterator
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from contextvars import ContextVar
 
 from sqlalchemy import Engine, MetaData, create_engine, text
@@ -16,6 +16,7 @@ LOCAL = "postgresql+psycopg://ecoconecta:solo-para-desarrollo-local@localhost:54
 
 metadata = MetaData()
 _motor: Engine | None = None
+_reserva: ContextVar[Connection | None] = ContextVar("reserva", default=None)
 _conexion: ContextVar[Connection | None] = ContextVar("conexion", default=None)
 _despues: ContextVar[list[Callable] | None] = ContextVar("despues", default=None)
 
@@ -53,13 +54,25 @@ def crear_tablas() -> None:
 
 
 @contextmanager
+def reservar_conexion() -> Iterator[Connection]:
+    """Mantiene la misma sesión de PostgreSQL para varias transacciones consecutivas."""
+    with motor().connect() as c:
+        token = _reserva.set(c)
+        try:
+            yield c
+        finally:
+            _reserva.reset(token)
+
+
+@contextmanager
 def transaccion() -> Iterator[Connection]:
     actual = _conexion.get()
     if actual is not None:
         yield actual
         return
     pendientes: list[Callable] = []
-    with motor().begin() as c:
+    reserva = _reserva.get()
+    with (motor().connect() if reserva is None else nullcontext(reserva)) as c, c.begin():
         token_conexion, token_pendientes = _conexion.set(c), _despues.set(pendientes)
         try:
             yield c

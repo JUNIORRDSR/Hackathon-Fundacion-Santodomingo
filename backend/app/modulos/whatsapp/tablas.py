@@ -1,5 +1,5 @@
 """Tablas de whatsapp, en su propio esquema (ADR-0001)."""
-from sqlalchemy import Column, DateTime, Integer, String, Table, Text, Uuid, func
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Table, Text, Uuid, func
 from sqlalchemy.dialects.postgresql import JSONB
 
 from app.compartido.bd import metadata
@@ -42,6 +42,14 @@ mensajes = Table(
     Column("media_url", Text),
     Column("estado", String(8)),  # enviado | fallido; vacío en los entrantes
     Column("enviado_en", DateTime(timezone=True), nullable=False),
+    schema="whatsapp",
+)
+
+# Un turno fallido se puede reintentar con el mensaje que el monitor ya mostró.
+entregas_pendientes = Table(
+    "entregas_pendientes", metadata,
+    Column("sid", ForeignKey("whatsapp.entregas.sid"), primary_key=True),
+    Column("mensaje_id", ForeignKey("whatsapp.mensajes.id"), nullable=False),
     schema="whatsapp",
 )
 

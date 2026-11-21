@@ -8,10 +8,10 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import Connection, func, insert, or_, select
+from sqlalchemy import Connection, delete, func, insert, or_, select
 from sqlalchemy.dialects.postgresql import insert as insertar_o_actualizar
 
-from app.compartido.bd import transaccion
+from app.compartido.bd import reservar_conexion, transaccion
 from app.modulos.directorio import contrato as directorio
 from app.modulos.whatsapp import adjuntos, contactos, registro
 from app.modulos.whatsapp import tablas as t
@@ -77,21 +77,60 @@ def con_agente() -> bool:
 
 def recibir(mensaje: MensajeEntrante, sid: str | None = None) -> list[str]:
     """Entrada de todo mensaje. Un mensaje repetido de Twilio (mismo SID) no se procesa dos veces.
-    Si la coordinación tomó el control, el bot calla. Las respuestas salen después del commit."""
-    with transaccion() as c:
-        c.execute(select(func.pg_advisory_xact_lock(func.hashtextextended(mensaje.telefono, 0))))
-        if sid is not None and not _registrar_entrega(c, sid):
-            return []
-        if mensaje.perfil:
-            contactos.recordar(mensaje.telefono, mensaje.perfil)
-        historial = _historial(mensaje.telefono)
-        _registrar(mensaje, "entrante", "vecino")
-        memoria, control = _conversacion(mensaje.telefono)
-        respuesta = Respuesta(textos=[], memoria=memoria) if control else _responder(mensaje, memoria, historial)
-        _guardar_memoria(mensaje.telefono, respuesta.memoria)
+    El monitor ve el entrante desde su commit, mientras el bot prepara la respuesta."""
+    respuesta = _procesar_turno(mensaje, sid)
+    if respuesta is None:
+        return []
     for salida in _salidas(mensaje.telefono, respuesta):
         enviar(salida, autor="bot")
     return respuesta.textos
+
+
+def _procesar_turno(mensaje: MensajeEntrante, sid: str | None) -> Respuesta | None:
+    """Serializa los turnos del mismo número a través de los dos commits."""
+    clave = func.hashtextextended(mensaje.telefono, 0)
+    with reservar_conexion() as conexion:
+        try:
+            with transaccion() as c:
+                c.execute(select(func.pg_advisory_lock(clave)))
+                mensaje_id = _registrar_entrada(c, mensaje, sid)
+            if mensaje_id is None:
+                return None
+            return _responder_entrada(mensaje, mensaje_id, sid)
+        finally:
+            if not conexion.invalidated:
+                try:
+                    with conexion.begin():
+                        conexion.execute(select(func.pg_advisory_unlock(clave)))
+                except BaseException:
+                    conexion.invalidate()  # No devolver al pool una sesión que puede seguir bloqueada.
+                    raise
+
+
+def _registrar_entrada(c: Connection, mensaje: MensajeEntrante, sid: str | None) -> int | None:
+    pendientes = t.entregas_pendientes.c
+    if sid is not None and not _registrar_entrega(c, sid):
+        consulta = (select(pendientes.mensaje_id).join(t.mensajes, t.mensajes.c.id == pendientes.mensaje_id)
+                    .where(pendientes.sid == sid, t.mensajes.c.telefono == mensaje.telefono))
+        return c.execute(consulta).scalar_one_or_none()
+    if mensaje.perfil:
+        contactos.recordar(mensaje.telefono, mensaje.perfil)
+    mensaje_id = _registrar(mensaje, "entrante", "vecino")
+    if sid is not None:
+        c.execute(insert(t.entregas_pendientes).values(sid=sid, mensaje_id=mensaje_id))
+    return mensaje_id
+
+
+def _responder_entrada(mensaje: MensajeEntrante, mensaje_id: int, sid: str | None) -> Respuesta:
+    with transaccion() as c:
+        memoria, control = _conversacion(mensaje.telefono)
+        respuesta = Respuesta(textos=[], memoria=memoria)
+        if not control:
+            respuesta = _responder(mensaje, memoria, _historial(mensaje.telefono, antes_de=mensaje_id))
+        _guardar_memoria(mensaje.telefono, respuesta.memoria)
+        if sid is not None:
+            c.execute(delete(t.entregas_pendientes).where(t.entregas_pendientes.c.sid == sid))
+    return respuesta
 
 
 def _salidas(telefono: str, respuesta: Respuesta) -> list[MensajeSaliente]:
@@ -171,14 +210,15 @@ def _conversar(turno: Turno, memoria: dict, herramientas: Herramientas) -> Respu
         return ConversadorMenu().responder(turno, {}, herramientas)
 
 
-def _historial(telefono: str) -> list[Linea]:
+def _historial(telefono: str, antes_de: int) -> list[Linea]:
     """Lo que se habló en las últimas 24 horas, sin los envíos fallidos ni el registro: la dirección que escribió
     al registrarse no viaja al modelo (ADR-0016)."""
     m, solicitante = t.mensajes.c, directorio.solicitante_por_telefono(telefono)
     desde = datetime.now(timezone.utc) - timedelta(hours=24)
     desde = max(desde, solicitante.autorizo_en) if solicitante else desde
     consulta = (select(m.autor, m.texto, m.media_url)
-                .where(m.telefono == telefono, m.enviado_en >= desde, or_(m.estado.is_(None), m.estado != "fallido"))
+                .where(m.telefono == telefono, m.id < antes_de, m.enviado_en >= desde,
+                       or_(m.estado.is_(None), m.estado != "fallido"))
                 .order_by(m.id.desc()).limit(HISTORIAL))
     with transaccion() as c:
         filas = c.execute(consulta).all()
@@ -187,12 +227,14 @@ def _historial(telefono: str) -> list[Linea]:
 
 
 def _registrar(mensaje: MensajeEntrante | MensajeSaliente, direccion: str, autor: str,
-               estado: str | None = None) -> None:
+               estado: str | None = None) -> int:
+    consulta = insert(t.mensajes).values(telefono=mensaje.telefono, texto=mensaje.texto, media_url=mensaje.media_url,
+                                         direccion=direccion, autor=autor, estado=estado,
+                                         enviado_en=datetime.now(timezone.utc))
     with transaccion() as c:
-        c.execute(insert(t.mensajes).values(telefono=mensaje.telefono, texto=mensaje.texto, media_url=mensaje.media_url,
-                                            direccion=direccion, autor=autor, estado=estado,
-                                            enviado_en=datetime.now(timezone.utc)))
+        mensaje_id = c.execute(consulta.returning(t.mensajes.c.id)).scalar_one()
         notificar(c)
+    return mensaje_id
 
 
 def _conversacion(telefono: str) -> tuple[dict, str | None]:

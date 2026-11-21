@@ -85,6 +85,8 @@
   /* Hilo: los componentes de chat de shadcn con los colores de EcoConecta */
   & .shadcn { --muted: var(--surface-muted); --muted-foreground: #515e56; --secondary: #ffffff; --secondary-foreground: var(--ink); }
   & .hilo { flex: 1; min-height: 0; background: var(--background); }
+  /* Mientras sigue el final, el navegador deja el desplazamiento en manos del chat. */
+  & .hilo [data-slot="message-scroller-viewport"]:not([data-scrollable~="end"]) { overflow-anchor: none; }
   & .hilo-dia { margin-block: .75rem .4rem; color: var(--muted-foreground); font-size: .75rem; font-weight: 600; text-transform: capitalize; }
   & .hilo-primero { margin-top: .55rem; }
   & .hilo-autor { color: var(--muted-foreground); font-size: .72rem; font-weight: 650; letter-spacing: .01em; }

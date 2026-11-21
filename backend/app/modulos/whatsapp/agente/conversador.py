@@ -34,6 +34,8 @@ class ConversadorAgente:
             return self._conversar(turno, acciones)
         except ContenidoBloqueado:
             log.info("Las salvaguardas de Azure frenaron un mensaje")
+            if acciones.solo_aviso_de_solicitud:
+                return _final([], acciones)
             return Respuesta(textos=[plantilla("agente_fuera_de_alcance")], memoria=acciones.memoria)
         except AgenteNoDisponible as error:
             log.warning("El agente no respondió (%s); responde el diálogo local", error)
@@ -66,8 +68,8 @@ def _restante(limite: float) -> float:
 
 
 def _final(salida: list[dict], acciones: Acciones) -> Respuesta:
-    texto = para_whatsapp(" ".join(_textos(salida)))
-    if not texto and not acciones.con_aviso and not acciones.cartel:
+    texto = "" if acciones.solo_aviso_de_solicitud else para_whatsapp(" ".join(_textos(salida)))
+    if not texto and not acciones.aviso and not acciones.cartel:
         raise AgenteNoDisponible("El modelo no escribió nada")
     for paso in PASOS:  # el diálogo local deja borradores; el agente ya sigue la conversación por el historial
         acciones.memoria.pop(paso, None)
@@ -99,7 +101,7 @@ def _tutear(voseo: re.Match) -> str:
 def _respaldo(turno: Turno, acciones: Acciones) -> Respuesta:
     """Sin agente, lo que ya se hizo en el turno se confirma tal cual (el diálogo no lo repite), la revisión de la
     foto sale con su texto fijo y lo demás lo atiende el diálogo local."""
-    if acciones.hechos or acciones.con_aviso:
+    if acciones.hechos or acciones.aviso:
         return Respuesta(textos=acciones.hechos, memoria=acciones.memoria)
     if turno.revision:
         return Respuesta(textos=turno.revision, memoria=acciones.memoria)

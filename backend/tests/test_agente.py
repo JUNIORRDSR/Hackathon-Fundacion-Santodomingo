@@ -126,7 +126,8 @@ def test_consultar_recolecciones_trae_kilos_puntos_y_estado():
 def test_pedir_recoleccion_lleva_la_foto_y_cancelar_pide_confirmacion():
     vecino = vecino_habilitado("+15555550104", "Leo")
     herramientas, memoria = Herramientas(vecino.id), {"foto": "data:image/png;base64,AA=="}
-    azure = AzureFalso(llamada("pedir_recoleccion", tipo="reciclable", franja="noche", observaciones=None), texto(""))
+    pedir = llamada("pedir_recoleccion", tipo="reciclable", franja="noche", observaciones=None)
+    azure = AzureFalso(pedir, texto("Listo, Leo. Tu solicitud de reciclables quedó recibida."))
     respuesta = ConversadorAgente(azure).responder(turno("recojan mis reciclables en la noche"), memoria, herramientas)
 
     assert respuesta.textos == []  # el aviso de «recibida» ya lleva el código
@@ -136,6 +137,16 @@ def test_pedir_recoleccion_lleva_la_foto_y_cancelar_pide_confirmacion():
     ConversadorAgente(AzureFalso(cancelar, texto("¿Confirmas?"))).responder(turno("cancélala"), respuesta.memoria,
                                                                            herramientas)
     assert herramientas.mis_solicitudes()[0].estado == solicitudes.Estado.RECIBIDA
+
+
+def test_pedir_recoleccion_y_consultar_puntos_responde_la_pregunta_adicional():
+    vecino = vecino_habilitado("+15555550117")
+    pedir = llamada("pedir_recoleccion", tipo="reciclable", franja="tarde", observaciones=None)
+    azure = AzureFalso(pedir, llamada("consultar_puntos"), texto("Tienes 0 puntos."))
+    respuesta = ConversadorAgente(azure).responder(
+        turno("Recoge mis reciclables en la tarde. ¿Cuántos puntos llevo?"), {}, Herramientas(vecino.id))
+
+    assert respuesta.textos == ["Tienes 0 puntos."]
 
 
 def test_cambiar_el_nombre_solo_acepta_un_nombre():

@@ -134,6 +134,9 @@
   &:has(.fab-lane) .main-content { display: flex; flex-direction: column; padding-bottom: 0; }
   &:has(.fab-lane) .motion-route-stage { flex: 1; }
   /* Con nombre propio en la View Transition de Daniela, el botón queda encima del contenido que cambia. */
+  /* La acción de cada pantalla, abajo a la izquierda; WhatsApp, abajo a la derecha. */
+  & .fab-acciones { position: absolute; left: 0; bottom: max(1.25rem, env(safe-area-inset-bottom)); display: flex; gap: .6rem; pointer-events: auto; }
+  & .fab-acciones > .button { min-height: 54px; box-shadow: var(--shadow); }
   & .whatsapp-fab { view-transition-name: eco-whatsapp; }
   & .whatsapp-fab { position: absolute; right: 0; bottom: max(1.25rem, env(safe-area-inset-bottom)); pointer-events: auto; display: inline-flex; align-items: center; gap: .55rem; min-height: 54px; padding: .4rem 1.15rem .4rem .4rem; border-radius: 9999px; background: #25d366; color: #05361f; font-weight: 750; text-decoration: none; box-shadow: 0 12px 26px -10px #25d36699, 0 3px 8px #2d4b3f26; transition: transform 180ms, background-color 180ms; }
   & .whatsapp-fab:hover { background: #2ee070; transform: translateY(-2px); }

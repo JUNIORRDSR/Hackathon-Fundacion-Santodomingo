@@ -1,4 +1,5 @@
-import { useLayoutEffect, useRef } from 'react'
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { ReactNode } from 'react'
 import villasLogo from '../../../../identidad-visual/Logo villas de san pablo - transparente.png'
 import foundationLogo from '../../../../identidad-visual/Logo Santo Domingo - transparente.png'
@@ -28,14 +29,22 @@ const modulePages: EcoPage[] = ['inicio', 'solicitudes', 'recolecciones', 'recol
 // Las cuatro del flujo quedan a la vista; el resto, en «Más», para que la barra quepa en una línea.
 const mainPages: EcoPage[] = ['inicio', 'solicitudes', 'recolecciones', 'canjes']
 
+// Con sesión, el logo va junto al título de cada pantalla y la acción baja a la franja de WhatsApp, a la izquierda.
+// Guarda el enlace al Inicio; sin sesión vale null y todo queda como antes (el logo en la barra).
+const AppShell = createContext<string | null>(null)
+
 export function PageHeader({ title, description, action }: { title: string; description: string; action?: ReactNode }) {
+  const inicio = useContext(AppShell)
+  const [lane, setLane] = useState<HTMLElement | null>(null)
+  useEffect(() => setLane(inicio ? document.getElementById('eco-acciones') : null), [inicio])
   return (
     <div className="page-header">
       <div>
         <h1 tabIndex={-1}>{title}</h1>
         <p>{description}</p>
       </div>
-      {action}
+      {inicio ? <BrandLogo href={inicio} /> : action}
+      {inicio && action && lane && createPortal(action, lane)}
     </div>
   )
 }
@@ -222,24 +231,28 @@ export function Layout({
       </header>
       <main id="eco-main" className="site-width main-content" tabIndex={-1} ref={main}>
         <div className="motion-route-stage" ref={stage}>
-          {content}
+          <AppShell.Provider value={coordinator ? href({ page: 'inicio' }) : null}>{content}</AppShell.Provider>
         </div>
-        {coordinator && extraPages.includes('whatsapp') && page !== 'whatsapp' && (
+        {coordinator && (
           <div className="fab-lane">
-            <a
-              className="whatsapp-fab"
-              href={href({ page: 'whatsapp' })}
-              data-sin-leer={!!badges.whatsapp}
-              aria-label={
-                'Abrir el monitor de WhatsApp' + (badges.whatsapp ? ', ' + badges.whatsapp + ' mensajes sin leer' : '')
-              }
-            >
-              <span className="whatsapp-fab-logo">
-                <WhatsappLogo />
-              </span>
-              <span className="whatsapp-fab-texto">WhatsApp</span>
-              {!!badges.whatsapp && <span className="whatsapp-fab-cuenta">{badges.whatsapp}</span>}
-            </a>
+            <div id="eco-acciones" className="fab-acciones" />
+            {extraPages.includes('whatsapp') && page !== 'whatsapp' && (
+              <a
+                className="whatsapp-fab"
+                href={href({ page: 'whatsapp' })}
+                data-sin-leer={!!badges.whatsapp}
+                aria-label={
+                  'Abrir el monitor de WhatsApp' +
+                  (badges.whatsapp ? ', ' + badges.whatsapp + ' mensajes sin leer' : '')
+                }
+              >
+                <span className="whatsapp-fab-logo">
+                  <WhatsappLogo />
+                </span>
+                <span className="whatsapp-fab-texto">WhatsApp</span>
+                {!!badges.whatsapp && <span className="whatsapp-fab-cuenta">{badges.whatsapp}</span>}
+              </a>
+            )}
           </div>
         )}
       </main>

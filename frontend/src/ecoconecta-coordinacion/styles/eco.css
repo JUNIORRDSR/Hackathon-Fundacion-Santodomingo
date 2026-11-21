@@ -82,7 +82,7 @@ html:has(.eco-app), body:has(> #root > .eco-app) {
   /* Sin logo (con sesión) la barra es menú y usuario; el menú gris claro sobre la barra blanca. */
   & .topbar-inner:not(:has(> .brand-mark)) { grid-template-columns: 1fr auto; }
   & .topbar .main-nav { background: var(--background); box-shadow: none; }
-  & .workspace-heading .brand-mark { flex-shrink: 0; width: 13.5rem; }
+  & :is(.workspace-heading, .page-header) .brand-mark { flex-shrink: 0; width: 13.5rem; }
   & .brand-link { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; border-radius: .65rem; }
   & .brand-mark { position: relative; display: block; width: 13.5rem; view-transition-name: eco-logo; }
   & .brand-mark img { width: 100%; height: auto; }

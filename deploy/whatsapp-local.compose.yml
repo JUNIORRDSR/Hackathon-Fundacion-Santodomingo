@@ -1,0 +1,21 @@
+services:
+  whatsapp-webhook:
+    image: nginx:1.30-alpine
+    volumes:
+      - ./deploy/whatsapp-local.nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+
+  whatsapp-tunel-temporal:
+    image: cloudflare/cloudflared:2026.7.2
+    command: tunnel --no-autoupdate --url http://whatsapp-webhook:8080
+    depends_on:
+      - whatsapp-webhook
+
+  whatsapp-tunel-fijo:
+    image: cloudflare/cloudflared:2026.7.2
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    depends_on:
+      - whatsapp-webhook
+    restart: unless-stopped

@@ -16,8 +16,9 @@ una tablet, y cada recolección suma puntos.
 docker compose up --build
 ```
 
-Abre http://localhost:8000/docs: cada etiqueta es un módulo y su contrato. Los usuarios de demostración son ficticios:
-`huerteros`, `recicladores` y `admin`, con la clave `ecoconecta-demo`.
+Abre [EcoConecta](http://localhost:8000) para usar el frontend integrado. Los contratos están en
+[/docs](http://localhost:8000/docs). Los usuarios de demostración `huerteros`, `recicladores` y `admin`
+usan la clave `ecoconecta-demo`.
 
 ## Backend sin Docker
 
@@ -34,21 +35,87 @@ pytest
 `pytest` también corre las reglas de arquitectura y de tamaño: si una falla, se corrige el código, no la regla
 ([ADR-0006](docs/adr/0006-reglas-de-arquitectura-en-pruebas.md)).
 
+## Un día completo de demo
+
+`python scripts/dia_de_demo.py` (o `python scripts/dia_de_demo.py https://<url-publicada>`) carga por la API 16 vecinos
+ficticios con sus solicitudes del día: pendientes, programadas a distintas horas, recolectadas con kilos (y sus puntos),
+una rechazada y dos canjes pedidos por WhatsApp. Se puede correr varias veces sin duplicar.
+
 ## Probar el bot sin WhatsApp
 
-1. `POST /api/acceso/entrar` con `{"usuario": "admin", "clave": "ecoconecta-demo"}`.
-2. `POST /api/whatsapp/simulador` con `{"telefono": "+573000000001", "texto": "Hola"}`, y sigue la conversación.
-3. `GET /api/whatsapp/simulador/mensajes` muestra todo lo que el sistema envió, avisos incluidos.
+Para repetir pruebas sin enviar mensajes a Twilio, arranca la app con `TRANSPORTE=simulado` en el `.env` de la raíz.
+Con `CONVERSADOR=menu` también puedes probar el flujo numerado sin consumir cuota de Azure.
+
+Entra a la app (usuario `admin`, clave `ecoconecta-demo`) y abre **WhatsApp**: a la izquierda las conversaciones, a la
+derecha el hilo. En **Simular un vecino** escribes como si fueras un celular (`+573000000009`, «Hola»). Con **Tomar el
+control** el bot calla y respondes como coordinación; **Devolver al bot** lo reactiva (ADR-0007).
+
+El monitor usa una conexión de eventos (`GET /api/whatsapp/eventos`) por pestaña. Cuando el webhook o el
+simulador guardan un mensaje, el backend avisa al navegador y este actualiza la conversación.
+
+Por API: `POST /api/whatsapp/simulador` con `{"telefono": "+573000000001", "texto": "Hola"}`, y
+`GET /api/whatsapp/conversaciones/{telefono}/mensajes` para el hilo, avisos incluidos.
 
 ## WhatsApp real con el sandbox de Twilio
 
+### Webhook local con Docker en Windows
+
+```powershell
+pwsh -File scripts/whatsapp-local.ps1 -Compilar
+```
+
+El script reutiliza el túnel activo o inicia uno temporal, sincroniza `TWILIO_WEBHOOK_URL` en el `.env` local
+y comprueba que una solicitud firmada llega a FastAPI. El proxy solo publica el webhook. El monitor sigue en
+`http://localhost:8000/#/whatsapp`. Guarda la URL que imprime el script en **Sandbox settings → When a message
+comes in**, con método **POST**. Cloudflare asigna otra URL cuando se reinicia un túnel temporal.
+
+Para conservar la URL tras reiniciar Docker, configura un túnel de Cloudflare dedicado a EcoConecta con un
+dominio público fijo y el servicio HTTP `http://whatsapp-webhook:8080`. Guarda su token en
+`CLOUDFLARE_TUNNEL_TOKEN` en el `.env` local y ejecuta:
+
+```powershell
+pwsh -File scripts/whatsapp-local.ps1 -UrlFija https://whatsapp.example.com/api/whatsapp/twilio -Compilar
+```
+
+Guarda esa URL en Twilio una vez. En los siguientes cambios puedes volver a compilar y levantar la app
+sin repetir `-UrlFija` ni cambiar la dirección del webhook. Usa el mismo script sin `-Compilar` para
+comprobar la conexión.
+
+### Configuración manual
+
 1. En la consola de Twilio, abre el sandbox de WhatsApp y anota el número y la palabra para unirse.
 2. Arranca la app con `TRANSPORTE=twilio`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` y
-   `TWILIO_WHATSAPP_FROM=whatsapp:+14155238886` (o el número del sandbox).
-3. En el sandbox, en «When a message comes in», pon `https://<url-publicada>/api/whatsapp/twilio` con `POST`.
+   `TWILIO_WHATSAPP_FROM=whatsapp:+14155238886` (o el número del sandbox). En `TWILIO_WEBHOOK_URL` configura
+   la URL HTTPS pública exacta, incluida la ruta `/api/whatsapp/twilio`.
+3. Guarda esa misma URL con método `POST` en «When a message comes in» del Sandbox.
 4. Cada celular de la demo manda primero `join <palabra>` al número del sandbox.
 
-El webhook rechaza con 403 todo lo que no venga firmado por Twilio.
+El webhook comprueba la firma de Twilio y procesa cada identificador de mensaje una sola vez. Opcionalmente,
+`WHATSAPP_PILOT_NUMBERS` limita los remitentes antes de que entren al bot. Si Twilio muestra un BSUID en
+**Sandbox Participants**, configura `WHATSAPP_CONTACT_ALIASES=CO.identificador=+573000000001` con el teléfono
+verificado del participante. Para el envío, la primera asociación de cada teléfono tiene prioridad.
+
+En el Sandbox clásico, `TWILIO_RESPUESTA_TWIML=1` devuelve las respuestas inmediatas en el propio webhook,
+incluidos los avisos generados por ese turno para el remitente. Los avisos posteriores del coordinador usan
+la API de Twilio.
+
+El monitor envía el texto de coordinación en el momento a través de la API de Twilio. La cuenta Trial
+puede exigir una plantilla y rechazar ese envío. Para enviar texto libre desde el monitor, configura un
+remitente de WhatsApp habilitado para ello y prueba dentro de la ventana de atención de 24 horas.
+
+El [prototipo TypeScript](modules/whatsapp-recoleccion/README.md) queda como referencia histórica. Las pruebas y el
+desarrollo del canal se hacen en `backend/app/modulos/whatsapp/` y en el monitor del frontend.
+
+## Azure OpenAI para WhatsApp
+
+El conversador opcional entiende frases como «quiero que recojan mis orgánicos» o «cuántos puntos tengo».
+El flujo y las respuestas del sistema se aplican con las mismas reglas del menú. Consulta la
+[guía de Foundry y la prueba local](docs/azure-openai-whatsapp.md).
+
+Para editar textos en ejecución, apunta `WHATSAPP_REPLIES_FILE` a un JSON UTF-8 editable con claves del
+[catálogo de WhatsApp](backend/app/modulos/whatsapp/respuestas.json). Puedes sobrescribir una parte del catálogo
+conservando sus marcadores. Un cambio válido se aplica sin reiniciar. En Docker, monta el directorio que contiene
+el archivo y usa la ruta del contenedor.
 
 ## Cómo entra cada pieza del equipo
 
@@ -70,7 +137,7 @@ Los contratos de esas piezas están en `backend/app/modulos/whatsapp/contrato.py
 | Almacenamiento | Ninguno propio: los contenidos son URLs públicas |
 | Redes | Ingreso HTTPS público de Container Apps, que es también la URL del webhook de WhatsApp |
 
-URL publicada: pendiente.
+URL publicada: <https://ecoconecta.happytree-01383e4e.northcentralus.azurecontainerapps.io> (contratos en `/docs`).
 
 ## Variables de entorno
 
@@ -82,6 +149,12 @@ Los nombres están en [.env.example](.env.example); los valores nunca van al rep
 | `DATABASE_URL` | Conexión a PostgreSQL; en local, si falta, usa la base de `docker-compose.yml` |
 | `CLAVE_SESION` | Firma la cookie de sesión |
 | `CLAVE_DEMO` | Clave de los usuarios de demostración |
+| `CODIGO_REGISTRO` | Código que la fundación da a quien crea su cuenta de coordinación; en local, `villas-2026` (ADR-0009) |
 | `SEMBRAR_DEMO` | `1` carga zonas, encargados, usuarios y contenidos ficticios |
 | `TRANSPORTE` | `simulado` o `twilio` |
 | `CONVERSADOR` | `menu` o `llm` |
+| `OPENAI_BASE_URL` | API v1 de Azure OpenAI: `https://<recurso>.openai.azure.com/openai/v1/`; sin ella, la de OpenAI |
+| `OPENAI_API_KEY` | Clave del recurso de Azure OpenAI (o de OpenAI) |
+| `CLASIFICACION_MODELO` | Nombre del despliegue con visión, por ejemplo `gpt-5-mini` |
+| `CLASIFICACION_ACTIVA` | `true` revisa las fotos que llegan por WhatsApp ([ADR-0011](docs/adr/0011-revision-de-fotos.md)) |
+| `TRANSCRIPCION_MODELO` | Despliegue de Whisper para las notas de voz; vacío las desactiva ([ADR-0013](docs/adr/0013-voz-y-salvaguardas.md)) |

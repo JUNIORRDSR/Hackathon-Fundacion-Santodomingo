@@ -1,0 +1,129 @@
+import importlib
+import json
+from io import BytesIO
+from uuid import UUID
+
+import pytest
+
+from app.modulos.whatsapp.contrato import Herramientas, Turno
+from app.modulos.whatsapp.menu import ConversadorMenu
+
+
+class AzureSimulado:
+    def __init__(self):
+        self.intencion = "organico"
+        self.falla = False
+        self.estado_http = 200
+        self.peticiones = []
+
+    def conectar(self, host, timeout):
+        self.host = host
+        self.timeout = timeout
+        return self
+
+    def close(self):
+        pass
+
+    def request(self, metodo, ruta, body, headers):
+        self.peticiones.append((metodo, ruta, json.loads(body), headers))
+
+    def getresponse(self):
+        if self.falla:
+            raise TimeoutError()
+        contenido = {"type": "output_text", "text": json.dumps({"intent": self.intencion})}
+        salida = {"type": "message", "role": "assistant", "content": [contenido]}
+        respuesta = BytesIO(json.dumps({"status": "completed", "output": [salida]}).encode())
+        respuesta.status = self.estado_http
+        return respuesta
+
+
+@pytest.fixture
+def azure(monkeypatch):
+    modulo = importlib.import_module("app.modulos.whatsapp.conversador_llm")
+    servidor = AzureSimulado()
+    monkeypatch.setattr(modulo, "HTTPSConnection", servidor.conectar)
+    monkeypatch.setenv("OPENAI_BASE_URL", "https://az-test.openai.azure.com/openai/v1/")
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("CONVERSADOR_MODELO", "eco-test")
+    monkeypatch.delenv("CONVERSADOR_RAZONAMIENTO", raising=False)
+    return modulo.ConversadorLLM, servidor
+
+
+def _responder(conversador, texto, *, memoria=None, media_url=None):
+    turno = Turno(nombre="AliasPrivado", texto=texto, media_url=media_url)
+    herramientas = Herramientas(UUID(int=1))
+    return conversador.desde_entorno().responder(turno, memoria or {}, herramientas)
+
+
+def _menu(texto):
+    return ConversadorMenu().responder(Turno(nombre="AliasPrivado", texto=texto), {}, Herramientas(UUID(int=1)))
+
+
+def test_intencion_de_recoleccion_solo_inicia_el_flujo_y_minimiza_el_texto(azure):
+    conversador, servidor = azure
+    respuesta = _responder(conversador, "SaludoPrivado necesito recolección de orgánicos")
+    assert respuesta.textos == _menu("1").textos
+    assert respuesta.memoria == {"pidiendo": "organico"}
+    assert (servidor.host, servidor.timeout) == ("az-test.openai.azure.com", 2)
+    metodo, ruta, cuerpo, cabeceras = servidor.peticiones[0]
+    assert (metodo, ruta) == ("POST", "/openai/v1/responses")
+    assert cabeceras["api-key"] == "test-key"
+    assert cuerpo["model"] == "eco-test"
+    assert cuerpo["store"] is False
+    assert cuerpo["input"] == [{"role": "user", "content": "necesito recoleccion organicos"}]
+    assert cuerpo["text"]["format"]["strict"] is True
+    assert "reasoning" not in cuerpo
+
+
+def test_despliegue_gpt5_puede_usar_razonamiento_minimo(azure, monkeypatch):
+    conversador, servidor = azure
+    monkeypatch.setenv("CONVERSADOR_RAZONAMIENTO", "minimal")
+    respuesta = _responder(conversador, "Necesito recolección de orgánicos")
+    assert respuesta.memoria == {"pidiendo": "organico"}
+    assert servidor.timeout == 3
+    cuerpo = servidor.peticiones[0][2]
+    assert cuerpo["reasoning"] == {"effort": "minimal"}
+    assert cuerpo["max_output_tokens"] == 128
+
+
+@pytest.mark.parametrize("texto,memoria,media_url", [
+    ("hola", None, None),
+    ("1", None, None),
+    ("recolección de orgánicos", {"pidiendo": "reciclable"}, None),
+    ("recolección de orgánicos", None, "https://media.example.test/photo.jpg"),
+    ("recoger reciclables, mi teléfono es +573000000001", None, None),
+    ("orgánicos en la calle San José", None, None),
+    ("orgánicos en https://privado.example.test", None, None),
+    ("reciclables, Isabel@ejemplo.test", None, None),
+    ("Mi nombre es Privado y necesito recolección de orgánicos", None, None),
+])
+def test_resuelve_con_el_menu_cuando_no_debe_consultar_a_azure(azure, texto, memoria, media_url):
+    conversador, servidor = azure
+    _responder(conversador, texto, memoria=memoria, media_url=media_url)
+    assert servidor.peticiones == []
+
+
+@pytest.mark.parametrize("intencion,falla", [("cancelar", False), ("desconocido", False), ("organico", True)])
+def test_azure_no_puede_inventar_acciones_y_las_fallas_tienen_respaldo(azure, intencion, falla):
+    conversador, servidor = azure
+    servidor.intencion, servidor.falla = intencion, falla
+    respuesta = _responder(conversador, "Necesito recolección de orgánicos")
+    assert respuesta.textos == _menu("Necesito recolección de orgánicos").textos
+    assert respuesta.memoria == {}
+    assert len(servidor.peticiones) == 1
+
+
+def test_url_ajena_a_azure_no_recibe_la_clave(azure, monkeypatch):
+    conversador, servidor = azure
+    monkeypatch.setenv("OPENAI_BASE_URL", "https://no.openai.azure.com.example.test")
+    respuesta = _responder(conversador, "Necesito recolección de orgánicos")
+    assert respuesta.textos == _menu("Necesito recolección de orgánicos").textos
+    assert servidor.peticiones == []
+
+
+def test_una_redireccion_de_azure_devuelve_el_menu_sin_otro_intento(azure):
+    conversador, servidor = azure
+    servidor.estado_http = 302
+    respuesta = _responder(conversador, "Necesito recolección de orgánicos")
+    assert respuesta.textos == _menu("Necesito recolección de orgánicos").textos
+    assert len(servidor.peticiones) == 1

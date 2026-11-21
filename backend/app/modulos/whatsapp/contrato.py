@@ -62,10 +62,11 @@ class Herramientas:
     def __init__(self, solicitante_id: UUID):
         self._id = solicitante_id
 
-    def pedir_recoleccion(self, flujo: Flujo, preferencia: Franja, observaciones: str = "") -> SolicitudResumida:
-        """Registra una solicitud. Levanta ErrorDeNegocio si ya hay una abierta del mismo flujo."""
+    def pedir_recoleccion(self, flujo: Flujo, preferencia: Franja, observaciones: str = "",
+                          foto_url: str | None = None) -> SolicitudResumida:
+        """Registra una solicitud, con la foto si la mandó. ErrorDeNegocio si ya hay una abierta del mismo flujo."""
         nueva = solicitudes.NuevaSolicitud(solicitante_id=self._id, flujo=flujo, preferencia=preferencia,
-                                           observaciones=observaciones, canal=Canal.WHATSAPP)
+                                           observaciones=observaciones, canal=Canal.WHATSAPP, foto_url=foto_url)
         return _resumir(solicitudes.registrar(nueva))
 
     def mis_solicitudes(self) -> list[SolicitudResumida]:
@@ -79,15 +80,18 @@ class Herramientas:
         return _resumir(cancelada)
 
     def mis_puntos(self) -> int:
-        return puntos.saldo(self._id).saldo
+        """Lo disponible: el saldo menos lo apartado en canjes por entregar."""
+        return puntos.disponible(self._id)
 
     def aprender(self, flujo: Flujo | None = None) -> list[contenidos.ContenidoVista]:
-        piezas = contenidos.listar(contenidos.Audiencia.SOLICITANTE, flujo)
-        return [c for c in piezas if c.proposito != contenidos.Proposito.CANJE]
+        return contenidos.capacitacion_publica(flujo)
 
-    def que_puedo_canjear(self) -> list[contenidos.ContenidoVista]:
-        """Lo que se ofrece por los puntos; el canje se hace en la huerta."""
-        return contenidos.listar(contenidos.Audiencia.SOLICITANTE, proposito=contenidos.Proposito.CANJE)
+    def premios(self) -> list[puntos.PremioVista]:
+        return puntos.premios(solo_activos=True)
+
+    def pedir_canje(self, premio_id: UUID) -> puntos.CanjeVista:
+        """Aparta los puntos y da el código que se muestra en la huerta. ErrorDeNegocio si no le alcanza."""
+        return puntos.pedir(self._id, premio_id)
 
 
 class Conversador(Protocol):

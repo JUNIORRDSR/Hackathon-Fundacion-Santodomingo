@@ -1,0 +1,115 @@
+/* Pantallas del host (entrar, registros, canjes, WhatsApp) con los tokens del módulo de Daniela (.eco-app). */
+.eco-app {
+  & ::selection { background: #f6c40066; color: var(--ink); }
+  & input, & textarea { caret-color: var(--highlight); }
+  & .field-help { color: var(--muted); font-size: .8125rem; }
+
+  /* Entrar y crear cuenta */
+  & .acceso { display: grid; justify-items: center; gap: 1rem; padding-block: clamp(.5rem, 5vh, 3.5rem) 1rem; }
+  & .acceso-tarjeta { width: min(100%, 31rem); padding: 1.5rem 1.6rem 1.7rem; display: grid; gap: 1.1rem; }
+  & .acceso-modo { justify-self: start; }
+  & .acceso-tarjeta h1 { font-size: clamp(1.6rem, 2.6vw, 2rem); }
+  & .acceso-tarjeta .muted { margin-top: .35rem; }
+  & .acceso-tarjeta fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+  & .acceso-tarjeta legend { font-size: .9rem; font-weight: 600; padding: 0; }
+  & .acceso-tarjeta .button-primary { width: 100%; min-height: 48px; font-size: .95rem; }
+  & .acceso-colectivo { align-items: flex-start; padding: .75rem; border-radius: .9rem; }
+  & .acceso-colectivo svg { width: 1.25rem; height: 1.25rem; margin-top: .1rem; display: block; }
+  & .acceso-colectivo span { display: grid; gap: .1rem; font-size: .95rem; }
+  & .acceso-colectivo small { color: var(--muted); font-weight: 500; font-size: .8rem; }
+  & .acceso-guias { display: inline-flex; align-items: center; gap: .45rem; color: var(--muted); font-size: .875rem; font-weight: 600; text-underline-offset: .2em; }
+
+  /* Canjes */
+  & .canje-vista { margin-bottom: 1.1rem; }
+  & .premio-nota { margin-bottom: .9rem; }
+  & .premios .panel-heading { margin-bottom: 1rem; align-items: end; }
+  & .premios .panel-heading h2 { font-size: 1.35rem; }
+  & .premios-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr)); gap: .9rem; }
+  & .premio { display: grid; gap: .55rem; align-content: start; padding: 1.1rem; }
+  & .premio[data-activo="false"] { opacity: .65; }
+  & .premio h3 { font-size: 1.05rem; }
+  & .premio-costo { font: 650 1.9rem/1 var(--font-heading); letter-spacing: -.04em; color: var(--highlight); font-variant-numeric: tabular-nums; }
+  & .premio-costo span { font-size: .875rem; font-weight: 600; letter-spacing: 0; color: var(--muted); }
+  & .premio-etiquetas { display: flex; gap: .35rem; flex-wrap: wrap; }
+  & .premio-ejemplo { background: #fbf0c4; color: var(--accent-ink); }
+
+  /* Botón flotante de WhatsApp */
+  /* El botón vive en un carril sticky al final del contenido: baja con la pantalla y se detiene encima del pie. */
+  & .fab-lane { position: sticky; bottom: 0; z-index: 4; display: flex; justify-content: flex-end; height: 0; margin-top: 4.75rem; pointer-events: none; }
+  /* El contenido ocupa el alto disponible: el carril queda siempre al fondo, justo encima del pie. */
+  &:has(.fab-lane) .main-content { display: flex; flex-direction: column; padding-bottom: 0; }
+  &:has(.fab-lane) .motion-route-stage { flex: 1; }
+  /* Con nombre propio en la View Transition de Daniela, el botón queda encima del contenido que cambia. */
+  & .whatsapp-fab { view-transition-name: eco-whatsapp; }
+  & .whatsapp-fab { position: absolute; right: 0; bottom: max(1.25rem, env(safe-area-inset-bottom)); pointer-events: auto; display: inline-flex; align-items: center; gap: .6rem; min-height: 54px; padding: .45rem 1.2rem .45rem .45rem; border-radius: 9999px; background: #f28c00; color: #063b2e; font-weight: 700; text-decoration: none; box-shadow: 0 12px 26px -10px #f28c00aa, 0 3px 8px #2d4b3f26; transition: transform 180ms, background-color 180ms; }
+  & .whatsapp-fab:hover { background: #f69a1f; transform: translateY(-2px); }
+  & .whatsapp-fab svg { width: 2.6rem; height: 2.6rem; padding: .6rem; border-radius: 50%; background: #ffffff; --icon-stroke: #168a2e; stroke-width: 2.4; }
+
+  /* Monitor de WhatsApp */
+  & .monitor { display: grid; grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr); gap: 1rem; height: max(32rem, calc(100svh - 17rem)); }
+  & .monitor-lista { display: flex; flex-direction: column; min-height: 0; padding: 1rem .6rem .6rem; }
+  & .monitor-lista h2 { display: flex; align-items: center; gap: .5rem; padding: 0 .5rem .75rem; font-size: 1rem; }
+  & .monitor-lista .search-field { flex: 0 0 auto; margin: 0 .5rem .65rem; }
+  & .monitor-conexion { padding: 0 .5rem .5rem; }
+  & .monitor-cuenta { display: inline-grid; place-items: center; min-width: 1.5rem; height: 1.5rem; padding-inline: .35rem; border-radius: 9999px; background: var(--surface-muted); color: var(--muted); font-size: .75rem; }
+  & .monitor-lista ul { overflow-y: auto; display: grid; gap: .15rem; align-content: start; }
+  & .monitor-lista button { display: flex; gap: .7rem; width: 100%; padding: .7rem .6rem; border: 0; border-radius: 1rem; background: transparent; text-align: left; transition: background-color 160ms; }
+  & .monitor-lista button:hover { background: var(--surface-muted); }
+  & .monitor-lista button[aria-pressed="true"] { background: var(--surface-muted); box-shadow: inset 0 0 0 1px var(--line); }
+  & .monitor-avatar { display: grid; place-items: center; flex: 0 0 auto; width: 2.6rem; height: 2.6rem; border-radius: 50%; background: var(--highlight); color: var(--on-highlight); font-size: .85rem; font-weight: 650; }
+  & .monitor-resumen { display: grid; gap: .15rem; min-width: 0; flex: 1; }
+  & .monitor-nombre { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; }
+  & .monitor-nombre time { color: var(--muted); font-size: .75rem; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  & .monitor-lista button[data-sin-leer="true"] time { color: var(--highlight); font-weight: 700; }
+  & .monitor-previa { display: flex; align-items: center; justify-content: space-between; gap: .5rem; min-width: 0; }
+  & .monitor-ultimo { color: var(--muted); font-size: .8125rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  & .monitor-sin-leer { display: inline-grid; place-items: center; flex-shrink: 0; min-width: 1.3rem; height: 1.3rem; padding-inline: .3rem; border-radius: 9999px; background: var(--highlight); color: var(--on-highlight); font-size: .72rem; font-weight: 750; font-variant-numeric: tabular-nums; }
+  & .monitor-insignia { justify-self: start; margin-top: .2rem; padding: .1rem .5rem; border-radius: 9999px; background: #fbf0c4; color: var(--accent-ink); font-size: .72rem; font-weight: 650; }
+  & .monitor-hilo { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  & .monitor-cabecera { display: flex; align-items: center; gap: .75rem; padding: .85rem 1rem; border-bottom: 1px solid var(--line); }
+  & .monitor-quien { flex: 1; min-width: 0; }
+  & .monitor-quien h2 { font-size: 1.05rem; }
+  & .monitor-estado { display: inline-flex; align-items: center; gap: .4rem; color: var(--muted); font-size: .8125rem; }
+  & .monitor-estado::before { content: ""; width: .5rem; height: .5rem; border-radius: 50%; background: #3f8f5f; }
+  & .monitor-estado[data-control="true"]::before { background: var(--yellow); }
+  & .monitor-vacio { flex: 1; display: grid; place-items: center; }
+  & .monitor-redactar { display: grid; gap: .6rem; padding: .75rem 1rem 1rem; border-top: 1px solid var(--line); background: var(--surface); }
+  & .monitor-redactar .segmented-control { justify-self: start; }
+  & .monitor-campo { display: flex; gap: .5rem; align-items: center; padding: .3rem .3rem .3rem .4rem; border: 1px solid var(--control-line); border-radius: 9999px; background: var(--surface); }
+  & .monitor-campo:focus-within { outline: 3px solid var(--ink); outline-offset: 2px; }
+  & .monitor-campo input { flex: 1; min-width: 0; min-height: 40px; padding: .4rem .6rem; border: 0; background: transparent; outline: 0; }
+  & .monitor-campo .monitor-telefono-input { flex: 0 0 10.75rem; border-right: 1px solid var(--line); border-radius: 0; font-variant-numeric: tabular-nums; }
+  & .monitor-enviar { display: grid; place-items: center; width: 42px; height: 42px; border: 0; border-radius: 50%; background: var(--highlight); --icon-stroke: var(--accent-on-highlight); }
+  & .monitor-enviar:disabled { background: var(--surface-muted); --icon-stroke: var(--muted); }
+
+  /* Hilo: los componentes de chat de shadcn con los colores de EcoConecta */
+  & .shadcn { --muted: var(--surface-muted); --muted-foreground: #515e56; --secondary: #ffffff; --secondary-foreground: var(--ink); }
+  & .hilo { flex: 1; min-height: 0; background: var(--background); }
+  & .hilo-dia { margin-block: .75rem .4rem; color: var(--muted-foreground); font-size: .75rem; font-weight: 600; text-transform: capitalize; }
+  & .hilo-primero { margin-top: .55rem; }
+  & .hilo-autor { color: var(--muted-foreground); font-size: .72rem; font-weight: 650; letter-spacing: .01em; }
+  & .hilo-hora { color: var(--muted-foreground); font-size: .7rem; font-variant-numeric: tabular-nums; }
+  & .hilo [data-slot="bubble"] { max-width: min(36rem, 78%); }
+  & .hilo [data-slot="bubble-content"] { padding: .6rem .85rem; border-radius: 1.1rem; font-size: .9rem; line-height: 1.45; box-shadow: 0 1px 2px #2d4b3f14; }
+  & .hilo [data-autor="vecino"] > [data-slot="bubble-content"] { background: #ffffff; color: var(--ink); border-bottom-left-radius: .35rem; }
+  & .hilo [data-autor="bot"] > [data-slot="bubble-content"] { background: #d9e8dd; color: var(--ink); border-bottom-right-radius: .35rem; }
+  & .hilo [data-autor="coordinacion"] > [data-slot="bubble-content"] { background: var(--highlight); color: var(--on-highlight); border-bottom-right-radius: .35rem; }
+  & .hilo [data-autor="aviso"] > [data-slot="bubble-content"] { background: #fbf3d4; color: var(--ink); border: 1px solid #ecd98f; border-bottom-right-radius: .35rem; }
+
+  @media (max-width: 575px) {
+    & .whatsapp-fab span { display: none; }
+    & .whatsapp-fab { padding: .85rem; }
+  }
+
+  @media (max-width: 790px) {
+    & .monitor { grid-template-columns: minmax(0, 1fr); height: auto; }
+    & .monitor-lista { max-height: 16rem; }
+    & .monitor-hilo { height: 34rem; }
+  }
+}
+
+/* La barra y el botón no se funden ni se mueven al cambiar de pantalla: solo se muestra su versión real. */
+::view-transition-old(eco-topbar),
+::view-transition-old(eco-whatsapp) { display: none; }
+::view-transition-new(eco-topbar),
+::view-transition-new(eco-whatsapp) { animation: none; }

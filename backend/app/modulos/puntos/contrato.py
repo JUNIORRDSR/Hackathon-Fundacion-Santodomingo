@@ -10,6 +10,10 @@ from app.compartido.bd import transaccion
 from app.compartido.eventos import Evento, publicar, suscribir
 from app.compartido.tipos import ErrorDeNegocio, Flujo
 from app.modulos.puntos import tablas as t
+from app.modulos.puntos.canjes import (  # noqa: F401  el canje es parte del contrato público (ADR-0008)
+    CanjeEntregado, CanjeVista, EstadoCanje, NuevoPremio, PremioVista, canjes, disponible, entregar, guardar_premio,
+    pedir, por_codigo, premios)
+from app.modulos.puntos.canjes import cancelar as cancelar_canje  # noqa: F401
 from app.modulos.puntos.dominio import Regla
 from app.modulos.solicitudes import contrato as solicitudes
 
@@ -70,6 +74,13 @@ def cambiar_regla(nueva: NuevaRegla) -> ReglaVista:
     with transaccion() as c:
         _guardar_regla(c, Regla(_vigente(c).version + 1, nueva.base, nueva.por_kg))
     return regla_vigente()
+
+
+def puntos_por_codigo() -> dict[str, int]:
+    """Lo que ganó cada recolección, por su código: la tablet lo muestra en Resultados."""
+    with transaccion() as c:
+        filas = c.execute(select(t.movimientos.c.codigo, t.movimientos.c.puntos).where(t.movimientos.c.puntos > 0))
+        return {fila.codigo: fila.puntos for fila in filas}
 
 
 def saldo(solicitante_id: UUID) -> Saldo:

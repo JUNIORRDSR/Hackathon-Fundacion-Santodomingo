@@ -13,6 +13,7 @@ from app.compartido import bd
 from app.compartido.configuracion import variable
 from app.compartido.tipos import ErrorDeNegocio, NoEncontrado
 from app.modulos.acceso import api as acceso_api
+from app.modulos.clasificacion import api as clasificacion_api
 from app.modulos.contenidos import api as contenidos_api
 from app.modulos.directorio import api as directorio_api
 from app.modulos.puntos import api as puntos_api
@@ -21,14 +22,16 @@ from app.modulos.reportes import api as reportes_api
 from app.modulos.solicitudes import api as solicitudes_api
 from app.modulos.whatsapp import api as whatsapp_api
 from app.modulos.whatsapp import avisos, bot
+from app.modulos.whatsapp.eventos_monitor import ciclo_eventos
 
 logging.basicConfig(level=logging.INFO)
 SPA = Path(__file__).resolve().parents[2] / "frontend" / "dist"
-ROUTERS = (acceso_api, solicitudes_api, directorio_api, puntos_api, contenidos_api, reportes_api, whatsapp_api)
+ROUTERS = (acceso_api, solicitudes_api, directorio_api, puntos_api, contenidos_api, reportes_api, whatsapp_api,
+           clasificacion_api)
 
 
 def crear_app() -> FastAPI:
-    app = FastAPI(title="EcoConecta", version="0.1.0",
+    app = FastAPI(title="EcoConecta", version="0.1.0", lifespan=ciclo_eventos,
                   description="Cada etiqueta es un módulo y su contrato (docs/arquitectura.md).")
     app.add_middleware(SessionMiddleware, secret_key=variable("CLAVE_SESION", "solo-para-desarrollo-local"),
                        max_age=30 * 24 * 3600, same_site="lax", https_only=os.getenv("ENTORNO") == "produccion")
@@ -45,6 +48,8 @@ def _conectar_modulos() -> None:
     puntos.escuchar()
     avisos.escuchar()
     bot.configurar_desde_entorno()
+    if bd.reiniciar_si_se_pidio():
+        logging.getLogger("ecoconecta").warning("Base reiniciada: los esquemas se crean de nuevo")
     bd.crear_tablas()
     if os.getenv("SEMBRAR_DEMO", "1") == "1":
         semillas.sembrar()
